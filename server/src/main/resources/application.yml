@@ -1,0 +1,15 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /ucenter
+
+spring:
+  redis:
+    host: 127.0.0.1
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/xinyufu?serverTimezone=UTC&autoReconnect=true&failOverReadOnly=false&useSSL=false
+    username: root
+    password: admin
+
+mybatis-plus:
+  type-enums-package: com.cetcxl.usercenter.server.entity.model
