@@ -1,4 +1,4 @@
-package com.cetcxl.usercenter.server.common.entity;
+package com.cetcxl.usercenter.server.common.rpc;
 
 import com.cetcxl.usercenter.server.common.constants.IResultCode;
 import lombok.AllArgsConstructor;
@@ -26,26 +26,33 @@ public class ResBody<T> implements Serializable {
         ;
     }
 
-    public static ResBody success(Object o) {
+    public static ResBody success(Object... o) {
         return ResBody.builder()
                 .status(Status.OK)
-                .data(o)
+                .data(o.length == 0 ? null : o)
                 .build();
     }
 
     public static ResBody error(String errorCode, String errorMessage) {
         return ResBody.builder()
+                .status(Status.ERROR)
                 .errorCode(errorCode)
                 .errorMessage(errorMessage)
+                .build();
+    }
+
+    public static ResBody error(Object... o) {
+        return ResBody.builder()
                 .status(Status.ERROR)
+                .data(o.length == 0 ? null : o)
                 .build();
     }
 
     public static ResBody error(IResultCode resultCode) {
         return ResBody.builder()
+                .status(Status.ERROR)
                 .errorCode(resultCode.getErrorCode())
                 .errorMessage(resultCode.getErrorMessage())
-                .status(Status.ERROR)
                 .build();
     }
 }
