@@ -17,13 +17,13 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .pathMapping("/")
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.cetcxl.usercenter.server.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.cetcxl.xlpay.admin.server.controller"))
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(
                         new ApiInfoBuilder()
-                                .title("UserCenter API")
-                                .description("UserCenter api detail")
+                                .title("xlpay API")
+                                .description("xlpay api detail")
                                 .build()
                 );
     }

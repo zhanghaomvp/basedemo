@@ -113,5 +113,4 @@ public class CompanyController extends BaseController {
         return ResBody.success(companyConverter.toCompanyVO(one));
     }
 
-
 }

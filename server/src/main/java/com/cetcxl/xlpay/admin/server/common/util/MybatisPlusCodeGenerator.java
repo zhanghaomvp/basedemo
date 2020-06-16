@@ -17,7 +17,7 @@ public class MybatisPlusCodeGenerator {
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
         String projectPath = System.getProperty("user.dir");
-        gc.setOutputDir(projectPath + System.lineSeparator() + "mybatisPlus generator");
+        gc.setOutputDir(projectPath + "\\" + "mybatisPlus generator");
         gc.setOpen(true);
         //实体属性 Swagger2 注解
         gc.setSwagger2(true);
@@ -36,7 +36,7 @@ public class MybatisPlusCodeGenerator {
 
         // 包配置
         PackageConfig pc = new PackageConfig();
-        pc.setParent("com.cetcxl.usercenter.server");
+        pc.setParent("com.cetcxl.xlpay.admin.server");
 
         mpg.setPackageInfo(pc);
 
@@ -46,8 +46,8 @@ public class MybatisPlusCodeGenerator {
         strategy.setColumnNaming(NamingStrategy.underline_to_camel);
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(false);
-        // 此处更改表名即可
-        strategy.setInclude("company");
+        // *****此处更改表名即可******
+        strategy.setInclude("wallet","company_member");
         strategy.setControllerMappingHyphenStyle(true);
         //strategy.setTablePrefix(pc.getModuleName() + "_");
 

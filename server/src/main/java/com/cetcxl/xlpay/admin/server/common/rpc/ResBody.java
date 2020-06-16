@@ -29,7 +29,7 @@ public class ResBody<T> implements Serializable {
     public static ResBody success(Object... o) {
         return ResBody.builder()
                 .status(Status.OK)
-                .data(o.length == 0 ? null : o)
+                .data(o.length == 0 ? null : o[0])
                 .build();
     }
 
@@ -44,7 +44,7 @@ public class ResBody<T> implements Serializable {
     public static ResBody error(Object... o) {
         return ResBody.builder()
                 .status(Status.ERROR)
-                .data(o.length == 0 ? null : o)
+                .data(o.length == 0 ? null : o[0])
                 .build();
     }
 
