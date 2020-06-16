@@ -48,11 +48,12 @@ public class ResBody<T> implements Serializable {
                 .build();
     }
 
-    public static ResBody error(IResultCode resultCode) {
+    public static ResBody error(IResultCode resultCode, Object... o) {
         return ResBody.builder()
                 .status(Status.ERROR)
                 .errorCode(resultCode.getErrorCode())
                 .errorMessage(resultCode.getErrorMessage())
+                .data(o.length == 0 ? null : o[0])
                 .build();
     }
 }

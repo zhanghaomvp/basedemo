@@ -1,5 +1,6 @@
 package com.cetcxl.xlpay.admin.server.common.exception.advice;
 
+import com.cetcxl.xlpay.admin.server.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.admin.server.common.rpc.ResBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -55,5 +56,10 @@ public class GlobalExceptionAdvice {
                 }
         );
         return ResBody.error(HttpStatus.BAD_REQUEST.name(), stringBuilder.toString());
+    }
+
+    @ExceptionHandler(value = BaseRuntimeException.class)
+    public ResBody handle(BaseRuntimeException e) {
+        return ResBody.error(e.getResultCode(), e.getMessage());
     }
 }

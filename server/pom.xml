@@ -86,9 +86,11 @@
         </dependency>
 
 
-
-
-
+        <dependency>
+            <groupId>com.zxl</groupId>
+            <artifactId>zxl-sdk</artifactId>
+            <version>2.0.3-xstor</version>
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
