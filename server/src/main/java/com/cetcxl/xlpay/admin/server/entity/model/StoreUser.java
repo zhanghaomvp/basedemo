@@ -23,40 +23,34 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value = "Company对象", description = "")
-public class Company implements Serializable {
+@ApiModel(value = "StoreUser对象", description = "")
+public class StoreUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    private String name;
-
-    private String contact;
+    private Integer store;
 
     private String phone;
 
-    private String email;
-
-    private String socialCreditCode;
-
-    private Integer functions;
+    private String password;
 
     @TableField("STATUS")
-    private CompanyStatus status;
+    private StoreUserStatus status;
 
     private LocalDateTime created;
 
     private LocalDateTime updated;
 
-    public enum CompanyStatus implements IEnum<Integer> {
+    public enum StoreUserStatus implements IEnum<Integer> {
         DISABLE(0),
         ACTIVE(1),
         ;
         private Integer status;
 
-        CompanyStatus(Integer status) {
+        StoreUserStatus(Integer status) {
             this.status = status;
         }
 
@@ -65,28 +59,4 @@ public class Company implements Serializable {
             return this.status;
         }
     }
-
-    public enum CompanyFuntion {
-        MEMBER_PAY(1),
-        ;
-        private Integer value;
-
-        CompanyFuntion(Integer value) {
-            this.value = value;
-        }
-
-        public Integer getValue() {
-            return this.value;
-        }
-
-        public boolean isOpen(Integer functions) {
-            return (this.value & functions) > 0;
-        }
-
-        public Integer addFuntion(Integer functions) {
-            return this.value | functions;
-        }
-    }
-
-
 }

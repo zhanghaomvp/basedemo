@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -22,39 +23,31 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value = "CompanyMember对象", description = "")
-public class CompanyMember implements Serializable {
+@ApiModel(value = "WalletCash对象", description = "")
+public class WalletCash implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    private Integer company;
+    private Integer companyMember;
 
-    private String icNo;
+    private BigDecimal cashBalance;
 
-    private String name;
-
-    private String phone;
-
-    private String department;
-
-    private String employeeNo;
-
-    private CompanyMemberStatus status;
+    private WalletCashStaus status;
 
     private LocalDateTime created;
 
     private LocalDateTime updated;
 
-    public enum CompanyMemberStatus implements IEnum<Integer> {
+    public enum WalletCashStaus implements IEnum<Integer> {
         DISABLE(0),
-        ACTIVE(1),
+        ENABLE(1),
         ;
         private Integer status;
 
-        CompanyMemberStatus(Integer status) {
+        WalletCashStaus(Integer status) {
             this.status = status;
         }
 

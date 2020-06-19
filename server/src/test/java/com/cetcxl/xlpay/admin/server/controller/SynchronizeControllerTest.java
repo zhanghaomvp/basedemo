@@ -3,11 +3,19 @@ package com.cetcxl.xlpay.admin.server.controller;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.admin.server.BaseTest;
+import com.cetcxl.xlpay.admin.server.entity.model.WalletCash;
+import com.cetcxl.xlpay.admin.server.entity.vo.CompanyMemberVO;
+import com.cetcxl.xlpay.admin.server.service.WalletCashService;
+import com.cetcxl.xlpay.admin.server.service.WalletCreditService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -20,6 +28,11 @@ class SynchronizeControllerTest extends BaseTest {
 
     @Autowired
     ObjectMapper mapper;
+
+    @Autowired
+    WalletCashService walletCashService;
+    @Autowired
+    WalletCreditService walletCreditService;
 
     @Test
     void addCompanyMember() throws Exception {
@@ -34,12 +47,12 @@ class SynchronizeControllerTest extends BaseTest {
                 .employeeNo(S_TEMP)
                 .build();
 
-        mockMvc
+        MvcResult mvcResult = mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/synchronize/company-member")
                                 .header(SIGN_APP, S_TEST)
-                                .param(SIGN_SALT, S_TEMP)
+                                .header(SIGN_SALT, S_TEMP)
                                 .header(SIGN, sign(S_TEMP))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(companyMemberAddReq))
@@ -49,13 +62,20 @@ class SynchronizeControllerTest extends BaseTest {
                 )
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.company").value(1)
+                                .jsonPath("$.data.companyName").value("中国电科")
                 )
-                .andExpect(
-                        MockMvcResultMatchers
-                                .jsonPath("$.data.wallet").isNumber()
-                );
+                .andReturn();
 
+        JsonNode jsonNode = mapper.readTree(mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        JsonNode data = jsonNode.get("data");
+        CompanyMemberVO companyMemberVO = mapper.readValue(data.traverse(), CompanyMemberVO.class);
+
+        WalletCash one = walletCashService
+                .getOne(
+                        Wrappers.lambdaQuery(WalletCash.class)
+                                .eq(WalletCash::getCompanyMember, companyMemberVO.getId())
+                );
+        Assertions.assertEquals(0, one.getCashBalance().intValue());
     }
 
     private String sign(String s) {

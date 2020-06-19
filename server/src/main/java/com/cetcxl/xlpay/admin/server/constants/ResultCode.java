@@ -7,8 +7,11 @@ public enum ResultCode implements IResultCode {
 
     COMPANY_EXIST("2201", "该企业已存在"),
     COMPANY_NOT_EXIST("2202", "该企业不存在"),
+    COMPANY_USER_EXIST("2203", "该手机号已绑定企业"),
+    COMPANY_MEMBER_EXIST("2204", "该企业成员存在"),
 
-    COMPANY_MEMBER_EXIST("2301", "该企业成员存在"),
+    STORE_USER_EXIST("2301", "该手机号已绑定商家"),
+    STORE_EXIST("2302", "该商家已经被绑定"),
     ;
 
     private String code;

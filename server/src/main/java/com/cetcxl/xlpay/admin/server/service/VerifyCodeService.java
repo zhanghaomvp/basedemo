@@ -51,7 +51,7 @@ public class VerifyCodeService {
 
     public boolean checkVerifyCode(String phone, String code) {
         String real = (String) redisTemplate.opsForValue().get(PREFIX_REDIS_KEY + phone);
-        if (!real.equals(code)) {
+        if (!code.equals(real)) {
             return false;
         }
 

@@ -2,6 +2,9 @@ package com.cetcxl.xlpay.admin.server.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.admin.server.entity.model.Company;
+import com.cetcxl.xlpay.admin.server.entity.model.CompanyUser;
+import com.cetcxl.xlpay.admin.server.entity.model.Store;
+import com.cetcxl.xlpay.admin.server.entity.model.StoreUser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,11 +19,19 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.Objects;
 
 @Component
 public class UserDetailService implements UserDetailsService {
     @Autowired
+    private CompanyUserService companyUserService;
+    @Autowired
     private CompanyService companyService;
+
+    @Autowired
+    private StoreUserService storeUserService;
+    @Autowired
+    private StoreService storeService;
 
     @Override
     public UserDetails loadUserByUsername(String loginName) throws UsernameNotFoundException {
@@ -28,17 +39,59 @@ public class UserDetailService implements UserDetailsService {
             throw new UsernameNotFoundException(loginName);
         }
 
-        Company one = companyService.getOne(
-                Wrappers.lambdaQuery(Company.class)
-                        .eq(Company::getLoginName, loginName)
-                        .ne(Company::getStatus, Company.CompanyStatusEnum.DISABLE)
+        String[] strings = StringUtils.split(loginName, ".");
+        String phone = strings[0];
+        boolean isCompany = "c".equals(strings[1]);
+        boolean isStore = "s".equals(strings[1]);
+
+        if (isCompany) {
+            return loginForCompany(phone);
+        }
+
+        if (isStore) {
+            return loginForStore(phone);
+        }
+
+        throw new UsernameNotFoundException("无法确定登录类型");
+    }
+
+    private UserInfo loginForCompany(String phone) {
+        CompanyUser companyUser = companyUserService.getOne(
+                Wrappers.lambdaQuery(CompanyUser.class)
+                        .eq(CompanyUser::getPhone, phone)
+                        .eq(CompanyUser::getStatus, CompanyUser.CompanyUserStatus.ACTIVE)
         );
 
+        if (Objects.isNull(companyUser)) {
+            throw new UsernameNotFoundException("该企业用户不存在");
+        }
+
+        Company company = companyService.getById(companyUser.getCompany());
+        if (Objects.isNull(company)) {
+            throw new UsernameNotFoundException("该企业不存在");
+        }
+
         return new UserInfo(
-                one.getName(),
-                one.getPassword(),
+                companyUser.getPhone(),
+                companyUser.getPassword(),
                 AuthorityUtils.createAuthorityList("All"),
-                one
+                company
+        );
+    }
+
+    private UserInfo loginForStore(String phone) {
+        StoreUser storeUser = storeUserService.getOne(
+                Wrappers.lambdaQuery(StoreUser.class)
+                        .eq(StoreUser::getPhone, phone)
+                        .ne(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE)
+        );
+        Store store = storeService.getById(storeUser.getStore());
+
+        return new UserInfo(
+                storeUser.getPhone(),
+                storeUser.getPassword(),
+                AuthorityUtils.createAuthorityList("All"),
+                store
         );
     }
 
@@ -46,14 +99,23 @@ public class UserDetailService implements UserDetailsService {
     @Setter
     @ToString
     public static class UserInfo extends User {
-        private Company company;
+        private Integer companyId;
+        private Integer storeId;
 
         public UserInfo(String username,
                         String password,
                         Collection<? extends GrantedAuthority> authorities,
                         Company company) {
             super(username, password, authorities);
-            this.company = company;
+            this.companyId = company.getId();
+        }
+
+        public UserInfo(String username,
+                        String password,
+                        Collection<? extends GrantedAuthority> authorities,
+                        Store store) {
+            super(username, password, authorities);
+            this.storeId = store.getId();
         }
     }
 }

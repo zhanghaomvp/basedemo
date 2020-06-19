@@ -1,9 +1,8 @@
 package com.cetcxl.xlpay.admin.server.service;
 
-
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cetcxl.xlpay.admin.server.dao.WalletMapper;
-import com.cetcxl.xlpay.admin.server.entity.model.Wallet;
+import com.cetcxl.xlpay.admin.server.dao.WalletCreditMapper;
+import com.cetcxl.xlpay.admin.server.entity.model.WalletCredit;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,9 +11,9 @@ import org.springframework.stereotype.Service;
  * </p>
  *
  * @author ${author}
- * @since 2020-06-15
+ * @since 2020-06-19
  */
 @Service
-public class WalletService extends ServiceImpl<WalletMapper, Wallet> {
+public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletCredit> {
 
 }

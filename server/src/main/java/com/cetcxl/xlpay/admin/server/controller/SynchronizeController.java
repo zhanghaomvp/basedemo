@@ -1,10 +1,10 @@
 package com.cetcxl.xlpay.admin.server.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.cetcxl.xlpay.admin.server.common.constants.PatternConstants;
 import com.cetcxl.xlpay.admin.server.common.controller.BaseController;
 import com.cetcxl.xlpay.admin.server.common.interceptor.annotation.SignApi;
 import com.cetcxl.xlpay.admin.server.common.rpc.ResBody;
-import com.cetcxl.xlpay.admin.server.entity.conveter.CompanyMemberConverter;
 import com.cetcxl.xlpay.admin.server.entity.model.Company;
 import com.cetcxl.xlpay.admin.server.entity.model.CompanyMember;
 import com.cetcxl.xlpay.admin.server.entity.vo.CompanyMemberVO;
@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.Objects;
 
@@ -41,8 +39,6 @@ public class SynchronizeController extends BaseController {
     CompanyService companyService;
     @Autowired
     CompanyMemberService companyMemberService;
-    @Autowired
-    CompanyMemberConverter companyMemberConverter;
 
     @Data
     @Builder
@@ -51,11 +47,11 @@ public class SynchronizeController extends BaseController {
     @ApiModel("企业成员添加req")
     public static class CompanyMemberAddReq {
         @ApiModelProperty(value = "统一社会信用代码", required = true)
-        @NotNull
+        @NotBlank
         String socialCreditCode;
 
         @ApiModelProperty(value = "身份证号码", required = true)
-        @NotEmpty
+        @NotBlank
         String icNo;
 
         @ApiModelProperty(value = "姓名", required = true)
@@ -63,7 +59,7 @@ public class SynchronizeController extends BaseController {
         String name;
 
         @ApiModelProperty(value = "手机号", required = true)
-        @Pattern(regexp = "^(1[3-9])\\d{9}$")
+        @Pattern(regexp = PatternConstants.PHONE)
         String phone;
 
 
@@ -83,17 +79,19 @@ public class SynchronizeController extends BaseController {
         Company company = companyService.getOne(
                 Wrappers.lambdaQuery(Company.class)
                         .eq(Company::getSocialCreditCode, req.getSocialCreditCode())
+                        .eq(Company::getStatus, Company.CompanyStatus.ACTIVE)
         );
 
         if (Objects.isNull(company)) {
             return ResBody.error(COMPANY_NOT_EXIST);
         }
 
-        CompanyMember member = companyMemberService.getOne(
-                Wrappers.lambdaQuery(CompanyMember.class)
-                        .eq(CompanyMember::getIcNo, req.getIcNo())
-                        .eq(CompanyMember::getCompany, company.getId())
-        );
+        CompanyMember member = companyMemberService
+                .getOne(
+                        Wrappers.lambdaQuery(CompanyMember.class)
+                                .eq(CompanyMember::getIcNo, req.getIcNo())
+                                .eq(CompanyMember::getCompany, company.getId())
+                );
 
         if (Objects.nonNull(member)) {
             return ResBody.error(COMPANY_MEMBER_EXIST);
@@ -106,12 +104,15 @@ public class SynchronizeController extends BaseController {
                 .phone(req.getPhone())
                 .department(req.getDepartment())
                 .employeeNo(req.getEmployeeNo())
+                .status(CompanyMember.CompanyMemberStatus.ACTIVE)
                 .build();
 
-        return ResBody.success(
-                companyMemberConverter.toCompanyMemberVO(
-                        companyMemberService.addCompanyMember(companyMember)
-                )
-        );
+        CompanyMemberVO companyMemberVO = CompanyMemberVO
+                .of(
+                        companyMemberService.addCompanyMember(companyMember),
+                        company
+                );
+
+        return ResBody.success(companyMemberVO);
     }
 }

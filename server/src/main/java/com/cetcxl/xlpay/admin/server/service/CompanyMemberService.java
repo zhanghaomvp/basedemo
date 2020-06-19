@@ -4,7 +4,8 @@ package com.cetcxl.xlpay.admin.server.service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.admin.server.dao.CompanyMemberMapper;
 import com.cetcxl.xlpay.admin.server.entity.model.CompanyMember;
-import com.cetcxl.xlpay.admin.server.entity.model.Wallet;
+import com.cetcxl.xlpay.admin.server.entity.model.WalletCash;
+import com.cetcxl.xlpay.admin.server.entity.model.WalletCredit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,20 +22,29 @@ import java.math.BigDecimal;
  */
 @Service
 public class CompanyMemberService extends ServiceImpl<CompanyMemberMapper, CompanyMember> {
-
     @Autowired
-    WalletService walletService;
+    WalletCashService walletCashService;
+    @Autowired
+    WalletCreditService walletCreditService;
 
     @Transactional
     public CompanyMember addCompanyMember(CompanyMember companyMember) {
-        Wallet wallet = Wallet.builder()
-                .cashBalance(new BigDecimal(0))
-                .creditBalance(new BigDecimal(0))
-                .build();
-        walletService.save(wallet);
-
-        companyMember.setWallet(wallet.getId());
         save(companyMember);
+
+        WalletCash walletCash = WalletCash.builder()
+                .companyMember(companyMember.getId())
+                .cashBalance(new BigDecimal(0))
+                .status(WalletCash.WalletCashStaus.ENABLE)
+                .build();
+        walletCashService.save(walletCash);
+
+        WalletCredit walletCredit = WalletCredit.builder()
+                .companyMember(companyMember.getId())
+                .creditBalance(new BigDecimal(0))
+                .creditQuota(new BigDecimal(0))
+                .status(WalletCredit.WalletCreditStaus.ENABLE)
+                .build();
+        walletCreditService.save(walletCredit);
 
         return companyMember;
     }

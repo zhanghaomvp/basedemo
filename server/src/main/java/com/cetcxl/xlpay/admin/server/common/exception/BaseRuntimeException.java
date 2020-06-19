@@ -8,6 +8,11 @@ public class BaseRuntimeException extends RuntimeException {
 
     private IResultCode resultCode;
 
+    public BaseRuntimeException(IResultCode resultCode) {
+        super();
+        this.resultCode = resultCode;
+    }
+
     public BaseRuntimeException(Throwable cause) {
         super(cause);
     }

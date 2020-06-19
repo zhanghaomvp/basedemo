@@ -9,7 +9,7 @@ import com.cetcxl.xlpay.admin.server.entity.model.Company;
  * </p>
  *
  * @author ${author}
- * @since 2020-06-10
+ * @since 2020-06-19
  */
 public interface CompanyMapper extends BaseMapper<Company> {
 

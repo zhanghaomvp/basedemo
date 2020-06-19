@@ -8,14 +8,12 @@ import java.time.LocalDateTime;
 
 @Data
 @ApiModel
-public class CompanyVO {
+public class CompanyVO extends BaseVO {
+    private Integer id;
     private String Name;
-    private String loginName;
+    private String socialCreditCode;
     private String phone;
     private String email;
-    private String socialCreditCode;
-
-
-    private Company.CompanyStatusEnum status;
+    private Company.CompanyStatus status;
     private LocalDateTime created;
 }

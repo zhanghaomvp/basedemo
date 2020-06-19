@@ -1,7 +1,7 @@
 package com.cetcxl.xlpay.admin.server.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.cetcxl.xlpay.admin.server.entity.model.Wallet;
+import com.cetcxl.xlpay.admin.server.entity.model.WalletCredit;
 
 /**
  * <p>
@@ -9,8 +9,8 @@ import com.cetcxl.xlpay.admin.server.entity.model.Wallet;
  * </p>
  *
  * @author ${author}
- * @since 2020-06-15
+ * @since 2020-06-19
  */
-public interface WalletMapper extends BaseMapper<Wallet> {
+public interface WalletCreditMapper extends BaseMapper<WalletCredit> {
 
 }

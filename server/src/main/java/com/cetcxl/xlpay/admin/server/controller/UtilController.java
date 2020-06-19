@@ -31,7 +31,7 @@ public class UtilController extends BaseController {
     @PostMapping("/util/verify-code")
     @ApiOperation("发送验证码")
     public ResBody<CompanyVO> register(
-            @Pattern(regexp = PatternConstants.REGEX_PHONE)
+            @Pattern(regexp = PatternConstants.PHONE)
             @RequestParam("phone") String phone
     ) {
         boolean flag = verifyCodeService.sendVerifyCode(phone);
