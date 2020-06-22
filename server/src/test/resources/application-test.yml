@@ -16,7 +16,7 @@ spring:
 
 mybatis-plus:
   type-enums-package: com.cetcxl.xlpay.admin.server.entity.model
-
+    
 sms:
   sms-bao:
     name: guoyubin

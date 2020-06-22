@@ -88,7 +88,7 @@ public class StoreController extends BaseController {
         String socialCreditCode;
     }
 
-    @PostMapping("/store/register")
+    @PostMapping("/stores/register")
     @ApiOperation("企业注册")
     @Transactional
     public ResBody<StoreUserVO> register(@RequestBody @Validated StoreRegisterReq req) {
@@ -128,6 +128,8 @@ public class StoreController extends BaseController {
                 .store(store.getId())
                 .status(StoreUser.StoreUserStatus.ACTIVE)
                 .build();
+        storeUserService.save(storeUser);
+
         StoreUserVO storeUserVO = StoreUserVO.of(storeUser, store);
         return ResBody.success(storeUserVO);
     }

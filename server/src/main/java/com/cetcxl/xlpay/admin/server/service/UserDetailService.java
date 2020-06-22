@@ -83,7 +83,7 @@ public class UserDetailService implements UserDetailsService {
         StoreUser storeUser = storeUserService.getOne(
                 Wrappers.lambdaQuery(StoreUser.class)
                         .eq(StoreUser::getPhone, phone)
-                        .ne(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE)
+                        .eq(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE)
         );
         Store store = storeService.getById(storeUser.getStore());
 

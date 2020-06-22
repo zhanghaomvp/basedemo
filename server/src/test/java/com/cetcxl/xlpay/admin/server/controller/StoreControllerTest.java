@@ -1,8 +1,12 @@
 package com.cetcxl.xlpay.admin.server.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.admin.server.BaseTest;
+import com.cetcxl.xlpay.admin.server.entity.model.Store;
+import com.cetcxl.xlpay.admin.server.service.StoreService;
 import com.cetcxl.xlpay.admin.server.service.VerifyCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -27,6 +31,9 @@ class StoreControllerTest extends BaseTest {
     @InjectMocks
     @Autowired
     StoreController storeController;
+
+    @Autowired
+    StoreService storeService;
 
     @Override
     @BeforeEach
@@ -57,7 +64,7 @@ class StoreControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .post("/store/register")
+                                .post("/stores/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req))
                 )
@@ -69,5 +76,13 @@ class StoreControllerTest extends BaseTest {
                                 .jsonPath("$.data.storeName").value(S_SHOP)
                 )
                 .andReturn();
+
+        Assert.assertTrue(
+                storeService.remove(
+                        Wrappers
+                                .lambdaQuery(Store.class)
+                                .eq(Store::getName, S_SHOP)
+                )
+        );
     }
 }

@@ -2,27 +2,30 @@ package com.cetcxl.xlpay.admin.server.entity.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.core.enums.IEnum;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author ${author}
  * @since 2020-06-19
  */
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="CompanyStoreRelation对象", description="")
+@ApiModel(value = "CompanyStoreRelation对象", description = "")
 public class CompanyStoreRelation implements Serializable {
 
-    private static final long serialVersionUID=1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
@@ -35,11 +38,49 @@ public class CompanyStoreRelation implements Serializable {
 
     private Integer applyReleation;
 
-    private Integer status;
+    private RelationStatus status;
 
     private LocalDateTime created;
 
     private LocalDateTime updated;
 
+    public enum Relation {
+        CASH_PAY(1),
+        CREDIT_PAY(2),
+        ;
 
+        private Integer value;
+
+        Relation(Integer value) {
+            this.value = value;
+        }
+
+        public Integer getValue() {
+            return this.value;
+        }
+
+        public boolean hasRelation(Integer value) {
+            return (this.value & value) > 0;
+        }
+
+        public Integer addRelation(Integer value) {
+            return this.value | value;
+        }
+    }
+
+    public enum RelationStatus implements IEnum<Integer> {
+        APPROVAL(0),
+        WORKING(1),
+        ;
+        private Integer status;
+
+        RelationStatus(Integer status) {
+            this.status = status;
+        }
+
+        @Override
+        public Integer getValue() {
+            return this.status;
+        }
+    }
 }

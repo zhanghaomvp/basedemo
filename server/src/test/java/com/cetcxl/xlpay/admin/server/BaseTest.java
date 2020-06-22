@@ -1,5 +1,7 @@
 package com.cetcxl.xlpay.admin.server;
 
+import com.cetcxl.xlpay.admin.server.entity.model.Company;
+import com.cetcxl.xlpay.admin.server.service.UserDetailService;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterAll;
@@ -8,6 +10,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -61,5 +66,20 @@ public class BaseTest {
 
     @AfterEach
     public void tearDown() {
+    }
+
+    public void setAuthentication(Company company) {
+        SecurityContextHolder
+                .getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                new UserDetailService.UserInfo(
+                                        S_TEMP,
+                                        S_TEMP,
+                                        AuthorityUtils.createAuthorityList("All"),
+                                        company
+                                ),
+                                null,
+                                AuthorityUtils.createAuthorityList("All")));
     }
 }
