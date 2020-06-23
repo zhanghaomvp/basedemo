@@ -5,6 +5,12 @@ INSERT INTO `company_user`(`id`, `company`, `phone`, `password`, `STATUS`)
 VALUES (1, 1, '17360026771', '$2a$10$TcTaUT0x6USCDexzR.McsegoKMs/izIvO4SbjTcr7Wq3kY6hDozhy', 1);
 
 --
+INSERT INTO `company_member`(`id`, `company`, `ic_no`, `name`, `phone`, `department`, `employee_no`, `status`)
+VALUES (1, 1, '511528198909010018', '张浩浩', '17360026771', '区块链', '13063', 1);
+INSERT INTO `wallet_cash`(`id`, `company_member`, `cash_balance`, `status`)
+VALUES (1, 1, 0.00, 1);
+
+--
 INSERT INTO `store_user`(`id`, `store`, `phone`, `password`, `STATUS`)
 VALUES (1, 2, '17360026771', '$2a$10$qS.2WYtbfKCCi0DA9eehAe/E6z7TadzFQW1nVGdtUUAjkeVsiOyAy', 1);
 INSERT INTO `store`(`id`, `name`, `contact`, `phone`, `email`, `social_credit_code`, `business_license`, `status`, `address`)

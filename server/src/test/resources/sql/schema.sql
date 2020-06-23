@@ -106,11 +106,10 @@ CREATE TABLE `wallet_credit` (
 	INDEX wallet_credit_company_member_index ( company_member )
 );
 
-
 CREATE TABLE `wallet_cash_flow` (
-	`id` VARCHAR ( 20 ) UNIQUE,
+	 id INT UNSIGNED AUTO_INCREMENT,
 	`wallet_cash` INT UNSIGNED,
-	`deal` VARCHAR ( 20 ),
+	`deal` INT UNSIGNED,
 	`amount` DECIMAL ( 13, 2 ),
 	`balance` DECIMAL ( 13, 2 ),
 	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -118,11 +117,13 @@ CREATE TABLE `wallet_cash_flow` (
 	INDEX wallet_cash_flow_wallet_cash_index ( wallet_cash )
 );
 ALTER TABLE `wallet_cash_flow` ADD INDEX wallet_cash_flow_created_index ( `created` );
+ALTER TABLE `wallet_cash_flow` ADD COLUMN `type` TINYINT NOT NULL;
+ALTER TABLE `wallet_cash_flow` ADD COLUMN `info` VARCHAR ( 200 ) NOT NULL;
 
 CREATE TABLE `wallet_credit_flow` (
-	`id` VARCHAR ( 20 ) UNIQUE,
+	 id INT UNSIGNED AUTO_INCREMENT,
 	`wallet_credit` INT UNSIGNED,
-	`deal` VARCHAR ( 20 ),
+	`deal` INT UNSIGNED,
 	`amount` DECIMAL ( 13, 2 ),
 	`balance` DECIMAL ( 13, 2 ),
 	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -130,10 +131,12 @@ CREATE TABLE `wallet_credit_flow` (
 	INDEX wallet_credit_flow_wallet_credit_index ( wallet_credit )
 );
 ALTER TABLE `wallet_credit_flow` ADD INDEX wallet_credit_flow_created_index ( `created` );
-
+ALTER TABLE `wallet_credit_flow` ADD COLUMN `type` TINYINT NOT NULL;
+ALTER TABLE `wallet_credit_flow` ADD COLUMN `info` VARCHAR ( 200 ) NOT NULL;
+ALTER TABLE `wallet_credit_flow` ADD COLUMN `quota` DECIMAL ( 13, 2 ) NOT NULL;
 
 CREATE TABLE `deal` (
-	`id` VARCHAR ( 20 ) UNIQUE,
+	 id INT UNSIGNED AUTO_INCREMENT,
 	`company` INT UNSIGNED,
 	`company_member` INT UNSIGNED,
 	`store` INT UNSIGNED,

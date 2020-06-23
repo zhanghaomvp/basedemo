@@ -4,7 +4,7 @@ import com.cetcxl.xlpay.admin.server.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.admin.server.common.rpc.ResBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.BindingResult;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,19 +20,31 @@ import java.util.Set;
 @Slf4j
 public class GlobalExceptionAdvice {
 
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResBody handle(MethodArgumentNotValidException e) {
-        BindingResult bindingResult = e.getBindingResult();
-        List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-
+    @ExceptionHandler(value = BindException.class)
+    public ResBody handle(BindException e) {
         StringBuilder stringBuilder = new StringBuilder();
+        List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
         fieldErrors.forEach(
                 fieldError -> {
                     stringBuilder.append(fieldError.getField() + ":" + fieldError.getDefaultMessage() + System.lineSeparator());
                 }
         );
 
-        List<ObjectError> globalErrors = bindingResult.getGlobalErrors();
+        return ResBody.error(HttpStatus.BAD_REQUEST.name(), stringBuilder.toString());
+    }
+
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    public ResBody handle(MethodArgumentNotValidException e) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
+        fieldErrors.forEach(
+                fieldError -> {
+                    stringBuilder.append(fieldError.getField() + ":" + fieldError.getDefaultMessage() + System.lineSeparator());
+                }
+        );
+
+        List<ObjectError> globalErrors = e.getBindingResult().getGlobalErrors();
         globalErrors.forEach(
                 objectError -> {
                     stringBuilder.append(objectError.getDefaultMessage() + System.lineSeparator());
@@ -44,10 +56,9 @@ public class GlobalExceptionAdvice {
 
     @ExceptionHandler(value = ConstraintViolationException.class)
     public ResBody handle(ConstraintViolationException e) {
-        Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
-
         StringBuilder stringBuilder = new StringBuilder();
 
+        Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
         constraintViolations.forEach(
                 constraintViolation -> {
                     stringBuilder.append(
@@ -61,5 +72,11 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(value = BaseRuntimeException.class)
     public ResBody handle(BaseRuntimeException e) {
         return ResBody.error(e.getResultCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(value = Exception.class)
+    public ResBody handle(Exception e) {
+        log.error("check system error : ", e);
+        return ResBody.error();
     }
 }

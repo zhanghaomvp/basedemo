@@ -3,6 +3,8 @@ package com.cetcxl.xlpay.admin.server.constants;
 import com.cetcxl.xlpay.admin.server.common.constants.IResultCode;
 
 public enum ResultCode implements IResultCode {
+    SYSTEM_LOGIC_ERROR("1001", "系统错误"),
+
     VERIFY_CODE_FAIL("2101", "验证码校验失败"),
 
     COMPANY_EXIST("2201", "该企业已存在"),
@@ -11,6 +13,7 @@ public enum ResultCode implements IResultCode {
     COMPANY_MEMBER_EXIST("2204", "该企业成员存在"),
     COMPANY_STORE_RELATION_EXIST("2205", "企业与该商家已绑定"),
     COMPANY_STORE_RELATION_APPROVING("2206", "企业商家授信审核中,等待商家确认"),
+    COMPANY_MEMBER_WALLET_NOT_EXIST("2207", "企业成员钱包不存在"),
 
 
     STORE_USER_EXIST("2301", "该手机号已绑定商家"),

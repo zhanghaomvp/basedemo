@@ -5,8 +5,16 @@ import com.cetcxl.xlpay.admin.server.common.rpc.ResBody;
 import com.cetcxl.xlpay.admin.server.entity.model.Company;
 import com.cetcxl.xlpay.admin.server.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.admin.server.service.CompanyStoreRelationService;
+import com.cetcxl.xlpay.admin.server.service.VerifyCodeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -14,8 +22,29 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static com.cetcxl.xlpay.admin.server.common.config.MybatisPlusConfig.PageReq.PARAM_PAGE_NO;
 import static com.cetcxl.xlpay.admin.server.common.config.MybatisPlusConfig.PageReq.PARAM_PAGE_SIZE;
+import static org.mockito.ArgumentMatchers.eq;
 
 class CompanyControllerTest extends BaseTest {
+
+    @Autowired
+    ObjectMapper mapper;
+
+    @Mock
+    VerifyCodeService verifyCodeService;
+
+    @InjectMocks
+    @Autowired
+    CompanyController companyController;
+
+    @Override
+    @BeforeEach
+    public void setUp() {
+        super.setUp();
+
+        companyController = (CompanyController) AopProxyUtils.getSingletonTarget(companyController);
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Autowired
     CompanyStoreRelationService companyStoreRelationService;
 
@@ -88,6 +117,34 @@ class CompanyControllerTest extends BaseTest {
                         MockMvcResultMatchers
                                 .jsonPath("$.data.records[0].name").value("shop2")
                 );
+    }
+
+    @Test
+    void register_success() throws Exception {
+        Mockito.doReturn(true)
+                .when(verifyCodeService)
+                .checkVerifyCode(eq(S_PHONE), eq(S_VERIFY_CODE));
+
+        CompanyController.CompanyRegisterReq req = CompanyController.CompanyRegisterReq.builder()
+                .phone(S_PHONE)
+                .password(S_TEMP)
+                .verifyCode(S_VERIFY_CODE)
+                .socialCreditCode(S_TEMP)
+                .name(S_CETCXL)
+                .build();
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/companys/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(req))
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        ).andExpect(
+                MockMvcResultMatchers
+                        .jsonPath("$.data.companyName").value(S_CETCXL)
+        ).andReturn();
+
     }
 
     @Test

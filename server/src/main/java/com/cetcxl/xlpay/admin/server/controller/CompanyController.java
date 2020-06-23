@@ -21,7 +21,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,6 +63,9 @@ public class CompanyController extends BaseController {
 
     @Data
     @ApiModel("用户注册请求体")
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class CompanyRegisterReq {
 
         @ApiModelProperty(value = "手机号", required = true)
