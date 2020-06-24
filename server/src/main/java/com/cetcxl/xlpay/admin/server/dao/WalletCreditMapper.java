@@ -19,7 +19,8 @@ import java.math.BigDecimal;
 public interface WalletCreditMapper extends BaseMapper<WalletCredit> {
     @Data
     class WalletCreditDTO {
-        private String walletId;
+        private Integer walletId;
+        private Integer companyMemberId;
         private String name;
         private String icNo;
         private String department;

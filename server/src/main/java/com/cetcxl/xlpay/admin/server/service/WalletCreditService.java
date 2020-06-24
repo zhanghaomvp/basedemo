@@ -2,6 +2,7 @@ package com.cetcxl.xlpay.admin.server.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cetcxl.xlpay.admin.server.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.admin.server.dao.WalletCreditMapper;
 import com.cetcxl.xlpay.admin.server.entity.model.Deal;
 import com.cetcxl.xlpay.admin.server.entity.model.WalletCredit;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Objects;
+
+import static com.cetcxl.xlpay.admin.server.constants.ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST;
 
 /**
  * <p>
@@ -26,7 +30,12 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
     WalletCreditFlowService walletCreditFlowService;
 
     @Transactional
-    public void process(Deal deal, WalletCredit walletCredit) {
+    public void process(Deal deal, Integer walletId) {
+        WalletCredit walletCredit = getById(walletId);
+        if (Objects.isNull(walletCredit)) {
+            throw new BaseRuntimeException(COMPANY_MEMBER_WALLET_NOT_EXIST);
+        }
+
         if (deal.getType() == Deal.DealType.ADMIN_QUOTA) {
             adjustQuota(deal, walletCredit);
         }
@@ -36,6 +45,7 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
         WalletCreditFlow creditFlow = WalletCreditFlow.builder()
                 .walletCredit(walletCredit.getId())
                 .deal(deal.getId())
+                .info("")
                 .build();
 
         BigDecimal subtract = deal.getAmount()

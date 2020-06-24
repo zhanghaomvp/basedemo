@@ -22,6 +22,7 @@ public class GlobalExceptionAdvice {
 
     @ExceptionHandler(value = BindException.class)
     public ResBody handle(BindException e) {
+        log.error("check system error : ", e);
         StringBuilder stringBuilder = new StringBuilder();
         List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
         fieldErrors.forEach(
@@ -35,6 +36,7 @@ public class GlobalExceptionAdvice {
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResBody handle(MethodArgumentNotValidException e) {
+        log.error("check system error : ", e);
         StringBuilder stringBuilder = new StringBuilder();
 
         List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
@@ -56,6 +58,7 @@ public class GlobalExceptionAdvice {
 
     @ExceptionHandler(value = ConstraintViolationException.class)
     public ResBody handle(ConstraintViolationException e) {
+        log.error("check system error : ", e);
         StringBuilder stringBuilder = new StringBuilder();
 
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
@@ -71,6 +74,7 @@ public class GlobalExceptionAdvice {
 
     @ExceptionHandler(value = BaseRuntimeException.class)
     public ResBody handle(BaseRuntimeException e) {
+        log.error("check system error : ", e);
         return ResBody.error(e.getResultCode(), e.getMessage());
     }
 

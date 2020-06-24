@@ -19,7 +19,8 @@ import java.math.BigDecimal;
 public interface WalletCashMapper extends BaseMapper<WalletCash> {
     @Data
     class WalletCashDTO {
-        private String walletId;
+        private Integer walletId;
+        private Integer companyMemberId;
         private String name;
         private String icNo;
         private String department;
