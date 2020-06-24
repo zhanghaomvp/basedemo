@@ -1,9 +1,10 @@
 package com.cetcxl.xlpay.admin.server.controller;
-
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.admin.server.BaseTest;
 import com.cetcxl.xlpay.admin.server.common.rpc.ResBody;
 import com.cetcxl.xlpay.admin.server.entity.model.Company;
 import com.cetcxl.xlpay.admin.server.entity.model.CompanyStoreRelation;
+import com.cetcxl.xlpay.admin.server.service.CompanyService;
 import com.cetcxl.xlpay.admin.server.service.CompanyStoreRelationService;
 import com.cetcxl.xlpay.admin.server.service.VerifyCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,10 @@ class CompanyControllerTest extends BaseTest {
 
     @Autowired
     CompanyStoreRelationService companyStoreRelationService;
+
+    @Autowired
+    CompanyService companyService;
+
 
     @Test
     void detail_success() throws Exception {
@@ -145,6 +150,12 @@ class CompanyControllerTest extends BaseTest {
                         .jsonPath("$.data.companyName").value(S_CETCXL)
         ).andReturn();
 
+        Assert.assertTrue(
+                companyService.remove(
+                        Wrappers.lambdaQuery(Company.class)
+                                .eq(Company::getPhone, S_PHONE)
+                )
+        );
     }
 
     @Test

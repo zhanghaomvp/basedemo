@@ -3,7 +3,9 @@ package com.cetcxl.xlpay.admin.server.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.admin.server.BaseTest;
 import com.cetcxl.xlpay.admin.server.entity.model.Store;
+import com.cetcxl.xlpay.admin.server.entity.model.StoreUser;
 import com.cetcxl.xlpay.admin.server.service.StoreService;
+import com.cetcxl.xlpay.admin.server.service.StoreUserService;
 import com.cetcxl.xlpay.admin.server.service.VerifyCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
@@ -34,6 +36,9 @@ class StoreControllerTest extends BaseTest {
 
     @Autowired
     StoreService storeService;
+
+    @Autowired
+    StoreUserService storeUserService;
 
     @Override
     @BeforeEach
@@ -83,6 +88,20 @@ class StoreControllerTest extends BaseTest {
                                 .lambdaQuery(Store.class)
                                 .eq(Store::getName, S_SHOP)
                 )
+
         );
+
+        Assert.assertTrue(
+                storeUserService.remove(
+                        Wrappers
+                                .lambdaQuery(StoreUser.class)
+                                .eq(StoreUser::getPhone, S_PHONE)
+                )
+
+        );
+
     }
 }
+
+
+

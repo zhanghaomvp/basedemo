@@ -9,11 +9,14 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/xinyufu?serverTimezone=UTC&autoReconnect=true&failOverReadOnly=false&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: admin
+    password: root
     initialization-mode: never
 
 mybatis-plus:
   type-enums-package: com.cetcxl.xlpay.admin.server.entity.model
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 sms:
   sms-bao:
