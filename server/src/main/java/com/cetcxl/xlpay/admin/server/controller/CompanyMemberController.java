@@ -27,11 +27,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -77,6 +80,29 @@ public class CompanyMemberController extends BaseController {
                 req.getName());
 
         return ResBody.success(iPage);
+    }
+
+    @GetMapping("/companys/{companyId}/members/wallet/cash/excel")
+    @ApiOperation("企业成员余额账户明细导出")
+    public void listWalletCashExport(@Validated ListWalletReq req, HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(
+                response,
+                "余额管理明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+        );
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        WalletCashService.WalletCashExportRow.class
+                )
+                .sheet("sheet")
+                .doWrite(
+                        walletCashService.listWalletCashExport(
+                                ContextUtil.getUserInfo().getCompanyId(),
+                                req.getDepartment(),
+                                req.getName()
+                        )
+                );
     }
 
     @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{id}/status")
@@ -154,7 +180,7 @@ public class CompanyMemberController extends BaseController {
         List<DealService.DealCashImportRow> failRows;
     }
 
-    @PostMapping("/companys/{companyId}/members/wallet/cashs/balance/excel")
+    @PostMapping("/companys/{companyId}/members/wallet/cashs/balance/export")
     @ApiOperation("企业成员余额批量导入")
     public ResBody importUpdateWalletCashAmount(@RequestParam("file") MultipartFile file) throws IOException {
         DealService.DealCashImportListener listener = new DealService.DealCashImportListener(dealService);
@@ -178,6 +204,20 @@ public class CompanyMemberController extends BaseController {
                 );
     }
 
+    @GetMapping("/companys/{companyId}/members/wallet/cashs/balance/excel/template")
+    @ApiOperation("企业成员余额批量导入模板下载")
+    public void importUpdateWalletCashAmountTemplate(HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(response, "余额管理批量导入模板");
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        DealService.DealCashImportRow.class
+                )
+                .sheet("模板")
+                .doWrite(DealService.DealCashImportRow.data());
+    }
+
     /*
      *******************余额账户相关 end**********************
      */
@@ -196,6 +236,30 @@ public class CompanyMemberController extends BaseController {
         );
 
         return ResBody.success(iPage);
+    }
+
+    @GetMapping("/companys/{companyId}/members/wallet/credit/export")
+    @ApiOperation("企业成员信用账户明细导出")
+    public void listWalletCreditExport(@Validated ListWalletReq req, HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(
+                response,
+                "信用管理明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+        );
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        WalletCreditService.WalletCreditExportRow.class
+                )
+                .sheet("sheet")
+                .doWrite(
+                        walletCreditService.listWalletCreditExport(
+                                ContextUtil.getUserInfo().getCompanyId(),
+                                req.getDepartment(),
+                                req.getName()
+                        )
+                );
+        
     }
 
     @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{id}/status")
@@ -263,5 +327,4 @@ public class CompanyMemberController extends BaseController {
     /*
      **********************信用账户相关 end**********************
      */
-
 }

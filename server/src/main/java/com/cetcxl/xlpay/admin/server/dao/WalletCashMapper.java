@@ -7,6 +7,7 @@ import com.cetcxl.xlpay.admin.server.entity.model.WalletCash;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * <p>
@@ -26,8 +27,11 @@ public interface WalletCashMapper extends BaseMapper<WalletCash> {
         private String department;
         private String employeeNo;
         private BigDecimal cashBalance;
-        private Integer status;
+        private WalletCash.WalletCashStaus status;
     }
 
     IPage<WalletCashDTO> listWalletCash(Page page, Integer companyId, String department, String name);
+
+    List<WalletCashDTO> listWalletCash(Integer companyId, String department, String name);
+
 }

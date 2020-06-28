@@ -1,5 +1,9 @@
 package com.cetcxl.xlpay.admin.server.service;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.write.style.ColumnWidth;
+import com.alibaba.excel.annotation.write.style.HeadFontStyle;
+import com.alibaba.excel.annotation.write.style.HeadStyle;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.admin.server.common.exception.BaseRuntimeException;
@@ -7,12 +11,17 @@ import com.cetcxl.xlpay.admin.server.dao.WalletCreditMapper;
 import com.cetcxl.xlpay.admin.server.entity.model.Deal;
 import com.cetcxl.xlpay.admin.server.entity.model.WalletCredit;
 import com.cetcxl.xlpay.admin.server.entity.model.WalletCreditFlow;
+import lombok.Builder;
+import lombok.Data;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.cetcxl.xlpay.admin.server.constants.ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST;
 
@@ -76,4 +85,51 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
         );
     }
 
+    @Data
+    @Builder
+    @HeadStyle(fillPatternType = FillPatternType.SOLID_FOREGROUND, fillForegroundColor = 10)
+    @HeadFontStyle(fontHeightInPoints = 15)
+    public static class WalletCreditExportRow {
+        @ExcelProperty("姓名")
+        String name;
+        @ExcelProperty("身份证号")
+        @ColumnWidth(50)
+        String icNo;
+        @ExcelProperty("工号")
+        String employeeNo;
+        @ExcelProperty("部门")
+        String department;
+        @ExcelProperty("最大额度")
+        String quota;
+        @ExcelProperty("待结算额度")
+        String usedQuota;
+        @ExcelProperty("剩余额度")
+        String balance;
+        @ExcelProperty("账户状态")
+        String status;
+    }
+
+    public List<WalletCreditExportRow> listWalletCreditExport(Integer companyId, String department, String name) {
+        List<WalletCreditMapper.WalletCreditDTO> walletCashDTOS = baseMapper.listWalletCredit(
+                companyId,
+                department,
+                name
+        );
+
+        return walletCashDTOS.stream()
+                .map(
+                        dto ->
+                                WalletCreditExportRow.builder()
+                                        .name(dto.getName())
+                                        .icNo(dto.getIcNo())
+                                        .employeeNo(dto.getEmployeeNo())
+                                        .department(dto.getDepartment())
+                                        .status(dto.getStatus().getDesc())
+                                        .quota(dto.getCreditQuota().toString())
+                                        .balance(dto.getCreditBalance().toString())
+                                        .usedQuota(dto.getCreditQuota().subtract(dto.getCreditBalance()).toString())
+                                        .build()
+                )
+                .collect(Collectors.toList());
+    }
 }

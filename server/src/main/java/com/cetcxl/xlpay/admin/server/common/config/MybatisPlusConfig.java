@@ -8,8 +8,6 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.validation.constraints.NotNull;
-
 @Configuration
 @MapperScan({"com.cetcxl.xlpay.admin.server.dao"})
 public class MybatisPlusConfig {
@@ -34,9 +32,7 @@ public class MybatisPlusConfig {
         public static final String PARAM_PAGE_NO = "pageNo";
         public static final String PARAM_PAGE_SIZE = "pageSize";
 
-        @NotNull
         Integer pageNo;
-        @NotNull
         Integer pageSize;
     }
 }

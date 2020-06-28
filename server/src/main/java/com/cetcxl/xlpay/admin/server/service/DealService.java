@@ -1,6 +1,9 @@
 package com.cetcxl.xlpay.admin.server.service;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.write.style.ColumnWidth;
+import com.alibaba.excel.annotation.write.style.HeadFontStyle;
+import com.alibaba.excel.annotation.write.style.HeadStyle;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -16,6 +19,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,15 +86,40 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     }
 
     @Data
+    @Builder
+    @HeadStyle(fillPatternType = FillPatternType.SOLID_FOREGROUND, fillForegroundColor = 10)
+    @HeadFontStyle(fontHeightInPoints = 15)
     public static class DealCashImportRow {
         @ExcelProperty("姓名")
         String name;
         @ExcelProperty("身份证号")
+        @ColumnWidth(50)
         String icNo;
-        @ExcelProperty("变更类型")
+        @ExcelProperty("变更类型(充值/扣减)")
+        @ColumnWidth(30)
         String type;
         @ExcelProperty("金额")
         String amount;
+
+        public static List<DealCashImportRow> data() {
+            return Lists
+                    .newArrayList(
+                            DealCashImportRow
+                                    .builder()
+                                    .name("张三")
+                                    .icNo("511528209909010018")
+                                    .type("充值")
+                                    .amount("100")
+                                    .build(),
+                            DealCashImportRow
+                                    .builder()
+                                    .name("李四")
+                                    .icNo("511528209909010020")
+                                    .type("扣减")
+                                    .amount("50")
+                                    .build()
+                    );
+        }
     }
 
     @Slf4j

@@ -42,18 +42,24 @@ public class WalletCash implements Serializable {
     private LocalDateTime updated;
 
     public enum WalletCashStaus implements IEnum<Integer> {
-        DISABLE(0),
-        ENABLE(1),
+        DISABLE(0, "冻结"),
+        ENABLE(1, "正常"),
         ;
         private Integer status;
+        private String desc;
 
-        WalletCashStaus(Integer status) {
+        WalletCashStaus(Integer status, String desc) {
             this.status = status;
+            this.desc = desc;
         }
 
         @Override
         public Integer getValue() {
             return this.status;
+        }
+
+        public String getDesc() {
+            return desc;
         }
     }
 

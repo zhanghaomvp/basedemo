@@ -7,6 +7,7 @@ import com.cetcxl.xlpay.admin.server.entity.model.WalletCredit;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * <p>
@@ -28,9 +29,10 @@ public interface WalletCreditMapper extends BaseMapper<WalletCredit> {
 
         private BigDecimal creditBalance;
         private BigDecimal creditQuota;
-        private Integer status;
+        private WalletCredit.WalletCreditStaus status;
     }
 
     IPage<WalletCreditDTO> listWalletCredit(Page page, Integer companyId, String department, String name);
 
+    List<WalletCreditDTO> listWalletCredit(Integer companyId, String department, String name);
 }
