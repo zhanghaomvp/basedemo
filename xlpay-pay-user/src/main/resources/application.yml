@@ -1,0 +1,36 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /xlpay-pay-user
+
+spring:
+  redis:
+    host: 127.0.0.1
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/xinyufu?serverTimezone=UTC&autoReconnect=true&failOverReadOnly=false&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: admin
+    initialization-mode: never
+
+mybatis-plus:
+  type-enums-package: com.cetcxl.xlpay.common.entity.model,com.cetcxl.xlpay.payuser.entity.model
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+sms:
+  sms-bao:
+    name: guoyubin
+    password: guoyubin
+    url: http://api.smsbao.com/sms
+    sign: 【年轮小程序】
+
+xstor:
+  appId: 190710000110001
+  appKey: 08e83f4f43514e319df205752610db0c
+  sk: 8924a7bc50a3e6241f6cfb1af8b1679d817fd10b7d61bb82acf4efe03732c5df
+  pk: 04efdefee697d524390aad568c4f490baac12049a26ac67d2a0c9fc8f72927984d646029fecac61243567a6a9da8cc18cd48d7567f20570a8110a2b0cda77f1742
+
+http:
+  sign-api:
+    private-key: 123
+    public-key-map: "{test: 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtotQMHikmnsVotokVvnyZMtI6A3lgC1rnzW+V6SWnNUMQ1MZe8RzuoNhEN4q75jN26K2S0QC5LgdPbTMZj36c3s7Yx/DsL1IewlzjszUfcF7frR+X7dDtAP+el3DHfGOHcDQoV4XcHPH7jVnrwb1/Q6sO6BCuwaEKxn9xILCcBQIDAQAB'}"

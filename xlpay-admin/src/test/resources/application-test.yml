@@ -1,0 +1,31 @@
+server:
+  servlet:
+    context-path: /xlpay-admin
+
+spring:
+  redis:
+    host: 127.0.0.1
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;
+    username: root
+    password: admin
+    initialization-mode: always
+    driver-class-name: org.h2.Driver
+    schema: classpath:sql/schema.sql
+    data: classpath:sql/data.sql
+
+mybatis-plus:
+  type-enums-package: com.cetcxl.xlpay.common.entity.model
+
+sms:
+  sms-bao:
+    name: guoyubin
+    password: guoyubin
+    url: http://127.0.0.1:8089/sms
+    sign: 【年轮小程序】
+
+http:
+  sign-api:
+    public-key-map: "{test: 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtotQMHikmnsVotokVvnyZMtI6A3lgC1rnzW+V6SWnNUMQ1MZe8RzuoNhEN4q75jN26K2S0QC5LgdPbTMZj36c3s7Yx/DsL1IewlzjszUfcF7frR+X7dDtAP+el3DHfGOHcDQoV4XcHPH7jVnrwb1/Q6sO6BCuwaEKxn9xILCcBQIDAQAB'}"
+  trust-link-data:
+    url: http://127.0.0.1:8089/pay-trustlink-data

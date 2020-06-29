@@ -12,11 +12,13 @@
     </parent>
 
     <groupId>com.cetcxl</groupId>
-    <artifactId>xlpay-admin</artifactId>
+    <artifactId>xlpay</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>server</module>
+        <module>xlpay-admin</module>
+        <module>xlpay-core</module>
+        <module>xlpay-pay-user</module>
     </modules>
 
     <properties>

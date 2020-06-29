@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cetcxl.xlpay.admin.dao.WalletCreditMapper">
+
+    <select id="listWalletCredit" resultType="com.cetcxl.xlpay.admin.dao.WalletCreditMapper$WalletCreditDTO">
+        SELECT
+        wc.id AS wallet_id,
+        wc.credit_balance,
+        wc.credit_quota,
+        wc.`status`,
+        t.*
+        FROM
+        wallet_credit wc,
+        (
+        SELECT
+        cm.id AS company_member_id,
+        cm.`name`,
+        cm.ic_no,
+        cm.department,
+        cm.employee_no
+        FROM
+        company c,
+        company_member cm
+        WHERE
+        c.id = #{companyId}
+        AND cm.company = c.id
+        <if test="department != null">
+            AND cm.department = #{department}
+        </if>
+        <if test="name != null">
+            AND cm.`name` = #{name}
+        </if>
+        ) t
+        WHERE
+        wc.company_member = t.company_member_id
+        ORDER BY
+        wallet_id DESC
+    </select>
+
+</mapper>
