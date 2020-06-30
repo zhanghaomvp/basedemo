@@ -7,6 +7,7 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.common.service.XstoreService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -28,11 +29,13 @@ public class UtilController extends BaseController {
     @Autowired
     private XstoreService xstoreService;
 
-    @PostMapping("/util/verify-code")
+    @PostMapping(value = "/util/verify-code", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiOperation("发送验证码")
+    @ApiImplicitParam(name = "phone", paramType = "form")
     public ResBody<CompanyVO> register(
             @Pattern(regexp = PatternConstants.PHONE)
-            @RequestParam("phone") String phone
+            @RequestParam("phone")
+                    String phone
     ) {
         boolean flag = verifyCodeService.sendVerifyCode(phone);
         if (!flag) {

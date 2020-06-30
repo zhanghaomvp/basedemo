@@ -49,4 +49,18 @@ public class TrustlinkDataRpcService {
         }
         return Optional.ofNullable(responseEntity.getBody());
     }
+
+    public void syncCompanyEmployee(String socialCreditCode) {
+        ResponseEntity<String> responseEntity = restTemplate
+                .getForEntity(
+                        url + "/company/syncCompanyEmployee?creditId={socialCreditCode}",
+                        String.class,
+                        socialCreditCode
+                );
+
+        if (responseEntity.getStatusCode().isError()) {
+            log.error("TrustlinkDataRpcService syncCompanyEmployee error : {} ", responseEntity);
+            throw new BaseRuntimeException(RPC_ERROR);
+        }
+    }
 }

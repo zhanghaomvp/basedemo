@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.enums.IEnum;
+import com.cetcxl.xlpay.common.constants.IBitEnum;
 import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Data;
@@ -66,25 +67,18 @@ public class Company implements Serializable {
         }
     }
 
-    public enum CompanyFuntion {
+    public enum CompanyFuntion implements IBitEnum {
         MEMBER_PAY(1),
         ;
-        private Integer value;
+        private Integer bigPos;
 
-        CompanyFuntion(Integer value) {
-            this.value = value;
+        CompanyFuntion(Integer bigPos) {
+            this.bigPos = bigPos;
         }
 
-        public Integer getValue() {
-            return this.value;
-        }
-
-        public boolean isOpen(Integer functions) {
-            return (this.value & functions) > 0;
-        }
-
-        public Integer addFuntion(Integer functions) {
-            return this.value | functions;
+        @Override
+        public int getBitPos() {
+            return this.bigPos;
         }
     }
 

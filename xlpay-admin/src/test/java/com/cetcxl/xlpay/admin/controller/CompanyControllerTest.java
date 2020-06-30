@@ -1,7 +1,7 @@
 package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.cetcxl.xlpay.admin.BaseTest;
+import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
@@ -188,6 +188,7 @@ class CompanyControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/companys/{companyId}/stores/{storeId}/company-store-relation", 1, 2)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("canCashPay", "true")
                                 .param("canCreditPay", "true")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -217,6 +218,7 @@ class CompanyControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .patch("/companys/{companyId}/stores/{storeId}/company-store-relation/{id}", 1, 1, 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("canCashPay", "true")
                                 .param("canCreditPay", "true")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)

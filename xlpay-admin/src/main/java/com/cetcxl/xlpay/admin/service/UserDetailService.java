@@ -99,15 +99,15 @@ public class UserDetailService implements UserDetailsService {
     @Setter
     @ToString
     public static class UserInfo extends User {
-        private Integer companyId;
-        private Integer storeId;
+        private Company company;
+        private Store store;
 
         public UserInfo(String username,
                         String password,
                         Collection<? extends GrantedAuthority> authorities,
                         Company company) {
             super(username, password, authorities);
-            this.companyId = company.getId();
+            this.company = company;
         }
 
         public UserInfo(String username,
@@ -115,7 +115,7 @@ public class UserDetailService implements UserDetailsService {
                         Collection<? extends GrantedAuthority> authorities,
                         Store store) {
             super(username, password, authorities);
-            this.storeId = store.getId();
+            this.store = store;
         }
     }
 }

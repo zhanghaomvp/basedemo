@@ -1,6 +1,6 @@
 package com.cetcxl.xlpay.admin.rpc;
 
-import com.cetcxl.xlpay.admin.BaseTest;
+import com.cetcxl.xlpay.BaseTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -43,5 +43,22 @@ class TrustlinkDataRpcServiceTest extends BaseTest {
 
         assertTrue(companyInfo.isPresent());
         assertEquals(S_CETCXL, companyInfo.get().getOrganizationName());
+    }
+
+    @Test
+    void syncCompanyEmployee() {
+        WireMock.stubFor(
+                WireMock
+                        .get(
+                                WireMock
+                                        .urlPathEqualTo("/pay-trustlink-data/company/syncCompanyEmployee")
+                        )
+                        .willReturn(
+                                WireMock
+                                        .ok()
+                        )
+        );
+
+        trustlinkDataRpcService.syncCompanyEmployee(S_TEMP);
     }
 }

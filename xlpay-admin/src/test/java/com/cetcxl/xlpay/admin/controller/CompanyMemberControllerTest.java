@@ -1,7 +1,7 @@
 package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.cetcxl.xlpay.admin.BaseTest;
+import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.cetcxl.xlpay.common.entity.model.WalletCredit;
@@ -90,6 +90,7 @@ public class CompanyMemberControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .patch("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{id}/status", 1, 1, 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("status", WalletCash.WalletCashStaus.DISABLE.name())
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
@@ -117,6 +118,7 @@ public class CompanyMemberControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{id}/balance", 1, 1, 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("amount", "125")
                                 .param("dealType", "ADMIN_RECHARGE")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -190,6 +192,7 @@ public class CompanyMemberControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/companys/{companyId}/members/1/wallet/credit/{id}/quota", 1, 1, 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("quota", "200")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
@@ -215,6 +218,7 @@ public class CompanyMemberControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/companys/{companyId}/members/wallet/cashs/balance", 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("walletIds[]", "1", "2")
                                 .param("companyMemberIds[]", "1", "2")
                                 .param("dealType", "ADMIN_RECHARGE")
@@ -267,6 +271,7 @@ public class CompanyMemberControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/companys/{companyId}/members/wallet/credits/balance", 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param("walletIds[]", "1", "2")
                                 .param("companyMemberIds[]", "1", "2")
                                 .param("quota","200")

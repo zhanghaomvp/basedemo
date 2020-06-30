@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -27,6 +28,7 @@ import javax.validation.constraints.Pattern;
 import java.util.Objects;
 
 import static com.cetcxl.xlpay.payuser.constants.ResultCode.PAY_USER_NO_PASSWORD_PAY_IS_EXIST;
+import static com.cetcxl.xlpay.payuser.constants.ResultCode.PAY_USER_NO_PASSWORD_PAY_NO_EXIST;
 
 @Validated
 @RestController
@@ -77,7 +79,7 @@ public class PayUserController extends BaseController {
         return ResBody.success();
     }
 
-    @PatchMapping("/pay-user/{id}/password")
+    @PatchMapping(value = "/pay-user/{id}/password", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiOperation("钱包支付密码修改")
     public ResBody updatePayPassword(@PathVariable Integer id,
                                      @RequestParam @Pattern(regexp = PatternConstants.PAY_PASSWORD) String oldPassword,
@@ -97,25 +99,31 @@ public class PayUserController extends BaseController {
         return ResBody.success();
     }
 
-    @PatchMapping("/pay-user/{id}/secret-free-payment")
+    @PatchMapping(value = "/pay-user/{id}/secret-free-payment", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiOperation("小额免密支付功能")
     public ResBody noPayPassword(@PathVariable Integer id,
-                                 @RequestParam @NotNull Boolean payUserFuntion) {
+                                 @RequestParam @NotNull Boolean isOpen) {
 
         PayUser payUser = payUserService.getById(id);
-        if (payUserFuntion == PayUser.PayUserFuntion.NO_PASSWORD_PAY.isOpen(payUser.getFunctions())
-                || payUserFuntion == true) {
+        Integer functions = payUser.getFunctions();
 
-            return ResBody.error(PAY_USER_NO_PASSWORD_PAY_IS_EXIST);
+        if (isOpen) {
+            if (PayUser.PayUserFuntion.NO_PASSWORD_PAY.isOpen(functions)) {
+                return ResBody.error(PAY_USER_NO_PASSWORD_PAY_IS_EXIST);
+            }
+            functions = PayUser.PayUserFuntion.NO_PASSWORD_PAY.open(functions);
         } else {
-            payUserService.update(
-                    Wrappers.lambdaUpdate(PayUser.class)
-                            .eq(PayUser::getId, id)
-                            .set(PayUser::getFunctions, PayUser.PayUserFuntion.NO_PASSWORD_PAY.addFuntion(0))
-            );
-
+            if (!PayUser.PayUserFuntion.NO_PASSWORD_PAY.isOpen(functions)) {
+                return ResBody.error(PAY_USER_NO_PASSWORD_PAY_NO_EXIST);
+            }
+            functions = PayUser.PayUserFuntion.NO_PASSWORD_PAY.close(functions);
         }
 
+        payUserService.update(
+                Wrappers.lambdaUpdate(PayUser.class)
+                        .eq(PayUser::getId, id)
+                        .set(PayUser::getFunctions, functions)
+        );
         return ResBody.success();
     }
 }

@@ -1,7 +1,11 @@
 package com.cetcxl.xlpay.admin.config;
 
+import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
+import com.cetcxl.xlpay.admin.entity.vo.StoreVO;
+import com.cetcxl.xlpay.admin.service.UserDetailService;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +22,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Objects;
 
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.AUTHENTICATION_ERROR;
+
+@Slf4j
 @EnableWebSecurity
 @Configuration
 @Order(1)
@@ -61,11 +69,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin()
                 .successHandler(
                         (req, res, auth) -> {
-                            resolveResponse(res, ResBody.success());
+
+                            UserDetailService.UserInfo userInfo = (UserDetailService.UserInfo) auth.getPrincipal();
+
+                            if (Objects.nonNull(userInfo.getCompany())) {
+                                resolveResponse(res, ResBody.success(CompanyVO.of(userInfo.getCompany(), CompanyVO.class)));
+                            }
+
+                            if (Objects.nonNull(userInfo.getStore())) {
+                                resolveResponse(res, ResBody.success(StoreVO.of(userInfo.getStore(), StoreVO.class)));
+                            }
                         }
                 )
                 .failureHandler(
-                        (req, res, e) -> resolveResponse(res, ResBody.error("", e.getMessage()))
+                        (req, res, e) -> resolveResponse(res, ResBody.error(e.getMessage()))
                 )
                 .permitAll()
                 .and()
@@ -78,14 +95,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 )
                 .permitAll()
                 .and()
-                .sessionManagement().maximumSessions(1).sessionRegistry(sessionRegistry).maxSessionsPreventsLogin(true)
+                .exceptionHandling()
+                .authenticationEntryPoint(
+                        (req, res, e) -> {
+                            log.error("authenticationEntryPoint error : {} ", e);
+                            resolveResponse(res, ResBody.error(AUTHENTICATION_ERROR));
+                        }
+                )
+                .and()
+                .sessionManagement().maximumSessions(1).sessionRegistry(sessionRegistry)
                 .and()
                 .and()
         ;
     }
 
     private void resolveResponse(HttpServletResponse res, Object o) throws IOException {
-        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         PrintWriter out = res.getWriter();
         out.write(mapper.writeValueAsString(o));
         out.flush();

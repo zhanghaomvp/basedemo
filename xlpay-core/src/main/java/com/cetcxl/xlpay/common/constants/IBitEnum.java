@@ -1,0 +1,17 @@
+package com.cetcxl.xlpay.common.constants;
+
+public interface IBitEnum {
+    int getBitPos();
+
+    default boolean isOpen(Integer bitInt) {
+        return ((1 << (getBitPos() - 1)) & bitInt) > 0;
+    }
+
+    default Integer open(Integer bitInt) {
+        return (1 << (getBitPos() - 1)) | bitInt;
+    }
+
+    default Integer close(Integer bitInt) {
+        return (1 << (getBitPos() - 1)) ^ Integer.MAX_VALUE & bitInt;
+    }
+}

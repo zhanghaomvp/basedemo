@@ -1,4 +1,4 @@
-package com.cetcxl.xlpay.admin;
+package com.cetcxl.xlpay;
 
 import com.cetcxl.xlpay.XlpayAdminApplication;
 import com.cetcxl.xlpay.common.entity.model.Company;

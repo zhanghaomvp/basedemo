@@ -1,6 +1,6 @@
 package com.cetcxl.xlpay.common.service;
 
-import com.cetcxl.xlpay.admin.BaseTest;
+import com.cetcxl.xlpay.BaseTest;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

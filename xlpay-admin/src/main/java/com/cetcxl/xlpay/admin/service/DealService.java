@@ -8,12 +8,12 @@ import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.cetcxl.xlpay.admin.dao.DealMapper;
-import com.cetcxl.xlpay.common.entity.model.CompanyMember;
-import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.admin.exception.DealCashImportException;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
+import com.cetcxl.xlpay.common.entity.model.CompanyMember;
+import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
@@ -181,7 +181,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
         try {
             Deal deal = Deal.builder()
-                    .company(ContextUtil.getUserInfo().getCompanyId())
+                    .company(ContextUtil.getUserInfo().getCompany().getId())
                     .companyMember(companyMember.getId())
                     .amount(new BigDecimal(row.getAmount()))
                     .type(dealType)

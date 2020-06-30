@@ -5,9 +5,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.constants.ResultCode;
 import com.cetcxl.xlpay.admin.dao.StoreMapper;
-import com.cetcxl.xlpay.common.entity.model.Company;
-import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
-import com.cetcxl.xlpay.common.entity.model.CompanyUser;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyStoreRelationVO;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyUserVO;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
@@ -17,6 +14,10 @@ import com.cetcxl.xlpay.admin.util.ContextUtil;
 import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
+import com.cetcxl.xlpay.common.entity.model.Company;
+import com.cetcxl.xlpay.common.entity.model.CompanyMember;
+import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
+import com.cetcxl.xlpay.common.entity.model.CompanyUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
@@ -24,8 +25,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,6 +57,8 @@ public class CompanyController extends BaseController {
     private CompanyUserService companyUserService;
     @Autowired
     private CompanyService companyService;
+    @Autowired
+    CompanyMemberService companyMemberService;
 
     @Autowired
     private VerifyCodeService verifyCodeService;
@@ -95,7 +101,7 @@ public class CompanyController extends BaseController {
     @PostMapping("/companys/register")
     @ApiOperation("企业注册")
     @Transactional
-    public ResBody<CompanyUserVO> register(@RequestBody @Validated CompanyRegisterReq req) {
+    public ResBody<CompanyUserVO> register(@RequestBody @Validated final CompanyRegisterReq req) {
         if (!verifyCodeService.checkVerifyCode(req.getPhone(), req.getVerifyCode())) {
             return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
         }
@@ -121,16 +127,25 @@ public class CompanyController extends BaseController {
             if (!optionalCompanyInfo.isPresent()) {
                 return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
             }
-
             TrustlinkDataRpcService.CompanyInfo companyInfo = optionalCompanyInfo.get();
+
             company = Company.builder()
                     .name(companyInfo.getOrganizationName())
                     .socialCreditCode(companyInfo.getOrganizationCreditId())
                     .phone(req.getPhone())
-                    .functions(Company.CompanyFuntion.MEMBER_PAY.addFuntion(0))
+                    .functions(Company.CompanyFuntion.MEMBER_PAY.open(0))
                     .status(Company.CompanyStatus.ACTIVE)
                     .build();
             companyService.save(company);
+
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronizationAdapter() {
+                        @Override
+                        public void afterCommit() {
+                            trustlinkDataRpcService.syncCompanyEmployee(req.getSocialCreditCode());
+                        }
+                    }
+            );
         }
 
         companyUser = CompanyUser.builder()
@@ -157,8 +172,21 @@ public class CompanyController extends BaseController {
         if (Objects.isNull(company)) {
             return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
         }
-
         CompanyVO companyVO = CompanyVO.of(company, CompanyVO.class);
+
+        companyVO.setMemberCount(
+                companyMemberService.count(
+                        Wrappers.lambdaQuery(CompanyMember.class)
+                                .eq(CompanyMember::getCompany, company.getId())
+                )
+        );
+        companyVO.setStoreCount(
+                companyStoreRelationService.count(
+                        Wrappers.lambdaQuery(CompanyStoreRelation.class)
+                                .eq(CompanyStoreRelation::getCompany, company.getId())
+                )
+        );
+
         return ResBody.success(companyVO);
     }
 
@@ -182,7 +210,7 @@ public class CompanyController extends BaseController {
                             storeMapper
                                     .listCompanyStoresWithRelation(
                                             new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getCompanyId()
+                                            user.getCompany().getId()
                                     )
                     );
         } else {
@@ -191,20 +219,20 @@ public class CompanyController extends BaseController {
                             storeMapper
                                     .listCompanyStoresNotWithRelation(
                                             new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getCompanyId()
+                                            user.getCompany().getId()
                                     )
                     );
         }
     }
 
-    @PostMapping("/companys/{companyId}/stores/{storeId}/company-store-relation")
+    @PostMapping(value = "/companys/{companyId}/stores/{storeId}/company-store-relation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("增加企业商家授信")
     @Transactional
     public ResBody addCompanyStoreRelation(@PathVariable Integer storeId,
                                            @ApiParam(required = true, value = "是否开通余额消费授信") @NotNull Boolean canCashPay,
                                            @ApiParam(required = true, value = "是否开通信用消费授信") @NotNull Boolean canCreditPay) {
         UserDetailService.UserInfo user = ContextUtil.getUserInfo();
-        Integer companyId = user.getCompanyId();
+        Integer companyId = user.getCompany().getId();
 
         CompanyStoreRelation one = companyStoreRelationService.getOne(
                 Wrappers.lambdaQuery(CompanyStoreRelation.class)
@@ -234,7 +262,7 @@ public class CompanyController extends BaseController {
         return ResBody.success(CompanyStoreRelationVO.of(relation));
     }
 
-    @PatchMapping("/companys/{companyId}/stores/{storeId}/company-store-relation/{id}")
+    @PatchMapping(value = "/companys/{companyId}/stores/{storeId}/company-store-relation/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("修改企业商家授信")
     @Transactional
     public ResBody updateCompanyStoreRelation(@PathVariable Integer id, @NotNull Boolean canCashPay, @NotNull Boolean canCreditPay) {

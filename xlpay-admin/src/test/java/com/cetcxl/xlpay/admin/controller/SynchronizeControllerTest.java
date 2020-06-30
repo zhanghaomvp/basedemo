@@ -5,7 +5,7 @@ import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
-import com.cetcxl.xlpay.admin.BaseTest;
+import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyMemberVO;
 import com.cetcxl.xlpay.admin.service.WalletCashService;
 import com.cetcxl.xlpay.admin.service.WalletCreditService;

@@ -59,6 +59,7 @@ class PayUserControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .patch("/pay-user/{id}/password", 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                                 .param("oldPassword", "741852")
                                 .param("newPassword", "123456")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -68,5 +69,23 @@ class PayUserControllerTest extends BaseTest {
                 );
 
         Assert.assertTrue(passwordEncoder.matches("123456", payUserService.getById(1).getPassword()));
+    }
+
+    @Test
+    void noPayPassword_Success() throws Exception {
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .patch("/pay-user/{id}/secret-free-payment", 1)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param("isOpen", "false")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(
+                        MockMvcResultMatchers.status().isOk()
+                );
+        Assert.assertEquals(new Integer(0), payUserService.getById(1).getFunctions());
+
     }
 }

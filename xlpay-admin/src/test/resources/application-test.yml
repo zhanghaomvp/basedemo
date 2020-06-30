@@ -1,6 +1,3 @@
-server:
-  servlet:
-    context-path: /xlpay-admin
 
 spring:
   redis:

@@ -62,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         }
                 )
                 .failureHandler(
-                        (req, res, e) -> resolveResponse(res, ResBody.error("", e.getMessage()))
+                        (req, res, e) -> resolveResponse(res, ResBody.error(e.getMessage()))
                 )
                 .permitAll()
                 .and()

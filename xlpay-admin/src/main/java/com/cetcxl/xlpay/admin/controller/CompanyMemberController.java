@@ -25,6 +25,7 @@ import io.swagger.annotations.ApiParam;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -76,7 +77,7 @@ public class CompanyMemberController extends BaseController {
     public ResBody<IPage<WalletCashMapper.WalletCashDTO>> listWalletCash(@Validated ListWalletReq req) {
         IPage<WalletCashMapper.WalletCashDTO> iPage = walletCashMapper.listWalletCash(
                 new Page(req.getPageNo(), req.getPageSize()),
-                ContextUtil.getUserInfo().getCompanyId(),
+                ContextUtil.getUserInfo().getCompany().getId(),
                 req.getDepartment(),
                 req.getName());
 
@@ -99,14 +100,14 @@ public class CompanyMemberController extends BaseController {
                 .sheet("sheet")
                 .doWrite(
                         walletCashService.listWalletCashExport(
-                                ContextUtil.getUserInfo().getCompanyId(),
+                                ContextUtil.getUserInfo().getCompany().getId(),
                                 req.getDepartment(),
                                 req.getName()
                         )
                 );
     }
 
-    @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/status")
+    @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/status", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("企业成员余额账户状态修改")
     public ResBody updateWalletCashStatus(@PathVariable Integer walletId, @NotNull WalletCash.WalletCashStaus status) {
         //todo 分布式锁待添加
@@ -124,7 +125,7 @@ public class CompanyMemberController extends BaseController {
         return ResBody.success();
     }
 
-    @PostMapping("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/balance")
+    @PostMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/balance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("企业成员余额账户余额修改")
     public ResBody updateWalletCashAmount(
             @PathVariable Integer walletId,
@@ -136,7 +137,7 @@ public class CompanyMemberController extends BaseController {
     ) {
         DealService.DealForAdminParam param = DealService.DealForAdminParam
                 .builder()
-                .company(ContextUtil.getUserInfo().getCompanyId())
+                .company(ContextUtil.getUserInfo().getCompany().getId())
                 .companyMember(companyMemberId)
                 .walletId(walletId)
                 .dealType(dealType)
@@ -147,7 +148,7 @@ public class CompanyMemberController extends BaseController {
         return ResBody.success();
     }
 
-    @PostMapping("/companys/{companyId}/members/wallet/cashs/balance")
+    @PostMapping(value = "/companys/{companyId}/members/wallet/cashs/balance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("批量企业成员余额账户余额修改")
     public ResBody batchUpdateWalletCashAmount(
             @RequestParam(value = "walletIds[]") @NotEmpty Integer[] walletIds,
@@ -165,7 +166,7 @@ public class CompanyMemberController extends BaseController {
                         value ->
                                 DealService.DealForAdminParam
                                         .builder()
-                                        .company(ContextUtil.getUserInfo().getCompanyId())
+                                        .company(ContextUtil.getUserInfo().getCompany().getId())
                                         .companyMember(companyMemberIds[value])
                                         .walletId(walletIds[value])
                                         .dealType(dealType)
@@ -186,7 +187,7 @@ public class CompanyMemberController extends BaseController {
         List<DealService.DealCashImportRow> failRows;
     }
 
-    @PostMapping("/companys/{companyId}/members/wallet/cashs/balance/import")
+    @PostMapping(value = "/companys/{companyId}/members/wallet/cashs/balance/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("批量企业成员余额账户余额修改导入")
     public ResBody importUpdateWalletCashAmount(@RequestParam("file") MultipartFile file) throws IOException {
         DealService.DealCashImportListener listener = new DealService.DealCashImportListener(dealService);
@@ -236,7 +237,7 @@ public class CompanyMemberController extends BaseController {
     public ResBody<IPage<WalletCreditMapper.WalletCreditDTO>> listWalletCredit(@Validated ListWalletReq req) {
         IPage<WalletCreditMapper.WalletCreditDTO> iPage = walletCreditMapper.listWalletCredit(
                 new Page(req.getPageNo(), req.getPageSize()),
-                ContextUtil.getUserInfo().getCompanyId(),
+                ContextUtil.getUserInfo().getCompany().getId(),
                 req.getDepartment(),
                 req.getName()
         );
@@ -260,7 +261,7 @@ public class CompanyMemberController extends BaseController {
                 .sheet("sheet")
                 .doWrite(
                         walletCreditService.listWalletCreditExport(
-                                ContextUtil.getUserInfo().getCompanyId(),
+                                ContextUtil.getUserInfo().getCompany().getId(),
                                 req.getDepartment(),
                                 req.getName()
                         )
@@ -268,7 +269,7 @@ public class CompanyMemberController extends BaseController {
 
     }
 
-    @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/status")
+    @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/status", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("企业成员信用钱包状态修改")
     public ResBody updateWalletCreditStatus(@PathVariable Integer walletId, @NotNull WalletCredit.WalletCreditStaus status) {
         //todo 分布式锁待添加
@@ -286,7 +287,7 @@ public class CompanyMemberController extends BaseController {
         return ResBody.success();
     }
 
-    @PostMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/quota")
+    @PostMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/quota", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("企业成员信用额度修改")
     public ResBody updateWalletCreditQuota(
             @PathVariable Integer walletId,
@@ -297,7 +298,7 @@ public class CompanyMemberController extends BaseController {
     ) {
         DealService.DealForAdminParam param = DealService.DealForAdminParam
                 .builder()
-                .company(ContextUtil.getUserInfo().getCompanyId())
+                .company(ContextUtil.getUserInfo().getCompany().getId())
                 .companyMember(companyMemberId)
                 .walletId(walletId)
                 .dealType(Deal.DealType.ADMIN_QUOTA)
@@ -308,7 +309,7 @@ public class CompanyMemberController extends BaseController {
         return ResBody.success();
     }
 
-    @PostMapping("/companys/{companyId}/members/wallet/credits/balance")
+    @PostMapping(value = "/companys/{companyId}/members/wallet/credits/balance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("批量企业成员信用账户额度修改")
     public ResBody batchUpdateWalletCreditQuota(
             @RequestParam(value = "walletIds[]") @NotEmpty Integer[] walletIds,
@@ -323,7 +324,7 @@ public class CompanyMemberController extends BaseController {
                         value ->
                                 DealService.DealForAdminParam
                                         .builder()
-                                        .company(ContextUtil.getUserInfo().getCompanyId())
+                                        .company(ContextUtil.getUserInfo().getCompany().getId())
                                         .companyMember(companyMemberIds[value])
                                         .walletId(walletIds[value])
                                         .dealType(Deal.DealType.ADMIN_QUOTA)

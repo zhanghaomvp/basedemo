@@ -2,7 +2,7 @@ package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.common.entity.model.Store;
-import com.cetcxl.xlpay.admin.BaseTest;
+import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.common.entity.model.StoreUser;
 import com.cetcxl.xlpay.admin.service.StoreService;
 import com.cetcxl.xlpay.admin.service.StoreUserService;

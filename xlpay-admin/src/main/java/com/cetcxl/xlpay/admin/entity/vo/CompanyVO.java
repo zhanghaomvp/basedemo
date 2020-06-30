@@ -15,6 +15,10 @@ public class CompanyVO extends BaseVO {
     private String socialCreditCode;
     private String phone;
     private String email;
+    private Integer functions;
     private Company.CompanyStatus status;
     private LocalDateTime created;
+
+    private Integer memberCount;
+    private Integer storeCount;
 }

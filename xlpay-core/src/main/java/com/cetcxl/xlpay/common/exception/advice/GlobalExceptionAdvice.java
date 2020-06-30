@@ -31,7 +31,7 @@ public class GlobalExceptionAdvice {
                 }
         );
 
-        return ResBody.error(HttpStatus.BAD_REQUEST.name(), stringBuilder.toString());
+        return ResBody.error(HttpStatus.BAD_REQUEST.value(), stringBuilder.toString());
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
@@ -53,7 +53,7 @@ public class GlobalExceptionAdvice {
                 }
         );
 
-        return ResBody.error(HttpStatus.BAD_REQUEST.name(), stringBuilder.toString());
+        return ResBody.error(HttpStatus.BAD_REQUEST.value(), stringBuilder.toString());
     }
 
     @ExceptionHandler(value = ConstraintViolationException.class)
@@ -69,7 +69,7 @@ public class GlobalExceptionAdvice {
                     );
                 }
         );
-        return ResBody.error(HttpStatus.BAD_REQUEST.name(), stringBuilder.toString());
+        return ResBody.error(HttpStatus.BAD_REQUEST.value(), stringBuilder.toString());
     }
 
     @ExceptionHandler(value = BaseRuntimeException.class)
