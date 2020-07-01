@@ -32,7 +32,7 @@ public class UtilController extends BaseController {
     @PostMapping(value = "/util/verify-code", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiOperation("发送验证码")
     @ApiImplicitParam(name = "phone", paramType = "form")
-    public ResBody<CompanyVO> register(
+    public ResBody<CompanyVO> sendSMSVerifyCode(
             @Pattern(regexp = PatternConstants.PHONE)
             @RequestParam("phone")
                     String phone

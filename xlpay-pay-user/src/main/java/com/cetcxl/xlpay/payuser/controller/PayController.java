@@ -133,7 +133,7 @@ public class PayController extends BaseController {
         );
 
         if (!CompanyStoreRelation.Relation.CASH_PAY
-                .hasRelation(companyStoreRelation.getRelation())) {
+                .isOpen(companyStoreRelation.getRelation())) {
             return ResBody.error(WALLET_RELATION_NOT_EXIST);
         }
 

@@ -74,7 +74,6 @@ public class SynchronizeController extends BaseController {
 
     @PostMapping("/synchronize/company-member")
     @ApiOperation("")
-    @SignApi
     public ResBody<CompanyMemberVO> addCompanyMember(@RequestBody @Validated CompanyMemberAddReq req) {
         Company company = companyService.getOne(
                 Wrappers.lambdaQuery(Company.class)

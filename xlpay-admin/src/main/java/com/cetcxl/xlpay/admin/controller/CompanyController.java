@@ -19,13 +19,15 @@ import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.entity.model.CompanyUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
@@ -225,12 +227,25 @@ public class CompanyController extends BaseController {
         }
     }
 
-    @PostMapping(value = "/companys/{companyId}/stores/{storeId}/company-store-relation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class CompanyStoreRelationReq {
+        @ApiModelProperty(required = true, value = "是否开通余额消费授信")
+        @NotNull
+        Boolean canCashPay;
+        @ApiModelProperty(required = true, value = "是否开通信用消费授信")
+        @NotNull
+        Boolean canCreditPay;
+    }
+
+    @PostMapping("/companys/{companyId}/stores/{storeId}/company-store-relation")
     @ApiOperation("增加企业商家授信")
     @Transactional
     public ResBody addCompanyStoreRelation(@PathVariable Integer storeId,
-                                           @ApiParam(required = true, value = "是否开通余额消费授信") @NotNull Boolean canCashPay,
-                                           @ApiParam(required = true, value = "是否开通信用消费授信") @NotNull Boolean canCreditPay) {
+                                           @Validated @RequestBody CompanyStoreRelationReq req) {
         UserDetailService.UserInfo user = ContextUtil.getUserInfo();
         Integer companyId = user.getCompany().getId();
 
@@ -245,11 +260,11 @@ public class CompanyController extends BaseController {
         }
 
         int relationValue = 0;
-        if (canCashPay) {
-            relationValue = CASH_PAY.addRelation(relationValue);
+        if (req.getCanCashPay()) {
+            relationValue = CASH_PAY.open(relationValue);
         }
-        if (canCreditPay) {
-            relationValue = CREDIT_PAY.addRelation(relationValue);
+        if (req.getCanCreditPay()) {
+            relationValue = CREDIT_PAY.open(relationValue);
         }
 
         CompanyStoreRelation relation = CompanyStoreRelation.builder()
@@ -262,10 +277,10 @@ public class CompanyController extends BaseController {
         return ResBody.success(CompanyStoreRelationVO.of(relation));
     }
 
-    @PatchMapping(value = "/companys/{companyId}/stores/{storeId}/company-store-relation/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping("/companys/{companyId}/stores/{storeId}/company-store-relation/{id}")
     @ApiOperation("修改企业商家授信")
     @Transactional
-    public ResBody updateCompanyStoreRelation(@PathVariable Integer id, @NotNull Boolean canCashPay, @NotNull Boolean canCreditPay) {
+    public ResBody updateCompanyStoreRelation(@PathVariable Integer id, @Validated @RequestBody CompanyStoreRelationReq req) {
         CompanyStoreRelation relation = companyStoreRelationService.getById(id);
 
         if (APPROVAL == relation.getStatus()) {
@@ -273,11 +288,11 @@ public class CompanyController extends BaseController {
         }
 
         Integer applyReleation = 0;
-        if (canCashPay) {
-            applyReleation = CASH_PAY.addRelation(applyReleation);
+        if (req.getCanCashPay()) {
+            applyReleation = CASH_PAY.open(applyReleation);
         }
-        if (canCreditPay) {
-            applyReleation = CREDIT_PAY.addRelation(applyReleation);
+        if (req.getCanCreditPay()) {
+            applyReleation = CREDIT_PAY.open(applyReleation);
         }
 
         companyStoreRelationService.update(

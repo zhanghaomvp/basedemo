@@ -2,13 +2,13 @@ package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.BaseTest;
-import com.cetcxl.xlpay.common.rpc.ResBody;
-import com.cetcxl.xlpay.common.entity.model.Company;
-import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.admin.rpc.TrustlinkDataRpcService;
 import com.cetcxl.xlpay.admin.service.CompanyService;
 import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
 import com.cetcxl.xlpay.admin.service.VerifyCodeService;
+import com.cetcxl.xlpay.common.entity.model.Company;
+import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
+import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -184,13 +184,17 @@ class CompanyControllerTest extends BaseTest {
                         .build()
         );
 
+        CompanyController.CompanyStoreRelationReq req = CompanyController.CompanyStoreRelationReq.builder()
+                .canCashPay(true)
+                .canCreditPay(true)
+                .build();
+
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/companys/{companyId}/stores/{storeId}/company-store-relation", 1, 2)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .param("canCashPay", "true")
-                                .param("canCreditPay", "true")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -214,13 +218,17 @@ class CompanyControllerTest extends BaseTest {
                         .build()
         );
 
+        CompanyController.CompanyStoreRelationReq req = CompanyController.CompanyStoreRelationReq.builder()
+                .canCashPay(true)
+                .canCreditPay(true)
+                .build();
+
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .patch("/companys/{companyId}/stores/{storeId}/company-store-relation/{id}", 1, 1, 1)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .param("canCashPay", "true")
-                                .param("canCreditPay", "true")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -232,11 +240,11 @@ class CompanyControllerTest extends BaseTest {
         CompanyStoreRelation relation = companyStoreRelationService.getById(1);
         Assert.assertTrue(
                 CompanyStoreRelation.Relation.CREDIT_PAY
-                        .hasRelation(relation.getApplyReleation())
+                        .isOpen(relation.getApplyReleation())
         );
         Assert.assertFalse(
                 CompanyStoreRelation.Relation.CREDIT_PAY
-                        .hasRelation(relation.getRelation())
+                        .isOpen(relation.getRelation())
         );
         Assert.assertTrue(CompanyStoreRelation.RelationStatus.APPROVAL == relation.getStatus());
     }

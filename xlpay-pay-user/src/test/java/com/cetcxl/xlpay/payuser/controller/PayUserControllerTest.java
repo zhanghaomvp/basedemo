@@ -24,6 +24,9 @@ class PayUserControllerTest extends BaseTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Test
     void register_success() throws Exception {
         PayUserController.UserAddReq userAddReq = PayUserController.UserAddReq.builder()
@@ -55,13 +58,17 @@ class PayUserControllerTest extends BaseTest {
     @Test
     void updatePayPassword_Success() throws Exception {
 
+        PayUserController.UpdatePayPasswordReq req = PayUserController.UpdatePayPasswordReq.builder()
+                .oldPassword("741852")
+                .newPassword("123456")
+                .build();
+
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .patch("/pay-user/{id}/password", 1)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                                .param("oldPassword", "741852")
-                                .param("newPassword", "123456")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(
@@ -72,15 +79,18 @@ class PayUserControllerTest extends BaseTest {
     }
 
     @Test
-    void noPayPassword_Success() throws Exception {
+    void updateNoPayFunction_Success() throws Exception {
+
+        PayUserController.UpdateNoPayFunctionReq req = PayUserController.UpdateNoPayFunctionReq.builder()
+                .isOpen(false)
+                .build();
 
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .patch("/pay-user/{id}/secret-free-payment", 1)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                                .param("isOpen", "false")
-                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(req))
                 )
                 .andExpect(
                         MockMvcResultMatchers.status().isOk()

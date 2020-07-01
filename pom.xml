@@ -79,4 +79,20 @@
         </dependencies>
     </dependencyManagement>
 
+    <repositories>
+        <repository>
+            <id>cetcxl</id>
+            <name>Nexus Snapshot Repository.</name>
+            <url>http://172.16.101.214:8081/repository/maven-hosted</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>cetcxl</id>
+            <name>Nexus Snapshot Repository.</name>
+            <url>http://172.16.101.214:8081/repository/maven-hosted</url>
+        </repository>
+    </distributionManagement>
+
 </project>

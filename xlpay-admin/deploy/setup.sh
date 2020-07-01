@@ -22,7 +22,7 @@ fi
 
 set -xv
 if [ "$RESET_MYSQL" = "true" ]; then
-  #docker exec -i mysql bash -c 'mysql -uroot -p'"$MYSQL_PASSWORD"'' < $BASEDIR/sql/sql.sql
+  docker exec -i mysql bash -c 'mysql -uroot -p'"$MYSQL_PASSWORD"'' < $BASEDIR/sql/schema.sql
 fi
 set +xv
 

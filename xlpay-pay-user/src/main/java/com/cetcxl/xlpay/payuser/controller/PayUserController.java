@@ -16,7 +16,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -39,6 +38,7 @@ public class PayUserController extends BaseController {
 
     @Autowired
     private PayUserService payUserService;
+
 
     @Data
     @Builder
@@ -79,35 +79,61 @@ public class PayUserController extends BaseController {
         return ResBody.success();
     }
 
-    @PatchMapping(value = "/pay-user/{id}/password", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ApiModel("支付密码修改请求体")
+    public static class UpdatePayPasswordReq {
+
+        @ApiModelProperty(value = "旧密码", required = true)
+        @Pattern(regexp = PatternConstants.PAY_PASSWORD)
+        private String oldPassword;
+
+        @ApiModelProperty(value = "新密码", required = true)
+        @Pattern(regexp = PatternConstants.PAY_PASSWORD)
+        private String newPassword;
+    }
+
+    @PatchMapping("/pay-user/{id}/password")
     @ApiOperation("钱包支付密码修改")
-    public ResBody updatePayPassword(@PathVariable Integer id,
-                                     @RequestParam @Pattern(regexp = PatternConstants.PAY_PASSWORD) String oldPassword,
-                                     @RequestParam @Pattern(regexp = PatternConstants.PAY_PASSWORD) String newPassword) {
+    public ResBody updatePayPassword(@PathVariable Integer id, @RequestBody @Validated UpdatePayPasswordReq req) {
 
         PayUser payUser = payUserService.getById(id);
-        if (!passwordEncoder.matches(oldPassword, payUser.getPassword())) {
+        if (!passwordEncoder.matches(req.oldPassword, payUser.getPassword())) {
             return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_EXIST);
         }
 
         payUserService.update(
                 Wrappers.lambdaUpdate(PayUser.class)
                         .eq(PayUser::getId, id)
-                        .set(PayUser::getPassword, passwordEncoder.encode(newPassword))
+                        .set(PayUser::getPassword, passwordEncoder.encode(req.newPassword))
         );
 
         return ResBody.success();
     }
 
-    @PatchMapping(value = "/pay-user/{id}/secret-free-payment", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ApiModel("小额免密支付请求体")
+    public static class UpdateNoPayFunctionReq {
+
+        @ApiModelProperty(value = "是否开通小额免密支付", required = true)
+        @NotNull
+        private boolean isOpen;
+
+    }
+
+    @PatchMapping(value = "/pay-user/{id}/secret-free-payment")
     @ApiOperation("小额免密支付功能")
-    public ResBody noPayPassword(@PathVariable Integer id,
-                                 @RequestParam @NotNull Boolean isOpen) {
+    public ResBody updateNoPayFunction(@PathVariable Integer id, @RequestBody @Validated UpdateNoPayFunctionReq req) {
 
         PayUser payUser = payUserService.getById(id);
         Integer functions = payUser.getFunctions();
 
-        if (isOpen) {
+        if (req.isOpen) {
             if (PayUser.PayUserFuntion.NO_PASSWORD_PAY.isOpen(functions)) {
                 return ResBody.error(PAY_USER_NO_PASSWORD_PAY_IS_EXIST);
             }
@@ -123,6 +149,7 @@ public class PayUserController extends BaseController {
                 Wrappers.lambdaUpdate(PayUser.class)
                         .eq(PayUser::getId, id)
                         .set(PayUser::getFunctions, functions)
+
         );
         return ResBody.success();
     }

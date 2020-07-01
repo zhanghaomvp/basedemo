@@ -3,6 +3,7 @@ package com.cetcxl.xlpay.common.entity.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.enums.IEnum;
+import com.cetcxl.xlpay.common.constants.IBitEnum;
 import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Data;
@@ -44,7 +45,7 @@ public class CompanyStoreRelation implements Serializable {
 
     private LocalDateTime updated;
 
-    public enum Relation {
+    public enum Relation implements IBitEnum {
         CASH_PAY(1),
         CREDIT_PAY(2),
         ;
@@ -59,12 +60,9 @@ public class CompanyStoreRelation implements Serializable {
             return this.value;
         }
 
-        public boolean hasRelation(Integer value) {
-            return (this.value & value) > 0;
-        }
-
-        public Integer addRelation(Integer value) {
-            return this.value | value;
+        @Override
+        public int getBitPos() {
+            return this.value;
         }
     }
 

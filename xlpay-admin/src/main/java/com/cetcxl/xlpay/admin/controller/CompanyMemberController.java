@@ -20,10 +20,12 @@ import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -107,9 +109,18 @@ public class CompanyMemberController extends BaseController {
                 );
     }
 
-    @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/status", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class UpdateWalletCashStatusReq {
+        @NotNull WalletCash.WalletCashStaus status;
+    }
+
+    @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/status")
     @ApiOperation("企业成员余额账户状态修改")
-    public ResBody updateWalletCashStatus(@PathVariable Integer walletId, @NotNull WalletCash.WalletCashStaus status) {
+    public ResBody updateWalletCashStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCashStatusReq req) {
         //todo 分布式锁待添加
         WalletCash walletCash = walletCashService.getById(walletId);
         if (Objects.isNull(walletCash)) {
@@ -119,58 +130,81 @@ public class CompanyMemberController extends BaseController {
         walletCashService.update(
                 Wrappers
                         .lambdaUpdate(WalletCash.class)
-                        .set(WalletCash::getStatus, status)
+                        .set(WalletCash::getStatus, req.getStatus())
                         .eq(WalletCash::getId, walletCash.getId())
         );
         return ResBody.success();
     }
 
-    @PostMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/balance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class UpdateWalletCashAmountReq {
+        @NotNull
+        Deal.DealType dealType;
+        @NotBlank
+        @ApiModelProperty(required = true, value = "充值金额 或者 扣减金额", example = "50.0")
+        String amount;
+    }
+
+    @PostMapping("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/balance")
     @ApiOperation("企业成员余额账户余额修改")
     public ResBody updateWalletCashAmount(
             @PathVariable Integer walletId,
             @PathVariable Integer companyMemberId,
-            @NotNull Deal.DealType dealType,
-            @NotBlank
-            @ApiParam(required = true, value = "充值金额 或者 扣减金额", example = "50.0")
-                    String amount
+            @Validated @RequestBody UpdateWalletCashAmountReq req
     ) {
         DealService.DealForAdminParam param = DealService.DealForAdminParam
                 .builder()
                 .company(ContextUtil.getUserInfo().getCompany().getId())
                 .companyMember(companyMemberId)
                 .walletId(walletId)
-                .dealType(dealType)
-                .amount(new BigDecimal(amount))
+                .dealType(req.getDealType())
+                .amount(new BigDecimal(req.getAmount()))
                 .build();
 
         dealService.dealCashForAdmin(param);
         return ResBody.success();
     }
 
-    @PostMapping(value = "/companys/{companyId}/members/wallet/cashs/balance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class BatchUpdateWalletCashAmountReq {
+        @NotEmpty
+        List<Integer> walletIds;
+        @NotEmpty
+        List<Integer> companyMemberIds;
+        @NotNull
+        Deal.DealType dealType;
+        @ApiModelProperty(required = true, value = "充值金额 或者 扣减金额", example = "50.0")
+        String amount;
+    }
+
+    @PostMapping("/companys/{companyId}/members/wallet/cashs/balance")
     @ApiOperation("批量企业成员余额账户余额修改")
-    public ResBody batchUpdateWalletCashAmount(
-            @RequestParam(value = "walletIds[]") @NotEmpty Integer[] walletIds,
-            @RequestParam(value = "companyMemberIds[]") @NotEmpty Integer[] companyMemberIds,
-            @NotNull Deal.DealType dealType,
-            @NotBlank
-            @ApiParam(required = true, value = "充值金额 或者 扣减金额", example = "50.0")
-                    String amount) {
-        if (walletIds.length != companyMemberIds.length) {
+    public ResBody batchUpdateWalletCashAmount(@Validated @RequestBody BatchUpdateWalletCashAmountReq req) {
+        List<Integer> walletIds = req.getWalletIds();
+        List<Integer> companyMemberIds = req.getCompanyMemberIds();
+        if (walletIds.size() != companyMemberIds.size()) {
             throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
         }
 
-        List<DealService.DealForAdminParam> list = IntStream.range(0, walletIds.length)
+        List<DealService.DealForAdminParam> list = IntStream.range(0, walletIds.size())
                 .mapToObj(
-                        value ->
+                        i ->
                                 DealService.DealForAdminParam
                                         .builder()
                                         .company(ContextUtil.getUserInfo().getCompany().getId())
-                                        .companyMember(companyMemberIds[value])
-                                        .walletId(walletIds[value])
-                                        .dealType(dealType)
-                                        .amount(new BigDecimal(amount))
+                                        .companyMember(companyMemberIds.get(i))
+                                        .walletId(walletIds.get(i))
+                                        .dealType(req.getDealType())
+                                        .amount(new BigDecimal(req.getAmount()))
                                         .build()
                 )
                 .collect(Collectors.toList());
@@ -269,9 +303,19 @@ public class CompanyMemberController extends BaseController {
 
     }
 
-    @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/status", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class UpdateWalletCreditStatusReq {
+        @NotNull WalletCredit.WalletCreditStaus status;
+    }
+
+    @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/status")
     @ApiOperation("企业成员信用钱包状态修改")
-    public ResBody updateWalletCreditStatus(@PathVariable Integer walletId, @NotNull WalletCredit.WalletCreditStaus status) {
+    public ResBody updateWalletCreditStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCreditStatusReq req) {
         //todo 分布式锁待添加
         WalletCredit walletCredit = walletCreditService.getById(walletId);
         if (Objects.isNull(walletCredit)) {
@@ -281,20 +325,29 @@ public class CompanyMemberController extends BaseController {
         walletCreditService.update(
                 Wrappers
                         .lambdaUpdate(WalletCredit.class)
-                        .set(WalletCredit::getStatus, status)
+                        .set(WalletCredit::getStatus, req.getStatus())
                         .eq(WalletCredit::getId, walletCredit.getId())
         );
         return ResBody.success();
     }
 
-    @PostMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/quota", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class UpdateWalletCreditQuotaReq {
+        @NotBlank
+        @ApiModelProperty(required = true, value = "修改后的额度", example = "2000")
+        String quota;
+    }
+
+    @PostMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/quota")
     @ApiOperation("企业成员信用额度修改")
     public ResBody updateWalletCreditQuota(
             @PathVariable Integer walletId,
             @PathVariable Integer companyMemberId,
-            @NotBlank
-            @ApiParam(required = true, value = "修改后的额度", example = "2000")
-                    String quota
+            @Validated @RequestBody UpdateWalletCreditQuotaReq req
     ) {
         DealService.DealForAdminParam param = DealService.DealForAdminParam
                 .builder()
@@ -302,33 +355,44 @@ public class CompanyMemberController extends BaseController {
                 .companyMember(companyMemberId)
                 .walletId(walletId)
                 .dealType(Deal.DealType.ADMIN_QUOTA)
-                .amount(new BigDecimal(quota))
+                .amount(new BigDecimal(req.getQuota()))
                 .build();
 
         dealService.dealCreditForAdmin(param);
         return ResBody.success();
     }
 
-    @PostMapping(value = "/companys/{companyId}/members/wallet/credits/balance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class BatchUpdateWalletCreditQuotaReq {
+        @NotEmpty List<Integer> walletIds;
+        @NotEmpty List<Integer> companyMemberIds;
+        @NotBlank String quota;
+    }
+
+    @PostMapping("/companys/{companyId}/members/wallet/credits/balance")
     @ApiOperation("批量企业成员信用账户额度修改")
-    public ResBody batchUpdateWalletCreditQuota(
-            @RequestParam(value = "walletIds[]") @NotEmpty Integer[] walletIds,
-            @RequestParam(value = "companyMemberIds[]") @NotEmpty Integer[] companyMemberIds,
-            @NotBlank String quota) {
-        if (walletIds.length != companyMemberIds.length) {
+    public ResBody batchUpdateWalletCreditQuota(@Validated @RequestBody BatchUpdateWalletCreditQuotaReq req) {
+        List<Integer> walletIds = req.getWalletIds();
+        List<Integer> companyMemberIds = req.getCompanyMemberIds();
+
+        if (walletIds.size() != companyMemberIds.size()) {
             throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
         }
 
-        List<DealService.DealForAdminParam> list = IntStream.range(0, walletIds.length)
+        List<DealService.DealForAdminParam> list = IntStream.range(0, walletIds.size())
                 .mapToObj(
-                        value ->
+                        i ->
                                 DealService.DealForAdminParam
                                         .builder()
                                         .company(ContextUtil.getUserInfo().getCompany().getId())
-                                        .companyMember(companyMemberIds[value])
-                                        .walletId(walletIds[value])
+                                        .companyMember(companyMemberIds.get(i))
+                                        .walletId(walletIds.get(i))
                                         .dealType(Deal.DealType.ADMIN_QUOTA)
-                                        .amount(new BigDecimal(quota))
+                                        .amount(new BigDecimal(req.getQuota()))
                                         .build()
                 )
                 .collect(Collectors.toList());
