@@ -14,7 +14,7 @@ public class CompanyMemberVO extends BaseVO {
 
     private Integer id;
     private String icNo;
-    private String Name;
+    private String name;
     private String phone;
     private String department;
     private String employeeNo;

@@ -1,0 +1,19 @@
+# curl --location --request POST 'http://localhost:8080/login'
+#--header 'Cookie: SESSION=N2M2YmI1M2UtNGE3Zi00ZDE1LTllN2EtZWVjNGMxOWE0ZmU0'
+#--form 'username=17360026771.c'
+#--form 'password=kobekaka'
+POST http://localhost:8080/login
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="username"
+
+17360026771.c
+--WebAppBoundary
+Content-Disposition: form-data; name="password"
+
+kobekaka
+--WebAppBoundary--
+
+###
+

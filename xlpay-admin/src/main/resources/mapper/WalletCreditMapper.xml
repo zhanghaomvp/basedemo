@@ -7,6 +7,7 @@
         wc.id AS wallet_id,
         wc.credit_balance,
         wc.credit_quota,
+        wc.credit_quota - wc.credit_balance as credit_used,
         wc.`status`,
         t.*
         FROM

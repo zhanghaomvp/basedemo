@@ -165,6 +165,10 @@ public class CompanyMemberControllerTest extends BaseTest {
                 .andExpect(
                         MockMvcResultMatchers
                                 .jsonPath("$.data.total").value(1)
+                )
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.records[0].creditUsed").value("50.0")
                 );
     }
 

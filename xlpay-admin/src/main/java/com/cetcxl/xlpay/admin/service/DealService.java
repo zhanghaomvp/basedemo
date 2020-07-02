@@ -15,9 +15,7 @@ import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.google.common.collect.Lists;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +85,8 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @HeadStyle(fillPatternType = FillPatternType.SOLID_FOREGROUND, fillForegroundColor = 10)
     @HeadFontStyle(fontHeightInPoints = 15)
     public static class DealCashImportRow {
@@ -119,6 +119,12 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                                     .amount("50")
                                     .build()
                     );
+        }
+
+        public enum TypeEnum {
+            充值,
+            扣减,
+            ;
         }
     }
 
@@ -160,10 +166,10 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
         }
 
         Deal.DealType dealType = null;
-        if ("充值".equals(row.getType())) {
+        if (DealCashImportRow.TypeEnum.充值.name().equals(row.getType())) {
             dealType = Deal.DealType.ADMIN_RECHARGE;
         }
-        if ("扣减".equals(row.getType())) {
+        if (DealCashImportRow.TypeEnum.扣减.name().equals(row.getType())) {
             dealType = Deal.DealType.ADMIN_REDUCE;
         }
 

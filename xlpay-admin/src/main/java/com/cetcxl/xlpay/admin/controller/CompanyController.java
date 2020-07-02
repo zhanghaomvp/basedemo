@@ -198,13 +198,16 @@ public class CompanyController extends BaseController {
         @NotNull
         @ApiModelProperty(value = "是否与商家已存在关联关系")
         Boolean hasRelation;
+
+        @ApiModelProperty(value = "商家名称")
+        String name;
     }
 
     @GetMapping("/companys/{companyId}/stores")
     @ApiOperation("商家查询")
     @Transactional
     public ResBody<IPage<StoreMapper.CompanyStoreDTO>> listStores(ListStoresReq req) {
-        UserDetailService.UserInfo user = ContextUtil.getUserInfo();
+        UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
 
         if (req.hasRelation) {
             return ResBody
@@ -212,7 +215,8 @@ public class CompanyController extends BaseController {
                             storeMapper
                                     .listCompanyStoresWithRelation(
                                             new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getCompany().getId()
+                                            user.getCompany().getId(),
+                                            req.getName()
                                     )
                     );
         } else {
@@ -221,7 +225,9 @@ public class CompanyController extends BaseController {
                             storeMapper
                                     .listCompanyStoresNotWithRelation(
                                             new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getCompany().getId()
+                                            user.getCompany().getId(),
+                                            req.getName()
+
                                     )
                     );
         }
@@ -246,7 +252,7 @@ public class CompanyController extends BaseController {
     @Transactional
     public ResBody addCompanyStoreRelation(@PathVariable Integer storeId,
                                            @Validated @RequestBody CompanyStoreRelationReq req) {
-        UserDetailService.UserInfo user = ContextUtil.getUserInfo();
+        UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
         Integer companyId = user.getCompany().getId();
 
         CompanyStoreRelation one = companyStoreRelationService.getOne(

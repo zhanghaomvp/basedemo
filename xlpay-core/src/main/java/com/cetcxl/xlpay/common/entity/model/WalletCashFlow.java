@@ -77,6 +77,7 @@ public class WalletCashFlow implements Serializable {
             case MINUS:
                 setBalance(balance.subtract(this.getAmount()));
                 break;
+            default:
         }
     }
 

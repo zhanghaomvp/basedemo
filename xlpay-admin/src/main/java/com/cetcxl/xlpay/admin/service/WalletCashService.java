@@ -6,11 +6,11 @@ import com.alibaba.excel.annotation.write.style.HeadFontStyle;
 import com.alibaba.excel.annotation.write.style.HeadStyle;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cetcxl.xlpay.common.entity.model.WalletCash;
-import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.admin.dao.WalletCashMapper;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.cetcxl.xlpay.common.entity.model.WalletCashFlow;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -58,6 +58,7 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
             case ADMIN_REDUCE:
                 flowType = WalletCashFlow.CashFlowType.MINUS;
                 break;
+            default:
         }
 
         cashFlow.setType(flowType);
@@ -94,12 +95,12 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
     }
 
     public List<WalletCashExportRow> listWalletCashExport(Integer companyId, String department, String name) {
-        List<WalletCashMapper.WalletCashDTO> walletCashDTOS = baseMapper.listWalletCash(
+        List<WalletCashMapper.WalletCashDTO> walletCashDtos = baseMapper.listWalletCash(
                 companyId,
                 department,
                 name);
 
-        return walletCashDTOS.stream()
+        return walletCashDtos.stream()
                 .map(
                         dto ->
                                 WalletCashExportRow.builder()

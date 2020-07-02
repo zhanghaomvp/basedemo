@@ -13,4 +13,4 @@ services:
       - TZ=Asia/Shanghai
     ports:
       - 8081:8080
-    command: java -Xms512m -Xmx1024m -jar /app.jar 
+    command: java -Xms512m -Xmx1024m -jar /app.jar --spring.profiles.active=prod --spring.datasource.password=$MYSQL_PASSWORD

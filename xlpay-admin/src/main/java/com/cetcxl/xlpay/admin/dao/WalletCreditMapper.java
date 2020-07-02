@@ -28,6 +28,7 @@ public interface WalletCreditMapper extends BaseMapper<WalletCredit> {
         private String employeeNo;
 
         private BigDecimal creditBalance;
+        private BigDecimal creditUsed;
         private BigDecimal creditQuota;
         private WalletCredit.WalletCreditStaus status;
     }

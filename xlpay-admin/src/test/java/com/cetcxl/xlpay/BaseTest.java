@@ -1,8 +1,7 @@
 package com.cetcxl.xlpay;
 
-import com.cetcxl.xlpay.XlpayAdminApplication;
 import com.cetcxl.xlpay.common.entity.model.Company;
-import com.cetcxl.xlpay.admin.service.UserDetailService;
+import com.cetcxl.xlpay.admin.service.UserDetailServiceImpl;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterAll;
@@ -74,7 +73,7 @@ public class BaseTest {
                 .getContext()
                 .setAuthentication(
                         new UsernamePasswordAuthenticationToken(
-                                new UserDetailService.UserInfo(
+                                new UserDetailServiceImpl.UserInfo(
                                         S_TEMP,
                                         S_TEMP,
                                         AuthorityUtils.createAuthorityList("All"),

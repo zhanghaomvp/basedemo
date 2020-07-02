@@ -71,11 +71,11 @@ public class SignApiInterceptor implements HandlerInterceptor {
             buildParam = request.getHeader(SIGN_SALT);
         }
 
-        Sign _verify = SecureUtil.sign(SignAlgorithm.SHA1withRSA, null, publicKey);
+        Sign verify = SecureUtil.sign(SignAlgorithm.SHA1withRSA, null, publicKey);
 
-        boolean verify = _verify.verify(buildParam.getBytes(StandardCharsets.UTF_8), Base64.getDecoder().decode(sign));
+        boolean isVerify = verify.verify(buildParam.getBytes(StandardCharsets.UTF_8), Base64.getDecoder().decode(sign));
 
-        if (!verify) {
+        if (!isVerify) {
             resolveResponse(response, CommonResultCode.VERIFY_SIGN_FAIL);
             return false;
         }

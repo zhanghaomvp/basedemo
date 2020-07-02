@@ -8,5 +8,5 @@ import lombok.Data;
 @ApiModel
 public class StoreVO extends BaseVO {
     private Integer id;
-    private String Name;
+    private String name;
 }

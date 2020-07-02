@@ -245,7 +245,7 @@ public class CompanyMemberController extends BaseController {
                 );
     }
 
-    @GetMapping("/companys/{companyId}/members/wallet/cashs/balance/excel/template")
+    @GetMapping("/companys/{companyId}/members/wallet/cashs/balance/excel/template/export")
     @ApiOperation("批量企业成员余额账户余额修改导入模板下载")
     public void importUpdateWalletCashAmountTemplate(HttpServletResponse response) throws Exception {
         resolveExcelResponseHeader(response, "余额账户余额修改批量导入模板");
@@ -275,7 +275,7 @@ public class CompanyMemberController extends BaseController {
                 req.getDepartment(),
                 req.getName()
         );
-
+        
         return ResBody.success(iPage);
     }
 

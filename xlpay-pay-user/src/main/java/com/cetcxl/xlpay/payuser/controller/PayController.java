@@ -56,7 +56,7 @@ public class PayController extends BaseController {
     public ResBody<String> getCashBalance(@PathVariable Integer id, @PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
 
-        if (payUser.getId() != id) {
+        if (!payUser.getId().equals(id)) {
             return ResBody.error(SYSTEM_LOGIC_ERROR);
         }
 
@@ -87,7 +87,7 @@ public class PayController extends BaseController {
     public ResBody<String> getCreditBalance(@PathVariable Integer id, @PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
 
-        if (payUser.getId() != id) {
+        if (!payUser.getId().equals(id)) {
             return ResBody.error(SYSTEM_LOGIC_ERROR);
         }
 

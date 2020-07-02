@@ -2,7 +2,7 @@ package com.cetcxl.xlpay.admin.config;
 
 import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
 import com.cetcxl.xlpay.admin.entity.vo.StoreVO;
-import com.cetcxl.xlpay.admin.service.UserDetailService;
+import com.cetcxl.xlpay.admin.service.UserDetailServiceImpl;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.util.Objects;
 
 import static com.cetcxl.xlpay.common.constants.CommonResultCode.AUTHENTICATION_ERROR;
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.SESSION_INVALID;
 
 @Slf4j
 @EnableWebSecurity
@@ -70,7 +71,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandler(
                         (req, res, auth) -> {
 
-                            UserDetailService.UserInfo userInfo = (UserDetailService.UserInfo) auth.getPrincipal();
+                            UserDetailServiceImpl.UserInfo userInfo = (UserDetailServiceImpl.UserInfo) auth.getPrincipal();
 
                             if (Objects.nonNull(userInfo.getCompany())) {
                                 resolveResponse(res, ResBody.success(CompanyVO.of(userInfo.getCompany(), CompanyVO.class)));
@@ -103,7 +104,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         }
                 )
                 .and()
-                .sessionManagement().maximumSessions(1).sessionRegistry(sessionRegistry)
+                .sessionManagement()
+                .maximumSessions(1)
+                .sessionRegistry(sessionRegistry)
+                .expiredSessionStrategy(
+                        event -> {
+                            log.error("sessionAuthenticationFailureHandler error : {} ", event.getSessionInformation());
+                            resolveResponse(event.getResponse(), ResBody.error(SESSION_INVALID));
+                        }
+                )
                 .and()
                 .and()
         ;

@@ -16,7 +16,7 @@ INSERT INTO `wallet_cash`(`id`, `company_member`, `cash_balance`, `status`)
 VALUES (2, 2, 0.00, 1);
 --
 INSERT INTO `wallet_credit`(`id`, `company_member`, `credit_balance`, `credit_quota`, `status`)
-VALUES (1, 1, 100.00, 100.00, 0);
+VALUES (1, 1, 50.00, 100.00, 0);
 INSERT INTO `wallet_credit`(`id`, `company_member`, `credit_balance`, `credit_quota`, `status`)
 VALUES (2, 2, 0.00, 0.00, 0);
 --

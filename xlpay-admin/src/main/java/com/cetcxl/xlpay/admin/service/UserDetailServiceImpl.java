@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 @Component
-public class UserDetailService implements UserDetailsService {
+public class UserDetailServiceImpl implements UserDetailsService {
     @Autowired
     private CompanyUserService companyUserService;
     @Autowired

@@ -109,13 +109,13 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
     }
 
     public List<WalletCreditExportRow> listWalletCreditExport(Integer companyId, String department, String name) {
-        List<WalletCreditMapper.WalletCreditDTO> walletCashDTOS = baseMapper.listWalletCredit(
+        List<WalletCreditMapper.WalletCreditDTO> walletCashDtos = baseMapper.listWalletCredit(
                 companyId,
                 department,
                 name
         );
 
-        return walletCashDTOS.stream()
+        return walletCashDtos.stream()
                 .map(
                         dto ->
                                 WalletCreditExportRow.builder()

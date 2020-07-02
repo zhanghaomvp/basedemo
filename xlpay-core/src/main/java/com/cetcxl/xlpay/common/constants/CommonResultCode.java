@@ -4,6 +4,7 @@ public enum CommonResultCode implements IResultCode {
     SYSTEM_LOGIC_ERROR(9001, "系统错误"),
     RPC_ERROR(9002, "远程服务调用失败"),
     AUTHENTICATION_ERROR(9003, "验证失败 请重新登录"),
+    SESSION_INVALID(9004, "session失效 请重新登录"),
 
     VERIFY_SIGN_HEAD_MISS(9101, "sign api head param miss"),
     VERIFY_SIGN_PUBLIC_KEY_MISS(9102, "sign api public key miss"),

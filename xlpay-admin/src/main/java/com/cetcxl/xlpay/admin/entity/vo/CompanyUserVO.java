@@ -18,9 +18,9 @@ public class CompanyUserVO extends BaseVO {
     private LocalDateTime created;
 
     public static CompanyUserVO of(CompanyUser companyUser, Company company) {
-        CompanyUserVO CompanyUserVO = of(companyUser, CompanyUserVO.class);
-        CompanyUserVO.setCompanyName(company.getName());
-        CompanyUserVO.setSocialCreditCode(company.getSocialCreditCode());
-        return CompanyUserVO;
+        CompanyUserVO companyUserVO = of(companyUser, CompanyUserVO.class);
+        companyUserVO.setCompanyName(company.getName());
+        companyUserVO.setSocialCreditCode(company.getSocialCreditCode());
+        return companyUserVO;
     }
 }

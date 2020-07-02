@@ -8,7 +8,7 @@ import com.cetcxl.xlpay.common.entity.model.Store;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.apache.ibatis.annotations.Select;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.jdbc.SQL;
 
@@ -37,31 +37,37 @@ public interface StoreMapper extends BaseMapper<Store> {
         private CompanyStoreRelation.RelationStatus relationStatus;
     }
 
-    @Select("SELECT\n" +
-            "	s.*,\n" +
-            "	csr.relation,\n" +
-            "	csr.apply_releation,\n" +
-            "	csr.`status` as relation_status \n" +
-            "FROM\n" +
-            "	store s,\n" +
-            "	company_store_relation csr \n" +
-            "WHERE\n" +
-            "   s.id = csr.store \n" +
-            "	AND csr.company = #{companyId}")
-    IPage<CompanyStoreDTO> listCompanyStoresWithRelation(Page page, Integer companyId);
-
-
-    static String listCompanyStoresNotWithRelationSql() {
+    static String listCompanyStoresWithRelationSql(String name) {
         return new SQL() {{
+
+            SELECT("s.*,csr.relation,csr.apply_releation,csr.`status` as relation_status ");
+            FROM(" store s, company_store_relation csr");
+            WHERE("s.id=csr.store AND csr.company=#{companyId}");
+            if (StringUtils.isNotBlank(name)) {
+                WHERE(" s.name like concat('%',#{name},'%')");
+            }
+        }}.toString();
+    }
+
+    @SelectProvider(type = StoreMapper.class, method = "listCompanyStoresWithRelationSql")
+    IPage<CompanyStoreDTO> listCompanyStoresWithRelation(Page page, Integer companyId, String name);
+
+
+    static String listCompanyStoresNotWithRelationSql(String name) {
+        return new SQL() {{
+
             SELECT("s.*");
-            FROM("store s");
+            FROM(" store s");
             WHERE("NOT EXISTS ( SELECT 1 FROM company_store_relation csr WHERE csr.company = #{companyId} AND s.id = csr.store )");
-            ORDER_BY("s.id desc");
+            if (StringUtils.isNotBlank(name)) {
+                WHERE(" s.name like concat('%',#{name},'%')");
+            }
+            ORDER_BY(" s.id desc");
         }}.toString();
     }
 
     @SelectProvider(type = StoreMapper.class, method = "listCompanyStoresNotWithRelationSql")
-    IPage<CompanyStoreDTO> listCompanyStoresNotWithRelation(Page page, Integer companyId);
+    IPage<CompanyStoreDTO> listCompanyStoresNotWithRelation(Page page, Integer companyId, String name);
 
 
 }

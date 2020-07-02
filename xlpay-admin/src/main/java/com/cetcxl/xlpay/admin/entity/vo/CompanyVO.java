@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @ApiModel
 public class CompanyVO extends BaseVO {
     private Integer id;
-    private String Name;
+    private String name;
     private String socialCreditCode;
     private String phone;
     private String email;

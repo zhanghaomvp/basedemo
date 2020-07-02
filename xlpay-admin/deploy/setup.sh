@@ -15,7 +15,7 @@ if [ $# -gt 2 ]; then
 fi
 
 if [ $# -gt 3 ]; then
-  MYSQL_PASSWORD=$3
+  MYSQL_PASSWORD=$4
 else
   MYSQL_PASSWORD='root001'
 fi
@@ -28,7 +28,7 @@ set +xv
 
 set -xv
 
-#sed -i -E "s#^(\s*)command:.*\$#\1command: /start.sh '"$INVOKE_ADDRESS"' '"$QUERY_ADDRESS"' '"$CHAIN_CODE_NAME"' '"$APP_KEY"' '"$APP_SECRET"' '"$SHOW_PATH"' '"$MYSQL_PASSWORD"'#" $BASEDIR/docker-compose-prod.yml
+sed -i -E "s#^(\s*)command:.*\$#\1command: java -Xms512m -Xmx1024m -jar /app.jar --spring.profiles.active=prod --spring.datasource.password='"$MYSQL_PASSWORD"'#" $BASEDIR/docker-compose-prod.yml
 
 # clear logs
 rm -rf /var/log/$PROJECT_NAME/$COMPONENT_NAME

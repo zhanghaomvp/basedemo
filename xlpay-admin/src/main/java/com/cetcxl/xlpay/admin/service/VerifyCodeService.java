@@ -25,6 +25,8 @@ public class VerifyCodeService {
     private static final String CONTENT_TEMPLATE = "您的验证码是:%s,短信2分钟内有效。";
     private static final int EXPIRE_MINUTE = 2;
 
+    public static final String JUMP_VERIFY_CODE = "000000";
+
     @Autowired
     private SmsService smsService;
     @Autowired
@@ -50,7 +52,7 @@ public class VerifyCodeService {
     }
 
     public boolean checkVerifyCode(String phone, String code) {
-        if ("000000".equals(code)) {
+        if (JUMP_VERIFY_CODE.equals(code)) {
             return true;
         }
 
@@ -63,10 +65,12 @@ public class VerifyCodeService {
         return true;
     }
 
+    private static final int BASE_VERIFY_CODE = 100000;
+
     private String generateVerifyCode() {
         int num = ThreadLocalRandom.current().nextInt(999999);
-        if (num < 100000) {
-            num += 100000;
+        if (num < BASE_VERIFY_CODE) {
+            num += BASE_VERIFY_CODE;
         }
         return String.valueOf(num);
     }
