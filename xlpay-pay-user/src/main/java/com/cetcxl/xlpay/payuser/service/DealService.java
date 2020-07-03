@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CASH;
+import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CREDIT;
 
 
 /**
@@ -26,6 +27,8 @@ import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CASH;
 public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Autowired
     WalletCashService walletCashService;
+    @Autowired
+    WalletCreditService walletCreditService;
 
     @Data
     @Builder
@@ -51,9 +54,28 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                 .type(param.getDealType())
                 .payType(CASH)
                 .info(param.getInfo())
+                .status(Deal.Status.PAID)
                 .build();
         save(deal);
 
         walletCashService.process(deal, param.getWalletId());
+    }
+
+    @Transactional
+    public void dealCredit(DealParam param) {
+        //todo 分布式锁 一定要
+        Deal deal = Deal.builder()
+                .company(param.getCompany())
+                .companyMember(param.getCompanyMember())
+                .store(param.getStore())
+                .amount(param.getAmount())
+                .type(param.getDealType())
+                .payType(CREDIT)
+                .info(param.getInfo())
+                .status(Deal.Status.PAID)
+                .build();
+        save(deal);
+
+        walletCreditService.process(deal, param.getWalletId());
     }
 }

@@ -13,9 +13,10 @@ class WalletCashFlowTest {
         WalletCashFlow cashFlow = WalletCashFlow.builder()
                 .type(WalletCashFlow.CashFlowType.MINUS)
                 .amount(new BigDecimal("100"))
+                .balance(new BigDecimal("110.5"))
                 .build();
 
-        cashFlow.caculateBalance(new BigDecimal("110.5"));
+        cashFlow.caculateBalance();
         Assert.assertTrue(cashFlow.getBalance().toString().equals("10.5"));
     }
 }

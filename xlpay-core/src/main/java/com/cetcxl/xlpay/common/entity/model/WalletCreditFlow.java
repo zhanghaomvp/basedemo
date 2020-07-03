@@ -52,8 +52,7 @@ public class WalletCreditFlow implements Serializable {
     private LocalDateTime created;
 
     public enum CreditFlowType implements IEnum<Integer> {
-        PLUS(0),
-        MINUS(1),
+        BALANCE_MINUS(1),
         QUOTA_PLUS(2),
         QUOTA_MINUS(3),
         ;
@@ -83,6 +82,10 @@ public class WalletCreditFlow implements Serializable {
                 setBalance(balance.subtract(this.getAmount()));
                 setQuota(quota.subtract(this.getAmount()));
                 break;
+            case BALANCE_MINUS:
+                setBalance(balance.subtract(this.getAmount()));
+                break;
+            default:
         }
     }
 }

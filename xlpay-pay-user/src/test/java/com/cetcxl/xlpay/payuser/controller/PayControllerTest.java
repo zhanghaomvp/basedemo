@@ -3,9 +3,12 @@ package com.cetcxl.xlpay.payuser.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.service.DealService;
 import com.cetcxl.xlpay.payuser.service.WalletCashService;
+import com.cetcxl.xlpay.payuser.service.WalletCreditService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,11 +19,19 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
 
+import static com.cetcxl.xlpay.common.entity.model.Deal.DealType.CASH_DEAL;
+import static com.cetcxl.xlpay.common.entity.model.Deal.DealType.CREDIT_DEAL;
+
 class PayControllerTest extends BaseTest {
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Autowired
     DealService dealService;
     @Autowired
     WalletCashService walletCashService;
+    @Autowired
+    WalletCreditService walletCreditService;
 
     @BeforeEach
     @Override
@@ -71,15 +82,20 @@ class PayControllerTest extends BaseTest {
     void payCash() throws Exception {
         BigDecimal oldCashBalance = walletCashService.getById(1).getCashBalance();
 
+        PayController.PayReq req = PayController.PayReq.builder()
+                .amount("5")
+                .storeId(1)
+                .info(S_TEMP)
+                .password(S_PAY_PASSWORD)
+                .build();
+
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/pay-user/{id}/wallet/cash/{walletId}/deal",
                                         2, 2)
-                                .param("storeId", "1")
-                                .param("amount", "5")
-                                .param("info", S_TEMP)
-                                .param("password", S_PAY_PASSWORD)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_VALUE)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -87,12 +103,52 @@ class PayControllerTest extends BaseTest {
         Deal deal = dealService.getOne(
                 Wrappers.lambdaQuery(Deal.class)
                         .eq(Deal::getStore, 1)
+                        .eq(Deal::getType, CASH_DEAL)
         );
 
         Assertions.assertTrue(S_TEMP.equals(deal.getInfo()));
-        Assertions.assertTrue(Deal.DealType.CASH_DEAL == deal.getType());
+        Assertions.assertTrue(CASH_DEAL == deal.getType());
 
         BigDecimal newCashBalance = walletCashService.getById(2).getCashBalance();
         Assertions.assertTrue(newCashBalance.add(new BigDecimal("5")).compareTo(oldCashBalance) == 0);
+    }
+
+    @Test
+    void payCredit() throws Exception {
+        WalletCredit oldWalletCredit = walletCreditService.getById(2);
+
+        PayController.PayReq req = PayController.PayReq.builder()
+                .amount("5")
+                .storeId(1)
+                .info(S_TEMP)
+                .password(S_PAY_PASSWORD)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .post("/pay-user/{id}/wallet/credit/{walletId}/deal",
+                                        2, 2)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON_VALUE)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Deal deal = dealService.getOne(
+                Wrappers.lambdaQuery(Deal.class)
+                        .eq(Deal::getStore, 1)
+                        .eq(Deal::getType, CREDIT_DEAL)
+        );
+
+        Assertions.assertTrue(S_TEMP.equals(deal.getInfo()));
+        Assertions.assertTrue(Deal.PayType.CREDIT == deal.getPayType());
+
+        WalletCredit newWalletCredit = walletCreditService.getById(2);
+        Assertions.assertTrue(
+                newWalletCredit.getCreditBalance()
+                        .add(new BigDecimal("5"))
+                        .compareTo(oldWalletCredit.getCreditBalance()) == 0
+        );
     }
 }

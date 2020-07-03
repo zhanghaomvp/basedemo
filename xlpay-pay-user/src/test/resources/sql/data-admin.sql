@@ -16,9 +16,9 @@ INSERT INTO `wallet_cash`(`id`, `company_member`, `cash_balance`, `status`)
 VALUES (2, 2, 10.00, 1);
 --
 INSERT INTO `wallet_credit`(`id`, `company_member`, `credit_balance`, `credit_quota`, `status`)
-VALUES (1, 1, 100.00, 100.00, 0);
+VALUES (1, 1, 100.00, 100.00, 1);
 INSERT INTO `wallet_credit`(`id`, `company_member`, `credit_balance`, `credit_quota`, `status`)
-VALUES (2, 2, 10.00, 10.00, 0);
+VALUES (2, 2, 10.00, 10.00, 1);
 --
 INSERT INTO `store_user`(`id`, `store`, `phone`, `password`, `STATUS`)
 VALUES (1, 2, '17360026771', '$2a$10$qS.2WYtbfKCCi0DA9eehAe/E6z7TadzFQW1nVGdtUUAjkeVsiOyAy', 1);
@@ -29,4 +29,4 @@ VALUES (2, 'shop2', 'shop2', '19900000002', NULL, 'shop2', NULL, 1, 'address');
 
 --
 INSERT INTO `company_store_relation`(`id`, `company`, `store`, `relation`, `apply_releation`, `status`)
-VALUES (1, 1, 1, 1, NULL, 1);
+VALUES (1, 1, 1, 3, NULL, 1);

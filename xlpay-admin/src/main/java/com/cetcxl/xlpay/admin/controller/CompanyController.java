@@ -45,6 +45,7 @@ import static com.cetcxl.xlpay.admin.constants.ResultCode.COMPANY_STORE_RELATION
 import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.Relation.CASH_PAY;
 import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.Relation.CREDIT_PAY;
 import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.RelationStatus.APPROVAL;
+import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.RelationStatus.WORKING;
 
 @Validated
 @RestController
@@ -134,7 +135,8 @@ public class CompanyController extends BaseController {
             company = Company.builder()
                     .name(companyInfo.getOrganizationName())
                     .socialCreditCode(companyInfo.getOrganizationCreditId())
-                    .phone(req.getPhone())
+                    .phone(companyInfo.getOrganizationTel())
+                    .email(companyInfo.getOrganizationEmail())
                     .functions(Company.CompanyFuntion.MEMBER_PAY.open(0))
                     .status(Company.CompanyStatus.ACTIVE)
                     .build();
@@ -205,7 +207,6 @@ public class CompanyController extends BaseController {
 
     @GetMapping("/companys/{companyId}/stores")
     @ApiOperation("商家查询")
-    @Transactional
     public ResBody<IPage<StoreMapper.CompanyStoreDTO>> listStores(ListStoresReq req) {
         UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
 
@@ -250,8 +251,8 @@ public class CompanyController extends BaseController {
     @PostMapping("/companys/{companyId}/stores/{storeId}/company-store-relation")
     @ApiOperation("增加企业商家授信")
     @Transactional
-    public ResBody addCompanyStoreRelation(@PathVariable Integer storeId,
-                                           @Validated @RequestBody CompanyStoreRelationReq req) {
+    public ResBody<CompanyStoreRelationVO> addCompanyStoreRelation(@PathVariable Integer storeId,
+                                                                   @Validated @RequestBody CompanyStoreRelationReq req) {
         UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
         Integer companyId = user.getCompany().getId();
 
@@ -265,18 +266,18 @@ public class CompanyController extends BaseController {
             return ResBody.error(ResultCode.COMPANY_STORE_RELATION_EXIST);
         }
 
-        int relationValue = 0;
+        int applyReleation = 0;
         if (req.getCanCashPay()) {
-            relationValue = CASH_PAY.open(relationValue);
+            applyReleation = CASH_PAY.open(applyReleation);
         }
         if (req.getCanCreditPay()) {
-            relationValue = CREDIT_PAY.open(relationValue);
+            applyReleation = CREDIT_PAY.open(applyReleation);
         }
 
         CompanyStoreRelation relation = CompanyStoreRelation.builder()
                 .company(companyId)
                 .store(storeId)
-                .relation(relationValue)
+                .applyReleation(applyReleation)
                 .status(APPROVAL)
                 .build();
         companyStoreRelationService.save(relation);
@@ -287,25 +288,40 @@ public class CompanyController extends BaseController {
     @ApiOperation("修改企业商家授信")
     @Transactional
     public ResBody updateCompanyStoreRelation(@PathVariable Integer id, @Validated @RequestBody CompanyStoreRelationReq req) {
-        CompanyStoreRelation relation = companyStoreRelationService.getById(id);
+        CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getById(id);
 
-        if (APPROVAL == relation.getStatus()) {
+        if (APPROVAL == companyStoreRelation.getStatus()) {
             return ResBody.error(COMPANY_STORE_RELATION_APPROVING);
         }
 
+        Integer relation = companyStoreRelation.getRelation();
         Integer applyReleation = 0;
+        boolean isAddRelation = false;
+
         if (req.getCanCashPay()) {
+            if (CASH_PAY.isClose(relation)) {
+                isAddRelation = true;
+            }
             applyReleation = CASH_PAY.open(applyReleation);
+        } else {
+            relation = CASH_PAY.close(relation);
         }
+
         if (req.getCanCreditPay()) {
+            if (CREDIT_PAY.isClose(relation)) {
+                isAddRelation = true;
+            }
             applyReleation = CREDIT_PAY.open(applyReleation);
+        } else {
+            relation = CREDIT_PAY.close(relation);
         }
 
         companyStoreRelationService.update(
                 Wrappers.lambdaUpdate(CompanyStoreRelation.class)
                         .set(CompanyStoreRelation::getApplyReleation, applyReleation)
-                        .set(CompanyStoreRelation::getStatus, APPROVAL)
-                        .eq(CompanyStoreRelation::getId, relation.getId())
+                        .set(CompanyStoreRelation::getRelation, relation)
+                        .set(CompanyStoreRelation::getStatus, isAddRelation ? APPROVAL : WORKING)
+                        .eq(CompanyStoreRelation::getId, companyStoreRelation.getId())
         );
         return ResBody.success();
     }

@@ -47,7 +47,7 @@ public class Deal implements Serializable {
 
     private Integer checkBatch;
 
-    private Integer status;
+    private Status status;
 
     private LocalDateTime created;
 
@@ -58,6 +58,7 @@ public class Deal implements Serializable {
         ADMIN_REDUCE(2),
         ADMIN_QUOTA(3),
         CASH_DEAL(4),
+        CREDIT_DEAL(5),
         ;
         private Integer status;
 
@@ -78,6 +79,24 @@ public class Deal implements Serializable {
         private Integer status;
 
         PayType(Integer status) {
+            this.status = status;
+        }
+
+        @Override
+        public Integer getValue() {
+            return this.status;
+        }
+    }
+
+    public enum Status implements IEnum<Integer> {
+        PAID(1),
+        CHECK_APPROVAL(2),
+        CHECK_CONFIRM(3),
+        CHECK_FINISH(4),
+        ;
+        private Integer status;
+
+        Status(Integer status) {
             this.status = status;
         }
 

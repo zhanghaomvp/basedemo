@@ -1,17 +1,21 @@
 package com.cetcxl.xlpay.admin.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.constants.ResultCode;
-import com.cetcxl.xlpay.common.entity.model.Company;
-import com.cetcxl.xlpay.common.entity.model.Store;
+import com.cetcxl.xlpay.admin.dao.StoreMapper;
 import com.cetcxl.xlpay.admin.entity.vo.StoreUserVO;
-import com.cetcxl.xlpay.admin.service.VerifyCodeService;
+import com.cetcxl.xlpay.admin.service.*;
+import com.cetcxl.xlpay.admin.util.ContextUtil;
+import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
-import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.entity.model.Company;
+import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
+import com.cetcxl.xlpay.common.entity.model.Store;
 import com.cetcxl.xlpay.common.entity.model.StoreUser;
-import com.cetcxl.xlpay.admin.service.StoreService;
-import com.cetcxl.xlpay.admin.service.StoreUserService;
+import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -24,14 +28,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.Objects;
+
+import static com.cetcxl.xlpay.admin.constants.ResultCode.COMPANY_STORE_RELATION_WORKING;
+import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.RelationStatus.WORKING;
 
 @Validated
 @RestController
@@ -44,6 +49,12 @@ public class StoreController extends BaseController {
     private StoreUserService storeUserService;
     @Autowired
     private StoreService storeService;
+
+    @Autowired
+    private CompanyStoreRelationService companyStoreRelationService;
+
+    @Autowired
+    StoreMapper storeMapper;
 
     @Autowired
     private VerifyCodeService verifyCodeService;
@@ -136,4 +147,69 @@ public class StoreController extends BaseController {
         return ResBody.success(storeUserVO);
     }
 
+
+    @Data
+    @ApiModel
+    public static class ListCompanysReq extends MybatisPlusConfig.PageReq {
+        @ApiModelProperty(value = "商家名称")
+        String companyName;
+    }
+
+    @GetMapping("/stores/{storeId}/companys")
+    @ApiOperation("企业查询")
+    public ResBody<IPage<StoreMapper.StoreCompanyDTO>> listCompanys(ListCompanysReq req) {
+        UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
+
+        return ResBody
+                .success(
+                        storeMapper
+                                .listStoreCompany(
+                                        new Page(req.getPageNo(), req.getPageSize()),
+                                        user.getStore().getId(),
+                                        req.getCompanyName()
+
+                                )
+                );
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class StoreCompanyRelationReq {
+        @ApiModelProperty(required = true, value = "是否通过")
+        @NotNull
+        Boolean isApproval;
+    }
+
+    @PatchMapping("/stores/{storeId}/company-store-relation/{id}")
+    @ApiOperation("商家确认企业商家授信")
+    @Transactional
+    public ResBody updateCompanyStoreRelation(@PathVariable Integer id,
+                                              @Validated @RequestBody StoreCompanyRelationReq req) {
+        CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getById(id);
+        if (WORKING == companyStoreRelation.getStatus()) {
+            return ResBody.error(COMPANY_STORE_RELATION_WORKING);
+        }
+
+        if (req.getIsApproval()) {
+            companyStoreRelationService.update(
+                    Wrappers.lambdaUpdate(CompanyStoreRelation.class)
+                            .set(CompanyStoreRelation::getApplyReleation, null)
+                            .set(CompanyStoreRelation::getRelation, companyStoreRelation.getApplyReleation())
+                            .set(CompanyStoreRelation::getStatus, WORKING)
+                            .eq(CompanyStoreRelation::getId, companyStoreRelation.getId())
+            );
+        } else {
+            companyStoreRelationService.update(
+                    Wrappers.lambdaUpdate(CompanyStoreRelation.class)
+                            .set(CompanyStoreRelation::getApplyReleation, null)
+                            .set(CompanyStoreRelation::getStatus, WORKING)
+                            .eq(CompanyStoreRelation::getId, companyStoreRelation.getId())
+            );
+        }
+
+        return ResBody.success();
+    }
 }

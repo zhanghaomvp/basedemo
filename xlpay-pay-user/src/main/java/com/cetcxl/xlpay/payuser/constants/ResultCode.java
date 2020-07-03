@@ -12,8 +12,8 @@ public enum ResultCode implements IResultCode {
 
     COMPANY_NOT_EXIST(3001, "绑定企业不存在"),
 
-    WALLET_BALANCE_NOT_ENOUGH(4001, "账户余额不足"),
-    WALLET_RELATION_NOT_EXIST(4002, "钱包与商家暂未授信"),
+    WALLET_BALANCE_NOT_ENOUGH(4001, "账户余额或剩余额度不足"),
+    WALLET_RELATION_NOT_EXIST(4002, "企业未开通商家支付授信"),
 
     ;
 

@@ -94,7 +94,7 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.total").value(1)
+                                .jsonPath("$.data.total").value(2)
                 )
                 .andExpect(
                         MockMvcResultMatchers
@@ -126,7 +126,7 @@ class CompanyControllerTest extends BaseTest {
                 )
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.records[0].name").value("shop2")
+                                .jsonPath("$.data.records[0].name").value("shop3")
                 );
     }
 
@@ -142,6 +142,8 @@ class CompanyControllerTest extends BaseTest {
                                 TrustlinkDataRpcService.CompanyInfo.builder()
                                         .organizationName(S_CETCXL)
                                         .organizationCreditId(S_TEMP)
+                                        .organizationTel(S_PHONE)
+                                        .organizationEmail(S_TEMP)
                                         .build()
                         )
                 )
@@ -192,7 +194,7 @@ class CompanyControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .post("/companys/{companyId}/stores/{storeId}/company-store-relation", 1, 2)
+                                .post("/companys/{companyId}/stores/{storeId}/company-store-relation", 1, 3)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -200,18 +202,18 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.id").value(2)
+                                .jsonPath("$.data.id").value(3)
                 )
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.relation").value(3)
+                                .jsonPath("$.data.applyReleation").value(3)
                 );
 
-        Assert.assertTrue(companyStoreRelationService.removeById(2));
+        Assert.assertTrue(companyStoreRelationService.removeById(3));
     }
 
     @Test
-    void updateCompanyStoreRelation_success() throws Exception {
+    void updateCompanyStoreRelation_close_success() throws Exception {
         setAuthentication(
                 Company.builder()
                         .id(1)
@@ -219,7 +221,53 @@ class CompanyControllerTest extends BaseTest {
         );
 
         CompanyController.CompanyStoreRelationReq req = CompanyController.CompanyStoreRelationReq.builder()
-                .canCashPay(true)
+                .canCashPay(false)
+                .canCreditPay(false)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .patch("/companys/{companyId}/stores/{storeId}/company-store-relation/{id}", 1, 1, 1)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value(ResBody.Status.OK.name())
+                );
+
+        CompanyStoreRelation relation = companyStoreRelationService.getById(1);
+        Assert.assertTrue(
+                CompanyStoreRelation.Relation.CASH_PAY
+                        .isClose(relation.getApplyReleation())
+        );
+        Assert.assertTrue(
+                CompanyStoreRelation.Relation.CASH_PAY
+                        .isClose(relation.getRelation())
+        );
+
+        Assert.assertTrue(CompanyStoreRelation.RelationStatus.WORKING == relation.getStatus());
+
+        companyStoreRelationService.update(
+                Wrappers.lambdaUpdate(CompanyStoreRelation.class)
+                        .set(CompanyStoreRelation::getRelation, 1)
+                        .eq(CompanyStoreRelation::getId, relation.getId())
+        );
+    }
+
+    @Test
+    void updateCompanyStoreRelation_add_success() throws Exception {
+        setAuthentication(
+                Company.builder()
+                        .id(1)
+                        .build()
+        );
+
+        CompanyController.CompanyStoreRelationReq req = CompanyController.CompanyStoreRelationReq.builder()
+                .canCashPay(false)
                 .canCreditPay(true)
                 .build();
 
@@ -241,6 +289,10 @@ class CompanyControllerTest extends BaseTest {
         Assert.assertTrue(
                 CompanyStoreRelation.Relation.CREDIT_PAY
                         .isOpen(relation.getApplyReleation())
+        );
+        Assert.assertTrue(
+                CompanyStoreRelation.Relation.CASH_PAY
+                        .isClose(relation.getRelation())
         );
         Assert.assertFalse(
                 CompanyStoreRelation.Relation.CREDIT_PAY

@@ -47,10 +47,11 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                 .deal(deal.getId())
                 .type(WalletCashFlow.CashFlowType.MINUS)
                 .amount(deal.getAmount())
+                .balance(walletCash.getCashBalance())
                 .info(deal.getInfo())
                 .build();
 
-        cashFlow.caculateBalance(walletCash.getCashBalance());
+        cashFlow.caculateBalance();
         walletCashFlowService.save(cashFlow);
 
         update(

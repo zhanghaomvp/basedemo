@@ -47,6 +47,8 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
         WalletCashFlow cashFlow = WalletCashFlow.builder()
                 .walletCash(walletCash.getId())
                 .deal(deal.getId())
+                .amount(deal.getAmount())
+                .balance(walletCash.getCashBalance())
                 .info("")
                 .build();
 
@@ -62,8 +64,7 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
         }
 
         cashFlow.setType(flowType);
-        cashFlow.setAmount(deal.getAmount());
-        cashFlow.caculateBalance(walletCash.getCashBalance());
+        cashFlow.caculateBalance();
         walletCashFlowService.save(cashFlow);
 
         update(

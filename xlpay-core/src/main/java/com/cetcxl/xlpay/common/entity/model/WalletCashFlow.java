@@ -65,17 +65,17 @@ public class WalletCashFlow implements Serializable {
         }
     }
 
-    public void caculateBalance(BigDecimal balance) {
+    public void caculateBalance() {
         if (Objects.isNull(type)) {
             throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
         }
 
         switch (type) {
             case PLUS:
-                setBalance(balance.add(this.getAmount()));
+                setBalance(this.balance.add(this.getAmount()));
                 break;
             case MINUS:
-                setBalance(balance.subtract(this.getAmount()));
+                setBalance(this.balance.subtract(this.getAmount()));
                 break;
             default:
         }

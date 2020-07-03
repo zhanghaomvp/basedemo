@@ -85,7 +85,14 @@ public class UserDetailServiceImpl implements UserDetailsService {
                         .eq(StoreUser::getPhone, phone)
                         .eq(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE)
         );
+        if (Objects.isNull(storeUser)) {
+            throw new UsernameNotFoundException("该商家用户不存在");
+        }
+
         Store store = storeService.getById(storeUser.getStore());
+        if (Objects.isNull(store)) {
+            throw new UsernameNotFoundException("该商家不存在");
+        }
 
         return new UserInfo(
                 storeUser.getPhone(),

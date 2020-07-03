@@ -8,14 +8,16 @@ import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.service.*;
 import com.cetcxl.xlpay.payuser.util.ContextUtil;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -113,23 +115,31 @@ public class PayController extends BaseController {
         return ResBody.success(walletCredit.getCreditBalance().toString());
     }
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class PayReq {
+        @NotNull Integer storeId;
+        @NotNull String amount;
+        @NotBlank String password;
+        String info;
+    }
 
     @PostMapping("/pay-user/{id}/wallet/cash/{walletId}/deal")
     @ApiOperation("个人余额支付")
     public ResBody payCash(
             @PathVariable Integer id,
             @PathVariable Integer walletId,
-            @NotNull Integer storeId,
-            @NotNull String amount,
-            @NotBlank String password,
-            String info) {
+            @Validated @RequestBody PayReq req) {
         WalletCash walletCash = walletCashService.getById(walletId);
         CompanyMember companyMember = companyMemberService.getById(walletCash.getCompanyMember());
 
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getOne(
                 Wrappers.lambdaQuery(CompanyStoreRelation.class)
                         .eq(CompanyStoreRelation::getCompany, companyMember.getCompany())
-                        .eq(CompanyStoreRelation::getStore, storeId)
+                        .eq(CompanyStoreRelation::getStore, req.getStoreId())
         );
 
         if (!CompanyStoreRelation.Relation.CASH_PAY
@@ -141,13 +151,47 @@ public class PayController extends BaseController {
                 .walletId(walletId)
                 .company(companyMember.getCompany())
                 .companyMember(companyMember.getId())
-                .store(storeId)
-                .amount(new BigDecimal(amount))
+                .store(req.getStoreId())
+                .amount(new BigDecimal(req.getAmount()))
                 .dealType(Deal.DealType.CASH_DEAL)
-                .info(info)
+                .info(req.getInfo())
                 .build();
 
         dealService.dealCash(dealParam);
+        return ResBody.success();
+    }
+
+    @PostMapping("/pay-user/{id}/wallet/credit/{walletId}/deal")
+    @ApiOperation("个人信用额度支付")
+    public ResBody payCredit(
+            @PathVariable Integer id,
+            @PathVariable Integer walletId,
+            @Validated @RequestBody PayReq req) {
+        WalletCredit walletCredit = walletCreditService.getById(walletId);
+        CompanyMember companyMember = companyMemberService.getById(walletCredit.getCompanyMember());
+
+        CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getOne(
+                Wrappers.lambdaQuery(CompanyStoreRelation.class)
+                        .eq(CompanyStoreRelation::getCompany, companyMember.getCompany())
+                        .eq(CompanyStoreRelation::getStore, req.getStoreId())
+        );
+
+        if (CompanyStoreRelation.Relation.CREDIT_PAY
+                .isClose(companyStoreRelation.getRelation())) {
+            return ResBody.error(WALLET_RELATION_NOT_EXIST);
+        }
+
+        DealService.DealParam dealParam = DealService.DealParam.builder()
+                .walletId(walletId)
+                .company(companyMember.getCompany())
+                .companyMember(companyMember.getId())
+                .store(req.getStoreId())
+                .amount(new BigDecimal(req.getAmount()))
+                .dealType(Deal.DealType.CREDIT_DEAL)
+                .info(req.getInfo())
+                .build();
+
+        dealService.dealCredit(dealParam);
         return ResBody.success();
     }
 }

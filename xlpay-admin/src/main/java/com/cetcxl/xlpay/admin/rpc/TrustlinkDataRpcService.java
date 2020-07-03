@@ -33,6 +33,7 @@ public class TrustlinkDataRpcService {
         private String organizationCreditId;
         private String organizationName;
         private String organizationTel;
+        private String organizationEmail;
     }
 
     public Optional<CompanyInfo> getCompanyInfo(String socialCreditCode) {

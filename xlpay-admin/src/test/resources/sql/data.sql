@@ -26,7 +26,11 @@ INSERT INTO `store`(`id`, `name`, `contact`, `phone`, `email`, `social_credit_co
 VALUES (1, 'shop1', 'shop1', '19900000001', NULL, 'shop1', NULL, 1, 'address');
 INSERT INTO `store`(`id`, `name`, `contact`, `phone`, `email`, `social_credit_code`, `business_license`, `status`, `address`)
 VALUES (2, 'shop2', 'shop2', '19900000002', NULL, 'shop2', NULL, 1, 'address');
+INSERT INTO `store`(`id`, `name`, `contact`, `phone`, `email`, `social_credit_code`, `business_license`, `status`, `address`)
+VALUES (3, 'shop3', 'shop3', '19900000003', NULL, 'shop3', NULL, 1, 'address');
 
 --
 INSERT INTO `company_store_relation`(`id`, `company`, `store`, `relation`, `apply_releation`, `status`)
 VALUES (1, 1, 1, 1, NULL, 1);
+INSERT INTO `company_store_relation`(`id`, `company`, `store`, `relation`, `apply_releation`, `status`)
+VALUES (2, 1, 2, 1, 3, 0);
