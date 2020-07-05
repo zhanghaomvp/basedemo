@@ -4,7 +4,10 @@ import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
 import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
+import com.cetcxl.xlpay.common.entity.model.Attachment;
+import com.cetcxl.xlpay.common.entity.vo.AttachmentVO;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.service.AttachmentService;
 import com.cetcxl.xlpay.common.service.XstoreService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -18,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Pattern;
-import java.io.IOException;
 
 @Validated
 @RestController
@@ -26,6 +28,9 @@ import java.io.IOException;
 public class UtilController extends BaseController {
     @Autowired
     private VerifyCodeService verifyCodeService;
+
+    @Autowired
+    private AttachmentService attachmentService;
     @Autowired
     private XstoreService xstoreService;
 
@@ -45,24 +50,26 @@ public class UtilController extends BaseController {
         return ResBody.success();
     }
 
-    @PostMapping("/util/upload")
+    @PostMapping("/util/upload/xstore")
     @ApiOperation("文件上传")
-    public ResBody<Long> upload(
+    public ResBody<AttachmentVO> upload(
             @RequestParam("file") MultipartFile file
     ) {
-        return ResBody.success(xstoreService.uploadFile(file));
+        AttachmentVO attachmentVO = AttachmentVO.of(xstoreService.uploadFile(file), AttachmentVO.class);
+        return ResBody.success(attachmentVO);
     }
 
-    @GetMapping("/util/download/{resoureceId}")
+    @GetMapping("/util/download/xstore/{attachId}")
     @ApiOperation("文件下载")
     public void download(
-            @PathVariable("resoureceId") long resoureceId,
+            @PathVariable("attachId") Integer attachId,
             HttpServletResponse response
-    ) throws IOException {
-        byte[] bytes = xstoreService.downloadFile(resoureceId);
+    ) throws Exception {
+        Attachment attachment = attachmentService.getById(attachId);
+        resolveAttachmentResponseHeader(response, attachment);
 
+        byte[] bytes = xstoreService.downloadFile(Long.valueOf(attachment.getResoure()));
         ServletOutputStream out = response.getOutputStream();
-        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         out.write(bytes);
         out.flush();
         out.close();

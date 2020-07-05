@@ -156,6 +156,37 @@ CREATE TABLE `deal` (
 
 ALTER TABLE `deal` ADD INDEX deal_created_index ( `created` ) ;
 ALTER TABLE `deal` ADD INDEX deal_updated_index ( `updated` ) ;
+ALTER TABLE `deal` ADD INDEX deal_check_batch ( `check_batch` ) ;
 
+
+-- 7月05日
+CREATE TABLE `attachment` (
+	`id` INT UNSIGNED AUTO_INCREMENT,
+	`category` SMALLINT,
+	`file_name` VARCHAR ( 100 ),
+	`file_type` INT UNSIGNED,
+	`resoure` VARCHAR ( 100 ),
+	`status` TINYINT,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+PRIMARY KEY ( `id` )
+);
+
+CREATE TABLE `checks` (
+	`batch` INT UNSIGNED AUTO_INCREMENT,
+	`company` INT UNSIGNED,
+	`store` INT UNSIGNED,
+	`pay_type` TINYINT,
+	`total_deal_count` INT,
+	`total_deal_amonut` DECIMAL ( 13, 2 ),
+	`attachments` VARCHAR ( 300 ),
+	`info` VARCHAR ( 300 ),
+	`status` TINYINT,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY ( `batch` ),
+	INDEX checks_company_index ( company ),
+	INDEX checks_store_index ( store )
+);
 
 

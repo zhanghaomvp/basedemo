@@ -36,7 +36,7 @@ public class MybatisPlusCodeGenerator {
 
         // 包配置
         PackageConfig pc = new PackageConfig();
-        pc.setParent("com.cetcxl.xlpay.admin.server");
+        pc.setParent("com.cetcxl.xlpay.admin");
 
         mpg.setPackageInfo(pc);
 
@@ -47,7 +47,7 @@ public class MybatisPlusCodeGenerator {
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(false);
         // *****此处更改表名即可******
-//        strategy.setInclude("store","company_store_relation","wallet_flow","deal");
+        strategy.setInclude("checks");
         strategy.setControllerMappingHyphenStyle(true);
         //strategy.setTablePrefix(pc.getModuleName() + "_");
 

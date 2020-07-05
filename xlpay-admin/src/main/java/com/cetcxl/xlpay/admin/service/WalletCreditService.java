@@ -131,4 +131,33 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                 )
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void payment(Deal deal) {
+        //// TODO: 2020/7/5 分布式锁
+        WalletCredit walletCredit = lambdaQuery()
+                .eq(WalletCredit::getCompanyMember, deal.getCompanyMember())
+                .one();
+
+        WalletCreditFlow creditFlow = WalletCreditFlow.builder()
+                .walletCredit(walletCredit.getId())
+                .deal(deal.getId())
+                .type(WalletCreditFlow.CreditFlowType.PAYMENT)
+                .balance(walletCredit.getCreditBalance())
+                .quota(walletCredit.getCreditQuota())
+                .amount(deal.getAmount())
+                .info("")
+                .build();
+
+        creditFlow.caculateBanlanceAndQuota();
+        walletCreditFlowService.save(creditFlow);
+
+        lambdaUpdate()
+                .set(WalletCredit::getCreditBalance, creditFlow.getBalance())
+                .set(WalletCredit::getCreditQuota, creditFlow.getQuota())
+                .eq(WalletCredit::getId, walletCredit.getId())
+                .update();
+
+    }
+
 }

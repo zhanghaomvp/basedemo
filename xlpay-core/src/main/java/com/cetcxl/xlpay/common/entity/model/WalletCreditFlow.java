@@ -55,6 +55,7 @@ public class WalletCreditFlow implements Serializable {
         BALANCE_MINUS(1),
         QUOTA_PLUS(2),
         QUOTA_MINUS(3),
+        PAYMENT(4),
         ;
         private Integer status;
 
@@ -84,6 +85,9 @@ public class WalletCreditFlow implements Serializable {
                 break;
             case BALANCE_MINUS:
                 setBalance(balance.subtract(this.getAmount()));
+                break;
+            case PAYMENT:
+                setBalance(balance.add(this.getAmount()));
                 break;
             default:
         }

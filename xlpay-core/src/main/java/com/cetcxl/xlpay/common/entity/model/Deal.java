@@ -89,10 +89,9 @@ public class Deal implements Serializable {
     }
 
     public enum Status implements IEnum<Integer> {
-        PAID(1),
-        CHECK_APPROVAL(2),
-        CHECK_CONFIRM(3),
-        CHECK_FINISH(4),
+        PAID(0),
+        CHECKING(1),
+        CHECK_FINISH(2),
         ;
         private Integer status;
 

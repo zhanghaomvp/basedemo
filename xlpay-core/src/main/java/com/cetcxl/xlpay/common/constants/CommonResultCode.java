@@ -6,7 +6,7 @@ public enum CommonResultCode implements IResultCode {
     AUTHENTICATION_ERROR(9003, "验证失败 请重新登录"),
     SESSION_INVALID(9004, "已在其他地方重新登录 请确认"),
     LOGIN_FAIL(9005, "请确认用户名存在或者密码是否正确"),
-
+    FILE_TYPE_NOT_SUPPORT(9006, "文件类型不支持"),
 
     VERIFY_SIGN_HEAD_MISS(9101, "sign api head param miss"),
     VERIFY_SIGN_PUBLIC_KEY_MISS(9102, "sign api public key miss"),

@@ -290,6 +290,7 @@ public class CompanyMemberControllerTest extends BaseTest {
                         Wrappers.lambdaQuery(WalletCredit.class)
                                 .eq(WalletCredit::getId, 2)
                 );
+        Assert.assertTrue(originWalletCredit.getCreditQuota().compareTo(new BigDecimal("200")) != 0);
 
         CompanyMemberController.BatchUpdateWalletCreditQuotaReq req =
                 CompanyMemberController.BatchUpdateWalletCreditQuotaReq.builder()
@@ -314,12 +315,6 @@ public class CompanyMemberControllerTest extends BaseTest {
                                 .eq(WalletCredit::getId, 2)
                 );
 
-        Assert.assertTrue(
-                nowWalletCredit.getCreditBalance()
-                        .compareTo(
-                                originWalletCredit.getCreditBalance()
-                                        .add(new BigDecimal("200"))
-                        ) == 0
-        );
+        Assert.assertTrue(nowWalletCredit.getCreditQuota().compareTo(new BigDecimal("200")) == 0);
     }
 }
