@@ -1,16 +1,19 @@
 package com.cetcxl.xlpay.admin.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cetcxl.xlpay.admin.dao.ChecksMapper;
 import com.cetcxl.xlpay.admin.entity.vo.ChecksVO;
 import com.cetcxl.xlpay.admin.service.ChecksService;
 import com.cetcxl.xlpay.admin.service.DealService;
+import com.cetcxl.xlpay.admin.util.ContextUtil;
+import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.constants.CommonResultCode;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.rpc.ResBody;
-import com.google.common.base.Joiner;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
@@ -25,10 +28,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Validated
 @RestController
@@ -38,6 +39,51 @@ public class ChecksController extends BaseController {
     DealService dealService;
     @Autowired
     ChecksService checksService;
+    @Autowired
+    ChecksMapper checksMapper;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class ListCheckReq extends MybatisPlusConfig.PageReq {
+        Integer companyId;
+        Integer storeId;
+        Deal.PayType payType;
+        Checks.Status status;
+    }
+
+    @GetMapping("/companys/{companyId}/checks")
+    @ApiOperation("企业结算列表查询")
+    public ResBody<IPage<ChecksMapper.CheckDTO>> ListCompanyCheck(ListCheckReq req) {
+        return ResBody
+                .success(
+                        checksMapper.listCheck(
+                                new Page(req.getPageNo(), req.getPageSize()),
+                                req
+                        )
+                );
+    }
+
+    @GetMapping("/stores/{storeId}/checks")
+    @ApiOperation("企业结算列表查询")
+    public ResBody<IPage<ChecksMapper.CheckDTO>> ListStoreCheck(ListCheckReq req) {
+        return ResBody
+                .success(
+                        checksMapper.listCheck(
+                                new Page(req.getPageNo(), req.getPageSize()),
+                                req
+                        )
+                );
+    }
+
+    @GetMapping("/checks/{checkId}")
+    @ApiOperation("企业账单详情查询")
+    public ResBody getCheckDetail(@PathVariable Integer checkId) {
+        ChecksVO checksVO = ChecksVO.of(checksService.getById(checkId), ChecksVO.class);
+        return ResBody.success(checksVO);
+    }
 
     @Data
     @Builder
@@ -64,57 +110,22 @@ public class ChecksController extends BaseController {
             @PathVariable Integer companyId,
             @Validated @RequestBody AddCheckReq req
     ) {
-        List<Deal> deals = dealService.list(
-                Wrappers.lambdaQuery(Deal.class)
-                        .in(Deal::getId, req.getDealIds())
-        );
 
-        if (deals.size() != req.getDealIds().size()) {
-            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
-        }
-
-        Optional<Deal> otherStoreDeal = deals.stream()
-                .filter(
-                        deal -> !deal.getStore().equals(req.getStoreId()) || deal.getPayType() != req.getPayType()
-                )
-                .findAny();
-
-        if (otherStoreDeal.isPresent()) {
-            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
-
-        }
-
-        Checks checks = Checks.builder()
-                .company(companyId)
-                .store(req.getStoreId())
-                .payType(req.getPayType())
-                .info(req.getInfo())
-                .status(Checks.Status.APPROVAL)
-                .totalDealCount(deals.size())
-                .totalDealAmonut(new BigDecimal("0"))
-                .attachments(
-                        Joiner.on(",").skipNulls().join(req.getAttachments())
-                )
-                .build();
-
-        deals.stream()
-                .forEach(
-                        deal ->
-                                checks.setTotalDealAmonut(
-                                        checks.getTotalDealAmonut().add(deal.getAmount())
-                                )
-
+        return ResBody
+                .success(
+                        ChecksVO.of(
+                                checksService.addCheck(
+                                        Integer.valueOf(ContextUtil.getUserInfo().getUsername()),
+                                        companyId,
+                                        req.getStoreId(),
+                                        req.getPayType(),
+                                        req.getDealIds(),
+                                        req.getAttachments(),
+                                        req.getInfo()
+                                ),
+                                ChecksVO.class
+                        )
                 );
-
-        checksService.save(checks);
-
-        dealService.lambdaUpdate()
-                .in(Deal::getId, req.getDealIds())
-                .set(Deal::getStatus, Deal.Status.CHECKING)
-                .set(Deal::getCheckBatch, checks.getBatch())
-                .update();
-
-        return ResBody.success(ChecksVO.of(checks, ChecksVO.class));
     }
 
 
@@ -135,15 +146,16 @@ public class ChecksController extends BaseController {
             @PathVariable Integer checkBatch,
             @Validated @RequestBody AuditCheckReq req
     ) {
-
         if (Objects.isNull(req.getApprovalOrReject())) {
             throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
         }
 
+        Integer operator = Integer.valueOf(ContextUtil.getUserInfo().getUsername());
+
         if (req.getApprovalOrReject()) {
-            checksService.process(checkBatch, Checks.Status.CONFIRM);
+            checksService.process(operator, checkBatch, Checks.Status.APPROVAL, req.getInfo());
         } else {
-            checksService.process(checkBatch, Checks.Status.REJECT);
+            checksService.process(operator, checkBatch, Checks.Status.REJECT, req.getInfo());
         }
 
         return ResBody.success();
@@ -159,10 +171,12 @@ public class ChecksController extends BaseController {
             throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
         }
 
+        Integer operator = Integer.valueOf(ContextUtil.getUserInfo().getUsername());
+
         if (req.getConfirmOrDeny()) {
-            checksService.process(checkBatch, Checks.Status.FINISH);
+            checksService.process(operator, checkBatch, Checks.Status.COFIRM, req.getInfo());
         } else {
-            checksService.process(checkBatch, Checks.Status.DENY);
+            checksService.process(operator, checkBatch, Checks.Status.DENY, req.getInfo());
         }
 
         return ResBody.success();

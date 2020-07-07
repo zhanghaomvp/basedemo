@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @SpringBootTest(classes = XlpayAdminApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class BaseTest {
+    public static final String S_ID_1 = "1";
     public static final String S_TEST = "test";
     public static final String S_TEMP = "temp";
     public static final String S_VERIFY_CODE = "123456";
@@ -75,7 +76,7 @@ public class BaseTest {
                 .setAuthentication(
                         new UsernamePasswordAuthenticationToken(
                                 new UserDetailServiceImpl.UserInfo(
-                                        S_TEMP,
+                                        S_ID_1,
                                         S_TEMP,
                                         AuthorityUtils.createAuthorityList("All"),
                                         company
@@ -90,7 +91,7 @@ public class BaseTest {
                 .setAuthentication(
                         new UsernamePasswordAuthenticationToken(
                                 new UserDetailServiceImpl.UserInfo(
-                                        S_TEMP,
+                                        S_ID_1,
                                         S_TEMP,
                                         AuthorityUtils.createAuthorityList("All"),
                                         store

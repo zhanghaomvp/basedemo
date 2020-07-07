@@ -1,8 +1,8 @@
 package com.cetcxl.xlpay.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cetcxl.xlpay.common.entity.model.Store;
 import com.cetcxl.xlpay.admin.dao.StoreMapper;
+import com.cetcxl.xlpay.common.entity.model.Store;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,5 +15,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class StoreService extends ServiceImpl<StoreMapper, Store> {
+    private static final String PREFIX_QR_CODE = "xlpay.store";
 
+    public String getQrCodeContent(Integer storeId) {
+        return PREFIX_QR_CODE + storeId;
+    }
 }

@@ -189,4 +189,15 @@ CREATE TABLE `checks` (
 	INDEX checks_store_index ( store )
 );
 
+ALTER TABLE `store` modify COLUMN `business_license` INT UNSIGNED;
 
+CREATE TABLE `checks_record` (
+	`id` INT UNSIGNED AUTO_INCREMENT,
+	`check_batch` INT UNSIGNED,
+	`action` TINYINT,
+	`operator` INT UNSIGNED,
+	`info` VARCHAR ( 300 ),
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY ( `id` ),
+	INDEX checks_record_check_batch_index ( check_batch )
+);

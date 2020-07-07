@@ -4,7 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan({"com.cetcxl.xlpay.admin.dao", "com.cetcxl.xlpay.common.dao"})
+@MapperScan({"com.cetcxl.xlpay.admin.dao"})
 public class MybatisPlusExtraConfig {
 
 }

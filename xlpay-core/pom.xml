@@ -70,11 +70,11 @@
             <version>2.2</version>
         </dependency>
 
-        <!--<dependency>
+        <dependency>
             <groupId>com.zxl</groupId>
             <artifactId>zxl-sdk</artifactId>
             <version>2.0.3-xstor</version>
-        </dependency>-->
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

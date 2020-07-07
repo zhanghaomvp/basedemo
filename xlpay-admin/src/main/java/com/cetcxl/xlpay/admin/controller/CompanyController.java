@@ -1,5 +1,6 @@
 package com.cetcxl.xlpay.admin.controller;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -51,6 +52,10 @@ import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.Relation
 @RestController
 @Api(tags = "企业管理相关接口")
 public class CompanyController extends BaseController {
+
+    @Autowired
+    private StoreUserService storeUserService;
+
     @Autowired
     PasswordEncoder passwordEncoder;
     @Autowired
@@ -325,4 +330,44 @@ public class CompanyController extends BaseController {
         );
         return ResBody.success();
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ApiModel("")
+    public static class ResetloginPasswordReq {
+        @ApiModelProperty(required = true, value = "登录名(手机号)")
+        @NotNull
+        private String phone;
+
+        @ApiModelProperty(required = true, value = "新密码")
+        @NotBlank
+        private String newPassword;
+
+        @ApiModelProperty(value = "验证码", required = true)
+        @Pattern(regexp = PatternConstants.VERIFY_CODE)
+        String verifyCode;
+    }
+
+    @PatchMapping("companys/company-user/password")
+    @ApiOperation("重置企业登录密码")
+    public ResBody resetLoginPassword(@Validated @RequestBody ResetloginPasswordReq req) {
+
+        if (!verifyCodeService.checkVerifyCode(req.getPhone(), req.getVerifyCode())) {
+            return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
+        }
+        CompanyUser companyUser = companyUserService.lambdaQuery()
+                .eq(CompanyUser::getPhone, req.getPhone())
+                .eq(CompanyUser::getStatus, CompanyUser.CompanyUserStatus.ACTIVE).one();
+
+        if (ObjectUtil.isNull(companyUser)) {
+            return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
+        }
+
+        companyUser.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        companyUserService.updateById(companyUser);
+        return ResBody.success();
+    }
+
 }

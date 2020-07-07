@@ -2,6 +2,7 @@ package com.cetcxl.xlpay.common.service;
 
 import com.cetcxl.xlpay.common.entity.model.Attachment;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
+import com.zxl.sdk.XstorSdk;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -12,8 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.cetcxl.xlpay.common.constants.CommonResultCode.FILE_TYPE_NOT_SUPPORT;
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.XSTORE_UPLOAD_FAIL;
 
 @Slf4j
 @Component
@@ -22,7 +25,9 @@ public class XstoreService implements InitializingBean {
     @Autowired
     private XstorConfigrution xstorConfigrution;
     @Autowired
-    AttachmentService attachmentService;
+    private AttachmentService attachmentService;
+
+    private XstorSdk xstorSdk;
 
     public Attachment uploadFile(MultipartFile file) {
         Optional<Attachment.FileType> fileType = Attachment.FileType.of(
@@ -31,8 +36,10 @@ public class XstoreService implements InitializingBean {
         if (!fileType.isPresent()) {
             throw new BaseRuntimeException(FILE_TYPE_NOT_SUPPORT);
         }
-        /*try {
-            return xstorSdk.upload(
+
+        try {
+
+            long resoureId = xstorSdk.upload(
                     UUID.randomUUID().toString().replaceAll("-", ""),
                     file.getInputStream(),
                     file.getSize(),
@@ -40,36 +47,37 @@ public class XstoreService implements InitializingBean {
                     StringUtils.substringAfterLast(file.getOriginalFilename(), "."),
                     xstorConfigrution.getSk(),
                     xstorConfigrution.getPk());
+
+            Attachment attachment = Attachment.builder()
+                    .category(Attachment.Category.XSTORE)
+                    .fileName(file.getOriginalFilename())
+                    .fileType(fileType.get())
+                    .resoure(String.valueOf(resoureId))
+                    .status(Attachment.Status.AVALALIABLE)
+                    .build();
+
+            attachmentService.save(attachment);
+            return attachment;
+
         } catch (Exception e) {
             throw new BaseRuntimeException(e, XSTORE_UPLOAD_FAIL);
-        }*/
-
-        Attachment attachment = Attachment.builder()
-                .category(Attachment.Category.XSTORE)
-                .fileName(file.getOriginalFilename())
-                .fileType(fileType.get())
-                .resoure("0L")
-                .status(Attachment.Status.AVALALIABLE)
-                .build();
-        attachmentService.save(attachment);
-        return attachment;
+        }
     }
 
     public byte[] downloadFile(Long resourceId) {
-        /*try {
+        try {
             return xstorSdk.download(resourceId, xstorConfigrution.getSk());
         } catch (Exception e) {
             throw new BaseRuntimeException(e, XSTORE_UPLOAD_FAIL);
-        }*/
-        return null;
+        }
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        /*xstorSdk = new XstorSdk(
+        xstorSdk = new XstorSdk(
                 xstorConfigrution.getAppId(),
                 xstorConfigrution.getAppKey(),
-                StringUtils.EMPTY);*/
+                StringUtils.EMPTY);
     }
 
     @Component

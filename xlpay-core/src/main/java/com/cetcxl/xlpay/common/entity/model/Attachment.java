@@ -62,7 +62,7 @@ public class Attachment implements Serializable {
     }
 
     public enum FileType implements IEnum<Integer> {
-        PICTURE(0, MediaType.ANY_IMAGE_TYPE, new String[]{}),
+        PICTURE(0, MediaType.ANY_IMAGE_TYPE, new String[]{"jpg", "png"}),
         EXCEL(1, MediaType.MICROSOFT_EXCEL, new String[]{"xlsx"}),
         WORD(2, MediaType.MICROSOFT_WORD, new String[]{}),
         ;

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@MapperScan({"com.cetcxl.xlpay.common.dao"})
 public class MybatisPlusConfig {
     @Bean
     public PaginationInterceptor paginationInterceptor() {

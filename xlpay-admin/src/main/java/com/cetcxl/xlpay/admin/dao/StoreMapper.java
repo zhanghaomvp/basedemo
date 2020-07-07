@@ -78,30 +78,46 @@ public interface StoreMapper extends BaseMapper<Store> {
         private String name;
         private String contact;
         private String phone;
-        @ApiModelProperty(value = "关联关系id")
-        private String relationId;
         @ApiModelProperty(value = "已生效关联关系，该值用位表示关联关系 第一位为1 表示余额消费授信 第二位为1 表示信用消费授信")
         private Integer relation;
         @ApiModelProperty(value = "待确认关联关系，该值用位表示关联关系 第一位为1 表示企业正发起余额消费授信 第二位为1 表示企业正发起信用消费授信")
         private Integer applyReleation;
         @ApiModelProperty(value = "当前企业与商家关联关系状态")
         private CompanyStoreRelation.RelationStatus relationStatus;
+        @ApiModelProperty(value = "CompanyStoreRelation关联Id")
+        private Integer csrId;
     }
 
-    static String listStoreCompanySql(String companyName) {
+    static String listStoreCompanyIsApprovalSql(String companyName) {
         return new SQL() {{
 
-            SELECT("c.*,csr.relation,csr.apply_releation,csr.`status` as relation_status,csr.`id` as relation_id ");
+            SELECT("c.*,csr.relation,csr.apply_releation,csr.`status` as relation_status,csr.`id` as csr_id ");
             FROM(" company c, company_store_relation csr");
             WHERE("c.id=csr.company AND csr.store=#{storeId}");
             if (StringUtils.isNotBlank(companyName)) {
                 WHERE(" c.name like concat('%',#{companyName},'%')");
             }
+            WHERE("csr.`status` = 0");
+
         }}.toString();
     }
 
-    @SelectProvider(type = StoreMapper.class, method = "listStoreCompanySql")
-    IPage<StoreCompanyDTO> listStoreCompany(Page page, Integer storeId, String companyName);
+    @SelectProvider(type = StoreMapper.class, method = "listStoreCompanyIsApprovalSql")
+    IPage<StoreCompanyDTO> listStoreCompanyIsApproval(Page page, Integer storeId, String companyName);
 
+    static String listStoreCompanyNotApprovalSql(String companyName) {
+        return new SQL() {{
 
+            SELECT("c.*,csr.relation,csr.apply_releation,csr.`status` as relation_status,csr.`id` as csr_id ");
+            FROM(" company c, company_store_relation csr");
+            WHERE("c.id=csr.company AND csr.store=#{storeId}");
+            if (StringUtils.isNotBlank(companyName)) {
+                WHERE(" c.name like concat('%',#{companyName},'%')");
+            }
+            WHERE("csr.relation > 0");
+        }}.toString();
+    }
+
+    @SelectProvider(type = StoreMapper.class, method = "listStoreCompanyNotApprovalSql")
+    IPage<StoreCompanyDTO> listStoreCompanyNotApproval(Page page, Integer storeId, String companyName);
 }

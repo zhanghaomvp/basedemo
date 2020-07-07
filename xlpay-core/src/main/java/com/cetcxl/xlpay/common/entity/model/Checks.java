@@ -3,14 +3,19 @@ package com.cetcxl.xlpay.common.entity.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.enums.IEnum;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import io.swagger.annotations.ApiModel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -52,11 +57,11 @@ public class Checks implements Serializable {
     private LocalDateTime updated;
 
     public enum Status implements IEnum<Integer> {
-        APPROVAL(0),
+        APPLY(0),
         REJECT(1),
-        CONFIRM(2),
+        APPROVAL(2),
         DENY(3),
-        FINISH(4),
+        COFIRM(4),
         ;
         private Integer status;
 
@@ -70,4 +75,40 @@ public class Checks implements Serializable {
         }
     }
 
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class InfoRecord {
+        Status status;
+        String info;
+    }
+
+    public Checks appendInfo(String info) {
+        try {
+            List<InfoRecord> list;
+
+            if (StringUtils.isNotBlank(this.info)) {
+                list = new ObjectMapper()
+                        .readValue(
+                                this.info,
+                                new TypeReference<List<InfoRecord>>() {
+                                }
+                        );
+            } else {
+                list = Lists.newArrayList();
+            }
+
+            list.add(
+                    InfoRecord.builder()
+                            .status(this.status)
+                            .info(info)
+                            .build()
+            );
+            this.info = new ObjectMapper().writeValueAsString(list);
+            return this;
+        } catch (JsonProcessingException e) {
+            throw new BaseRuntimeException(e);
+        }
+    }
 }

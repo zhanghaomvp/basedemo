@@ -72,7 +72,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         }
 
         return new UserInfo(
-                companyUser.getPhone(),
+                companyUser.getId().toString(),
                 companyUser.getPassword(),
                 AuthorityUtils.createAuthorityList("All"),
                 company
@@ -95,7 +95,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         }
 
         return new UserInfo(
-                storeUser.getPhone(),
+                storeUser.getId().toString(),
                 storeUser.getPassword(),
                 AuthorityUtils.createAuthorityList("All"),
                 store

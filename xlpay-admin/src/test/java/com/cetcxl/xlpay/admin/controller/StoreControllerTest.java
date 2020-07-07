@@ -74,6 +74,7 @@ class StoreControllerTest extends BaseTest {
                 .contactPhone(S_PHONE)
                 .address(S_TEMP)
                 .socialCreditCode(S_TEMP)
+                .businessLicense(0)
                 .build();
 
         mockMvc
@@ -82,6 +83,7 @@ class StoreControllerTest extends BaseTest {
                                 .post("/stores/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(
                         MockMvcResultMatchers.status().isOk()
@@ -113,7 +115,7 @@ class StoreControllerTest extends BaseTest {
     }
 
     @Test
-    void listCompanys() throws Exception {
+    void listCompanysisApproval_Success() throws Exception {
         setAuthentication(
                 Store.builder()
                         .id(1)
@@ -126,6 +128,7 @@ class StoreControllerTest extends BaseTest {
                                 .get("/stores/{storeId}/companys", 1)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
+                                .param("isApproval", "true")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -135,8 +138,32 @@ class StoreControllerTest extends BaseTest {
                 )
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.records[0].name").value("中国电科")
+                                .jsonPath("$.data.records[0].relationStatus").value("APPROVAL")
                 );
+    }
+
+    @Test
+    void listCompanysisNotApproval_Success() throws Exception {
+        setAuthentication(
+                Store.builder()
+                        .id(1)
+                        .build()
+        );
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/companys", 1)
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .param("isApproval", "false")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total").value(1)
+                )
+        ;
     }
 
     @Test
@@ -157,7 +184,7 @@ class StoreControllerTest extends BaseTest {
                                 .patch("/stores/{storeId}/company-store-relation/{id}", 2, 2)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req))
-                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                                .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
@@ -175,6 +202,45 @@ class StoreControllerTest extends BaseTest {
         );
     }
 
+    @Test
+    void cancelCompanyStoreRelation() throws Exception {
+        StoreController.StoreCompanyRelationReq req = StoreController.StoreCompanyRelationReq.builder()
+                .isCancel(true)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .delete("/stores/{storeId}/company-store-relation/{id}", 2, 2)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value(ResBody.Status.OK.name())
+                );
+
+        CompanyStoreRelation newRelation = companyStoreRelationService.getById(2);
+        Assert.assertTrue(Objects.isNull(newRelation.getRelation()));
+    }
+
+
+    @Test
+    void queryStoreInfo_success() throws Exception {
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}", 1)
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.companyNum").value(2)
+                );
+    }
 }
 
 

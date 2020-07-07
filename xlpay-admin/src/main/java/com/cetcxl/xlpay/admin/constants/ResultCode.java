@@ -16,6 +16,7 @@ public enum ResultCode implements IResultCode {
 
     STORE_USER_EXIST(2301, "该手机号已绑定商家"),
     STORE_EXIST(2302, "该商家已经被绑定"),
+    STORE_NOT_EXIST(2202, "该商家不存在"),
     ;
 
     private int code;

@@ -5,9 +5,11 @@ import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.admin.rpc.TrustlinkDataRpcService;
 import com.cetcxl.xlpay.admin.service.CompanyService;
 import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
+import com.cetcxl.xlpay.admin.service.CompanyUserService;
 import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
+import com.cetcxl.xlpay.common.entity.model.CompanyUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
@@ -20,6 +22,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -58,13 +61,18 @@ class CompanyControllerTest extends BaseTest {
     @Autowired
     CompanyService companyService;
 
+    @Autowired
+    CompanyUserService companyUserService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Test
     void detail_success() throws Exception {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/companys/1")
+                                .get("/companys/{companyId}",1)
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -94,7 +102,7 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.total").value(2)
+                                .jsonPath("$.data.total").value(3)
                 )
                 .andExpect(
                         MockMvcResultMatchers
@@ -126,7 +134,7 @@ class CompanyControllerTest extends BaseTest {
                 )
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.records[0].name").value("shop3")
+                                .jsonPath("$.data.records[0].name").value("shop4")
                 );
     }
 
@@ -163,6 +171,7 @@ class CompanyControllerTest extends BaseTest {
                         .post("/companys/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req))
+                        .accept(MediaType.APPLICATION_JSON_UTF8)
         ).andExpect(
                 MockMvcResultMatchers.status().isOk()
         ).andExpect(
@@ -202,7 +211,7 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.id").value(3)
+                                .jsonPath("$.data.id").value(4)
                 )
                 .andExpect(
                         MockMvcResultMatchers
@@ -299,5 +308,45 @@ class CompanyControllerTest extends BaseTest {
                         .isOpen(relation.getRelation())
         );
         Assert.assertTrue(CompanyStoreRelation.RelationStatus.APPROVAL == relation.getStatus());
+    }
+
+    @Test
+    void resetLoginPassword_success() throws Exception {
+
+        Mockito.doReturn(true)
+                .when(verifyCodeService)
+                .checkVerifyCode(eq("17360026771"), eq(S_VERIFY_CODE));
+
+        CompanyController.ResetloginPasswordReq req = CompanyController.ResetloginPasswordReq.builder()
+                .phone("17360026771")
+                .newPassword("admin456")
+                .verifyCode(S_VERIFY_CODE)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .patch("/companys/company-user/password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value(ResBody.Status.OK.name())
+                );
+
+        Assert.assertTrue(
+                passwordEncoder.matches(
+                        "admin456",
+                        companyUserService.lambdaQuery()
+                                .eq(CompanyUser::getPhone, "17360026771")
+                                .eq(CompanyUser::getStatus, CompanyUser.CompanyUserStatus.ACTIVE)
+                                .one()
+                                .getPassword()
+                )
+        );
+
     }
 }

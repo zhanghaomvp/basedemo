@@ -42,7 +42,7 @@ public class Store implements Serializable {
 
     private String socialCreditCode;
 
-    private String businessLicense;
+    private Integer businessLicense;
 
     private StoreStatus status;
 
