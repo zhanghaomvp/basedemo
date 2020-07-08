@@ -15,5 +15,4 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ChecksRecordService extends ServiceImpl<ChecksRecordMapper, ChecksRecord> {
-
 }

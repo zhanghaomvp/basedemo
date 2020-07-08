@@ -1,6 +1,5 @@
 package com.cetcxl.xlpay.admin.service;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.admin.dao.ChecksMapper;
 import com.cetcxl.xlpay.common.constants.CommonResultCode;
@@ -68,7 +67,6 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                         .set(Deal::getStatus, Deal.Status.PAID)
                         .set(Deal::getCheckBatch, null)
                         .eq(Deal::getCheckBatch, checkBatch)
-
                         .update();
                 break;
 
@@ -79,7 +77,8 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                         .update();
 
                 if (checks.getPayType() == Deal.PayType.CREDIT) {
-                    List<Deal> deals = dealService.lambdaQuery()
+                    List<Deal> deals = dealService
+                            .lambdaQuery()
                             .eq(Deal::getCheckBatch, checkBatch)
                             .list();
 
@@ -103,10 +102,10 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
             List<String> attachments,
             String info
     ) {
-        List<Deal> deals = dealService.list(
-                Wrappers.lambdaQuery(Deal.class)
-                        .in(Deal::getId, dealIds)
-        );
+
+        List<Deal> deals = dealService.lambdaQuery()
+                .in(Deal::getId, dealIds)
+                .list();
 
         if (deals.size() != dealIds.size()) {
             throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);

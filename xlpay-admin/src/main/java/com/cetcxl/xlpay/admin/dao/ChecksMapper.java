@@ -7,15 +7,20 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.controller.ChecksController;
 import com.cetcxl.xlpay.common.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.google.common.base.Joiner;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.jdbc.SQL;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -45,7 +50,8 @@ public interface ChecksMapper extends BaseMapper<Checks> {
         private LocalDateTime approvalTime;
         private String confirmPhone;
         private LocalDateTime confirmTime;
-
+        private String denyPhone;
+        private LocalDateTime denyTime;
     }
 
     static String listCheckSql(ChecksController.ListCheckReq req) {
@@ -61,7 +67,10 @@ public interface ChecksMapper extends BaseMapper<Checks> {
                     "	cr2.created AS approval_time,\n" +
                     "	cr3.operator AS confirm_operator,\n" +
                     "	cu3.phone AS confirm_phone,\n" +
-                    "	cr3.created AS confirm_time");
+                    "	cr3.created AS confirm_time,\n" +
+                    "	cr4.operator AS deny_operator,\n" +
+                    "	cu4.phone AS deny_phone,\n" +
+                    "	cr4.created AS deny_time");
             FROM(" checks c ");
             INNER_JOIN(
                     "company c1 ON c.company = c1.id",
@@ -72,8 +81,10 @@ public interface ChecksMapper extends BaseMapper<Checks> {
                     " company_user cu1 ON cr1.operator = cu1.id ",
                     " checks_record cr2 ON c.batch = cr2.check_batch AND cr2.action = 2 ",
                     " company_user cu2 ON cr2.operator = cu2.id ",
-                    " checks_record cr3 ON c.batch = cr3.check_batch AND cr3.action = 4 ",
-                    " company_user cu3 ON cr3.operator = cu3.id "
+                    " checks_record cr3 ON c.batch = cr3.check_batch AND cr3.action = 3 ",
+                    " company_user cu3 ON cr3.operator = cu3.id ",
+                    " checks_record cr4 ON c.batch = cr4.check_batch AND cr4.action = 4 ",
+                    " company_user cu4 ON cr3.operator = cu4.id "
             );
 
             if (Objects.nonNull(req.getCompanyId())) {
@@ -85,8 +96,21 @@ public interface ChecksMapper extends BaseMapper<Checks> {
             if (Objects.nonNull(req.getPayType())) {
                 WHERE("c.pay_type=#{req.payType}");
             }
-            if (Objects.nonNull(req.getStatus())) {
-                WHERE("c.status=#{req.status}");
+
+            if (Objects.nonNull(req.getStatues())) {
+                List<Integer> statues = Stream
+                        .of(req.getStatues())
+                        .map(status -> status.getValue())
+                        .collect(Collectors.toList());
+
+                WHERE("c.status" + " in ( " + Joiner.on(",").skipNulls().join(statues) + " ) ");
+            }
+
+            if (StringUtils.isNotBlank(req.getStoreName())) {
+                WHERE("s.name like concat('%',#{req.storeName},'%')");
+            }
+            if (StringUtils.isNotBlank(req.getCompanyName())) {
+                WHERE("c1.name like concat('%',#{req.companyName},'%')");
             }
             ORDER_BY(" batch asc ");
         }}.toString();

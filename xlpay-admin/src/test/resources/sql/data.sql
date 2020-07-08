@@ -58,11 +58,11 @@ INSERT INTO `deal`(`id`, `company`, `company_member`, `store`, `amount`, `type`,
 VALUES (5, 1, 2, 1, 5.00, 5, 1, 'test', 3, 1);
 
 INSERT INTO `checks`(`batch`, `company`, `store`, `pay_type`, `total_deal_count`, `total_deal_amonut`, `attachments`, `info`, `status`)
-VALUES (1, 1, 1, 0, 1, 5.00, NULL, NULL, 0);
+VALUES (1, 1, 1, 0, 1, 5.00, NULL, '[{"status":"APPLY","info":"apply"}]', 0);
 INSERT INTO `checks`(`batch`, `company`, `store`, `pay_type`, `total_deal_count`, `total_deal_amonut`, `attachments`, `info`, `status`)
-VALUES (2, 1, 1, 0, 1, 5.00, NULL, NULL, 0);
+VALUES (2, 1, 1, 0, 1, 5.00, NULL, '[{"status":"APPLY","info":"apply"},{"status":"REJECT","info":"reject"}]', 1);
 INSERT INTO `checks`(`batch`, `company`, `store`, `pay_type`, `total_deal_count`, `total_deal_amonut`, `attachments`, `info`, `status`)
-VALUES (3, 1, 1, 1, 1, 5.00, NULL, NULL, 2);
+VALUES (3, 1, 1, 1, 1, 5.00, NULL, '[{"status":"APPLY","info":"apply"},{"status":"APPROVAL","info":"approval"}]', 2);
 
 INSERT INTO `checks_record`(`id`, `check_batch`, `action`, `operator`, `info`, `created`)
 VALUES (1, 1, 0, 1, NULL, '2020-07-07 18:13:33');
@@ -70,3 +70,5 @@ INSERT INTO `checks_record`(`id`, `check_batch`, `action`, `operator`, `info`, `
 VALUES (2, 3, 0, 1, NULL, '2020-07-07 17:13:33');
 INSERT INTO `checks_record`(`id`, `check_batch`, `action`, `operator`, `info`, `created`)
 VALUES (3, 3, 2, 2, NULL, '2020-07-07 18:13:33');
+INSERT INTO `checks_record`(`id`, `check_batch`, `action`, `operator`, `info`, `created`)
+VALUES (4, 2, 1, 1, NULL, '2020-07-07 18:13:33');

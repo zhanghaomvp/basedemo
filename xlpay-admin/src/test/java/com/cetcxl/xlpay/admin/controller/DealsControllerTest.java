@@ -18,12 +18,34 @@ class DealsControllerTest extends BaseTest {
 
     @Test
     void listCompanyDeal() throws Exception {
+
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .get("/companys/{companyId}/deals", 1)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
+                                .param("storeName", "ho")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
+
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total")
+                                .value(5)
+                );
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/companys/{companyId}/deals", 1)
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -40,6 +62,8 @@ class DealsControllerTest extends BaseTest {
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
                                 .param("payType", Deal.PayType.CASH.name())
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -57,6 +81,8 @@ class DealsControllerTest extends BaseTest {
                                 .param(PARAM_PAGE_SIZE, "5")
                                 .param("payType", Deal.PayType.CASH.name())
                                 .param("status", Deal.Status.PAID.name())
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -75,6 +101,8 @@ class DealsControllerTest extends BaseTest {
                                 .param("payType", Deal.PayType.CASH.name())
                                 .param("status", Deal.Status.PAID.name())
                                 .param("department", "13234")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -91,6 +119,8 @@ class DealsControllerTest extends BaseTest {
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
                                 .param("name", "张浩浩1")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -146,6 +176,8 @@ class DealsControllerTest extends BaseTest {
                                 .get("/stores/{storeId}/deals", 1)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -153,6 +185,43 @@ class DealsControllerTest extends BaseTest {
                         MockMvcResultMatchers
                                 .jsonPath("$.data.total")
                                 .isNumber()
+                );
+
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/deals", 1)
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .param("companyName", "sdfasd")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total")
+                                .value(0)
+                );
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/deals", 1)
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .param("companyName", "国")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total")
+                                .value(5)
                 );
     }
 

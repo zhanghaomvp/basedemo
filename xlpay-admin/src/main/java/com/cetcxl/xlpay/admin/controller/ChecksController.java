@@ -3,16 +3,15 @@ package com.cetcxl.xlpay.admin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.dao.ChecksMapper;
+import com.cetcxl.xlpay.admin.dao.ChecksRecordMapper;
 import com.cetcxl.xlpay.admin.entity.vo.ChecksVO;
 import com.cetcxl.xlpay.admin.service.ChecksService;
 import com.cetcxl.xlpay.admin.service.DealService;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
 import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
-import com.cetcxl.xlpay.common.constants.CommonResultCode;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
-import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -29,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Objects;
 
 @Validated
 @RestController
@@ -40,6 +38,8 @@ public class ChecksController extends BaseController {
     @Autowired
     ChecksService checksService;
     @Autowired
+    ChecksRecordMapper checksRecordMapper;
+    @Autowired
     ChecksMapper checksMapper;
 
     @Data
@@ -48,15 +48,24 @@ public class ChecksController extends BaseController {
     @AllArgsConstructor
     @ApiModel("")
     public static class ListCheckReq extends MybatisPlusConfig.PageReq {
+        @NotNull(groups = ListCompanyCheckGroup.class)
         Integer companyId;
+        @NotNull(groups = ListStoreCheckGroup.class)
         Integer storeId;
+
+        String companyName;
+        String storeName;
+
         Deal.PayType payType;
-        Checks.Status status;
+        Checks.Status[] statues;
+    }
+
+    interface ListCompanyCheckGroup {
     }
 
     @GetMapping("/companys/{companyId}/checks")
     @ApiOperation("企业结算列表查询")
-    public ResBody<IPage<ChecksMapper.CheckDTO>> ListCompanyCheck(ListCheckReq req) {
+    public ResBody<IPage<ChecksMapper.CheckDTO>> ListCompanyCheck(@Validated(ListCompanyCheckGroup.class) ListCheckReq req) {
         return ResBody
                 .success(
                         checksMapper.listCheck(
@@ -66,9 +75,12 @@ public class ChecksController extends BaseController {
                 );
     }
 
+    interface ListStoreCheckGroup {
+    }
+
     @GetMapping("/stores/{storeId}/checks")
     @ApiOperation("企业结算列表查询")
-    public ResBody<IPage<ChecksMapper.CheckDTO>> ListStoreCheck(ListCheckReq req) {
+    public ResBody<IPage<ChecksMapper.CheckDTO>> ListStoreCheck(@Validated(ListStoreCheckGroup.class) ListCheckReq req) {
         return ResBody
                 .success(
                         checksMapper.listCheck(
@@ -79,10 +91,15 @@ public class ChecksController extends BaseController {
     }
 
     @GetMapping("/checks/{checkId}")
-    @ApiOperation("企业账单详情查询")
-    public ResBody getCheckDetail(@PathVariable Integer checkId) {
-        ChecksVO checksVO = ChecksVO.of(checksService.getById(checkId), ChecksVO.class);
-        return ResBody.success(checksVO);
+    @ApiOperation("结算单详情查询")
+    public ResBody<ChecksVO> getCheckDetail(@PathVariable Integer checkId) {
+        Checks checks = checksService.getById(checkId);
+        ChecksVO checksVO = ChecksVO.of(checks, ChecksVO.class);
+
+        checksVO.setChecksRecords(
+                checksRecordMapper.listCheckRecordDTO(checks.getBatch())
+        );
+        return ResBody.success(checksVO.resolveInfos());
     }
 
     @Data
@@ -135,21 +152,25 @@ public class ChecksController extends BaseController {
     @AllArgsConstructor
     @ApiModel("")
     public static class AuditCheckReq {
+        @NotNull(groups = ApprovalCheckGroup.class)
         Boolean approvalOrReject;
+        @NotNull(groups = ConfirmCheckGroup.class)
         Boolean confirmOrDeny;
         String info;
     }
 
+    interface ApprovalCheckGroup {
+    }
+
     @PatchMapping("/companys/{companyId}/deals/checks/{checkBatch}")
     @ApiOperation("结算单企业审慎")
-    public ResBody auditCheck(
-            @PathVariable Integer checkBatch,
-            @Validated @RequestBody AuditCheckReq req
+    public ResBody approvalCheck(
+            @PathVariable
+                    Integer checkBatch,
+            @Validated(ApprovalCheckGroup.class)
+            @RequestBody
+                    AuditCheckReq req
     ) {
-        if (Objects.isNull(req.getApprovalOrReject())) {
-            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
-        }
-
         Integer operator = Integer.valueOf(ContextUtil.getUserInfo().getUsername());
 
         if (req.getApprovalOrReject()) {
@@ -161,16 +182,18 @@ public class ChecksController extends BaseController {
         return ResBody.success();
     }
 
+    interface ConfirmCheckGroup {
+    }
+
     @PatchMapping("/stores/{storeId}/deals/checks/{checkBatch}")
     @ApiOperation("结算单商家确认")
     public ResBody confirmCheck(
-            @PathVariable Integer checkBatch,
-            @Validated @RequestBody AuditCheckReq req
+            @PathVariable
+                    Integer checkBatch,
+            @Validated(ConfirmCheckGroup.class)
+            @RequestBody
+                    AuditCheckReq req
     ) {
-        if (Objects.isNull(req.getConfirmOrDeny())) {
-            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
-        }
-
         Integer operator = Integer.valueOf(ContextUtil.getUserInfo().getUsername());
 
         if (req.getConfirmOrDeny()) {

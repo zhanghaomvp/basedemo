@@ -11,8 +11,9 @@ import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +34,6 @@ import static com.cetcxl.xlpay.common.entity.model.Checks.Status.*;
 import static com.cetcxl.xlpay.common.entity.model.Deal.Status.CHECKING;
 
 class ChecksControllerTest extends BaseTest {
-    @Autowired
-    ObjectMapper objectMapper;
     @Autowired
     ChecksService checksService;
     @Autowired
@@ -160,6 +159,7 @@ class ChecksControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .get("/companys/{companyId}/checks", 1)
+                                .param("companyId", "1")
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -172,14 +172,13 @@ class ChecksControllerTest extends BaseTest {
                 )
                 .andReturn();
 
-
         JsonNode jsonNode = objectMapper.readTree(mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
-        JsonNode data = jsonNode.get("data").get("records");
-        final List<ChecksMapper.CheckDTO> checkDTOS = objectMapper.readValue(
-                data.toString(),
-                new TypeReference<List<ChecksMapper.CheckDTO>>() {
-                }
-        );
+        List<ChecksMapper.CheckDTO> checkDTOS = objectMapper
+                .readValue(
+                        jsonNode.get("data").get("records").toString(),
+                        new TypeReference<List<ChecksMapper.CheckDTO>>() {
+                        }
+                );
 
         Assertions.assertTrue(checkDTOS.size() > 0);
         Assertions.assertTrue(checkDTOS.get(2).getApprovalPhone().equals("17360126771"));
@@ -187,8 +186,95 @@ class ChecksControllerTest extends BaseTest {
     }
 
     @Test
-    void getCheckDetail() throws Exception {
+    void listCompanyCheck_withStatues() throws Exception {
+        MvcResult mvcResult = mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/companys/{companyId}/checks", 1)
+                                .param("companyId", "1")
+                                .param("statues", REJECT.name())
+                                .param("statues", APPROVAL.name())
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        JsonNode jsonNode = objectMapper.readTree(mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        List<ChecksMapper.CheckDTO> checkDTOS = objectMapper
+                .readValue(
+                        jsonNode.get("data").get("records").toString(),
+                        new TypeReference<List<ChecksMapper.CheckDTO>>() {
+                        }
+                );
+
+        Assertions.assertFalse(
+                checkDTOS.stream()
+                        .filter(checkDTO -> checkDTO.getStatus() == APPLY)
+                        .findAny()
+                        .isPresent()
+        );
+
+    }
+
+    @Test
+    void listCompanyCheck_withCompanyName() throws Exception {
         mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/companys/{companyId}/checks", 1)
+                                .param("companyId", "1")
+                                .param("storeName", "abcdef")
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total")
+                                .value(0)
+                );
+    }
+
+    @Test
+    void listStoreCheck() throws Exception {
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/checks", 1)
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total")
+                                .value(Matchers.greaterThan(0))
+                );
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/checks", 1)
+                                .param("companyName", "abcdef")
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.total")
+                                .value(0)
+                );
+    }
+
+    @Test
+    void getCheckDetail() throws Exception {
+        MvcResult mvcResult = mockMvc
                 .perform(
                         MockMvcRequestBuilders
                                 .get("/checks/{checkId}", 3)
@@ -199,6 +285,35 @@ class ChecksControllerTest extends BaseTest {
                         MockMvcResultMatchers
                                 .jsonPath("$.data.status")
                                 .value(APPROVAL.name())
-                );
+                )
+                .andReturn();
+
+        ChecksVO checksVO = objectMapper
+                .readValue(
+                        mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8),
+                        new TypeReference<ResBody<ChecksVO>>() {
+                        }
+                )
+                .getData();
+
+        Assertions.assertFalse(
+                checksVO
+                        .getChecksRecords()
+                        .stream()
+                        .filter(checkRecordDTO -> StringUtils.isBlank(checkRecordDTO.getPhone()))
+                        .findAny()
+                        .isPresent()
+        );
+
+        Assertions.assertTrue(
+                checksVO.getInfos()
+                        .stream()
+                        .filter(infoRecord -> APPROVAL == infoRecord.getStatus())
+                        .findFirst()
+                        .get()
+                        .getInfo()
+                        .equals("approval")
+        );
+
     }
 }

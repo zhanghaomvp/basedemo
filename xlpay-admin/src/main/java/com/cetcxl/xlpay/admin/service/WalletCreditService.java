@@ -146,7 +146,7 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                 .balance(walletCredit.getCreditBalance())
                 .quota(walletCredit.getCreditQuota())
                 .amount(deal.getAmount())
-                .info("")
+                .info(WalletCreditFlow.CreditFlowType.PAYMENT.name())
                 .build();
 
         creditFlow.caculateBanlanceAndQuota();

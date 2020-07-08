@@ -3,6 +3,7 @@ package com.cetcxl.xlpay;
 import com.cetcxl.xlpay.admin.service.UserDetailServiceImpl;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.Store;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterAll;
@@ -40,6 +41,8 @@ public class BaseTest {
 
     @Autowired
     private WebApplicationContext context;
+    @Autowired
+    public ObjectMapper objectMapper;
 
     public MockMvc mockMvc;
 

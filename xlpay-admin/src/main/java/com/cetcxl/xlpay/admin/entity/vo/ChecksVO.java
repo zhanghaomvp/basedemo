@@ -2,15 +2,21 @@ package com.cetcxl.xlpay.admin.entity.vo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.cetcxl.xlpay.admin.dao.ChecksRecordMapper;
 import com.cetcxl.xlpay.common.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiModel;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -50,5 +56,29 @@ public class ChecksVO extends BaseVO implements Serializable {
     private LocalDateTime created;
 
     private LocalDateTime updated;
+
+    private String info;
+
+    List<Checks.InfoRecord> infos;
+
+    private List<ChecksRecordMapper.CheckRecordDTO> checksRecords;
+
+    public ChecksVO resolveInfos() {
+        if (StringUtils.isBlank(info)) {
+            return this;
+        }
+
+        try {
+            infos = new ObjectMapper()
+                    .readValue(
+                            this.info,
+                            new TypeReference<List<Checks.InfoRecord>>() {
+                            }
+                    );
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
 
 }

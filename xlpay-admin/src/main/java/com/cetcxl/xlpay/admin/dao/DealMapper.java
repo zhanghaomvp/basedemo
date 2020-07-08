@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.controller.DealsController;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.google.common.base.Strings;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
@@ -56,7 +58,15 @@ public interface DealMapper extends BaseMapper<Deal> {
             if (Objects.nonNull(req.getCompanyId())) {
                 WHERE("d.company=#{req.companyId}");
             }
-            if (Objects.nonNull(req.getStoreId())) {
+
+            if (StringUtils.isNotBlank(req.getCompanyName())) {
+                WHERE("c.`name` like concat('%',#{req.companyName},'%')");
+            }
+
+            if(StringUtils.isNotBlank(req.getStoreName())){
+                WHERE("s.`name` like concat('%',#{req.storeName},'%')");
+            }
+            if (Objects.nonNull(req.getStoreId()) ) {
                 WHERE("d.store=#{req.storeId}");
             }
             if (Objects.nonNull(req.getPayType())) {
@@ -65,10 +75,10 @@ public interface DealMapper extends BaseMapper<Deal> {
             if (Objects.nonNull(req.getStatus())) {
                 WHERE("d.status=#{req.status}");
             }
-            if (Objects.nonNull(req.getName())) {
+            if (StringUtils.isNotBlank(req.getName())) {
                 WHERE("cm.name like concat('%',#{req.name},'%')");
             }
-            if (Objects.nonNull(req.getDepartment())) {
+            if (StringUtils.isNotBlank(req.getDepartment())) {
                 WHERE("cm.department like concat('%',#{req.department},'%')");
             }
             if (Objects.nonNull(req.getBegin())) {
@@ -107,7 +117,7 @@ public interface DealMapper extends BaseMapper<Deal> {
             "	AND d.type IN ( 4, 5 ) \n" +
             "	AND d.created >= #{begin} \n" +
             "	AND d.created <= #{end}")
-    DashboardDTO totalAmountWithOutDepartment(DealsController.DashboardReq req);
+    DashboardDTO companyDashboardWithOutDepartment(DealsController.DashboardReq req);
 
     @Select("SELECT\n" +
             "	SUM( d.amount ) AS total_amount,\n" +
@@ -124,5 +134,5 @@ public interface DealMapper extends BaseMapper<Deal> {
             "	AND d.created >= #{begin} \n" +
             "	AND d.created <= #{end} \n" +
             "   AND cm.department like concat('%',#{department},'%')")
-    DashboardDTO totalAmountWithDepartment(DealsController.DashboardReq req);
+    DashboardDTO companyDashboardWithDepartment(DealsController.DashboardReq req);
 }

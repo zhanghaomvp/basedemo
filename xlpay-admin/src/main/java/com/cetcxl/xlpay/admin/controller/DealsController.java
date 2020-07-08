@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
@@ -46,20 +47,37 @@ public class DealsController extends BaseController {
         Integer companyId;
         Integer storeId;
 
+        String companyName;
+        String storeName;
+
         String name;
         String department;
         Deal.PayType payType;
         Deal.Status status;
 
+        @NotNull
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime begin;
+        @NotNull
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime end;
     }
 
     @GetMapping("/companys/{companyId}/deals")
     @ApiOperation("企业账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> ListCompanyDeal(ListDealReq req) {
+    public ResBody<IPage<DealMapper.DealDTO>> ListCompanyDeal(@Validated ListDealReq req) {
+        return ResBody
+                .success(
+                        dealMapper.listDeal(
+                                new Page(req.getPageNo(), req.getPageSize()),
+                                req
+                        )
+                );
+    }
+
+    @GetMapping("/stores/{storeId}/deals")
+    @ApiOperation("商家账单查询")
+    public ResBody<IPage<DealMapper.DealDTO>> ListStoreDeal(@Validated ListDealReq req) {
         return ResBody
                 .success(
                         dealMapper.listDeal(
@@ -76,18 +94,6 @@ public class DealsController extends BaseController {
         return ResBody.success(dealVO);
     }
 
-    @GetMapping("/stores/{storeId}/deals")
-    @ApiOperation("商家账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> ListStoreDeal(ListDealReq req) {
-        return ResBody
-                .success(
-                        dealMapper.listDeal(
-                                new Page(req.getPageNo(), req.getPageSize()),
-                                req
-                        )
-                );
-    }
-
     @Data
     @Builder
     @NoArgsConstructor
@@ -98,25 +104,28 @@ public class DealsController extends BaseController {
         Integer storeId;
 
         String department;
+        String companyName;
 
+        @NotNull
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime begin;
+        @NotNull
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime end;
     }
 
     @GetMapping("/companys/{companyId}/deals/dashboard")
     @ApiOperation("企业数据看板")
-    public ResBody<DealMapper.DashboardDTO> companyDashboard(DashboardReq req, @PathVariable Integer companyId) {
+    public ResBody<DealMapper.DashboardDTO> companyDashboard(@Validated DashboardReq req, @PathVariable Integer companyId) {
         if (StringUtils.isNotBlank(req.getDepartment())) {
             return ResBody
                     .success(
-                            dealMapper.totalAmountWithDepartment(req)
+                            dealMapper.companyDashboardWithDepartment(req)
                     );
         } else {
             return ResBody
                     .success(
-                            dealMapper.totalAmountWithOutDepartment(req)
+                            dealMapper.companyDashboardWithOutDepartment(req)
                     );
         }
     }
