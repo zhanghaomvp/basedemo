@@ -12,7 +12,7 @@ spring:
 
 
 mybatis-plus:
-  type-enums-package: com.cetcxl.xlpay.common.entity.model
+  type-enums-package: com.cetcxl.xlpay.common.entity.model,com.cetcxl.xlpay.admin.entity.model
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 

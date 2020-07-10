@@ -5,13 +5,15 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.controller.ChecksController;
-import com.cetcxl.xlpay.common.entity.model.Checks;
+import com.cetcxl.xlpay.admin.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.base.Joiner;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.jdbc.SQL;
 
@@ -21,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
 
 /**
  * <p>
@@ -41,16 +45,21 @@ public interface ChecksMapper extends BaseMapper<Checks> {
         private BigDecimal totalDealAmonut;
 
         private Deal.PayType payType;
+        @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime created;
         private Checks.Status status;
 
         private String applyPhone;
+        @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime applyTime;
         private String approvalPhone;
+        @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime approvalTime;
         private String confirmPhone;
+        @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime confirmTime;
         private String denyPhone;
+        @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime denyTime;
     }
 
@@ -117,5 +126,8 @@ public interface ChecksMapper extends BaseMapper<Checks> {
     }
 
     @SelectProvider(type = ChecksMapper.class, method = "listCheckSql")
-    IPage<CheckDTO> listCheck(Page page, ChecksController.ListCheckReq req);
+    IPage<CheckDTO> listCheck(Page page, @Param("req") ChecksController.ListCheckReq req);
+
+    @SelectProvider(type = ChecksMapper.class, method = "listCheckSql")
+    List<CheckDTO> listCheckExport(@Param("req") ChecksController.ListCheckReq req);
 }

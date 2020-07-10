@@ -1,4 +1,4 @@
-package com.cetcxl.xlpay.admin.entity.vo;
+package com.cetcxl.xlpay.payuser.entity.vo;
 
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
@@ -29,32 +29,15 @@ public class DealVO extends BaseVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer id;
-
-    private Integer company;
-
-    private String companyName;
-
-    private Integer companyMember;
-
-    private Integer store;
-
-    private String storeName;
-
     private BigDecimal amount;
-
-    private Deal.DealType type;
-
-    private Deal.PayType payType;
-
     private String info;
-
-    private Integer checkBatch;
-
+    private Deal.PayType payType;
     private Deal.Status status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created;
 
+    private String companyName;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updated;
+    private LocalDateTime checkFinishTime;
 }

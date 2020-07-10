@@ -2,9 +2,9 @@ package com.cetcxl.xlpay.admin.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.common.entity.model.Company;
-import com.cetcxl.xlpay.common.entity.model.CompanyUser;
+import com.cetcxl.xlpay.admin.entity.model.CompanyUser;
 import com.cetcxl.xlpay.common.entity.model.Store;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

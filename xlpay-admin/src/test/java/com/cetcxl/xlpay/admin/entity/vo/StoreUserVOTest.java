@@ -1,7 +1,7 @@
 package com.cetcxl.xlpay.admin.entity.vo;
 
 import com.cetcxl.xlpay.BaseTest;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

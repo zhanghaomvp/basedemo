@@ -2,13 +2,13 @@ package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.BaseTest;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
 import com.cetcxl.xlpay.admin.service.StoreService;
 import com.cetcxl.xlpay.admin.service.StoreUserService;
 import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.entity.model.Store;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
@@ -73,7 +73,7 @@ class StoreControllerTest extends BaseTest {
                 .contact(S_TEMP)
                 .contactPhone(S_PHONE)
                 .address(S_TEMP)
-                .socialCreditCode(S_TEMP)
+                .socialCreditCode(S_SOCIAL_CREDIT_CODE)
                 .businessLicense(0)
                 .build();
 
@@ -115,17 +115,17 @@ class StoreControllerTest extends BaseTest {
     }
 
     @Test
-    void listCompanysisApproval_Success() throws Exception {
+    void listCompanysIsApproval_Success() throws Exception {
         setAuthentication(
                 Store.builder()
-                        .id(1)
+                        .id(2)
                         .build()
         );
 
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/stores/{storeId}/companys", 1)
+                                .get("/stores/{storeId}/companys", 2)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
                                 .param("isApproval", "true")
@@ -143,7 +143,7 @@ class StoreControllerTest extends BaseTest {
     }
 
     @Test
-    void listCompanysisNotApproval_Success() throws Exception {
+    void listCompanysIsNotApproval_Success() throws Exception {
         setAuthentication(
                 Store.builder()
                         .id(1)
@@ -161,7 +161,7 @@ class StoreControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.total").value(1)
+                                .jsonPath("$.data.total").value(2)
                 )
         ;
     }
@@ -241,6 +241,26 @@ class StoreControllerTest extends BaseTest {
                                 .jsonPath("$.data.companyNum").value(2)
                 );
     }
+
+    @Test
+    void getAllCompanyNames_success() throws Exception {
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/company-names", 1)
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data").isArray()
+                )
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data[0]").value("三十所")
+                );
+    }
+
 }
 
 

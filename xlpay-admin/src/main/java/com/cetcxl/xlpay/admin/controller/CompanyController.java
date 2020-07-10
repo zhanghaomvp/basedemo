@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.constants.ResultCode;
+import com.cetcxl.xlpay.admin.dao.CompanyMemberMapper;
 import com.cetcxl.xlpay.admin.dao.StoreMapper;
+import com.cetcxl.xlpay.admin.entity.model.CompanyUser;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyStoreRelationVO;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyUserVO;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
@@ -18,7 +20,6 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
-import com.cetcxl.xlpay.common.entity.model.CompanyUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -54,9 +55,6 @@ import static com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation.Relation
 public class CompanyController extends BaseController {
 
     @Autowired
-    private StoreUserService storeUserService;
-
-    @Autowired
     PasswordEncoder passwordEncoder;
     @Autowired
     TrustlinkDataRpcService trustlinkDataRpcService;
@@ -73,6 +71,9 @@ public class CompanyController extends BaseController {
 
     @Autowired
     StoreMapper storeMapper;
+
+    @Autowired
+    CompanyMemberMapper companyMemberMapper;
 
     @Autowired
     CompanyStoreRelationService companyStoreRelationService;
@@ -94,6 +95,7 @@ public class CompanyController extends BaseController {
 
         @ApiModelProperty(value = "验证码", required = true)
         @Pattern(regexp = PatternConstants.VERIFY_CODE)
+        @NotBlank
         String verifyCode;
 
         @ApiModelProperty(value = "企业名称", required = true)
@@ -101,6 +103,7 @@ public class CompanyController extends BaseController {
         String name;
 
         @ApiModelProperty(value = "统一社会信用代码", required = true)
+        @Pattern(regexp = PatternConstants.SOCIAL_CREDIT_CODE)
         @NotBlank
         String socialCreditCode;
 
@@ -135,7 +138,11 @@ public class CompanyController extends BaseController {
             if (!optionalCompanyInfo.isPresent()) {
                 return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
             }
+
             TrustlinkDataRpcService.CompanyInfo companyInfo = optionalCompanyInfo.get();
+            if (!req.getName().equals(companyInfo.getOrganizationName())) {
+                return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
+            }
 
             company = Company.builder()
                     .name(companyInfo.getOrganizationName())
@@ -300,6 +307,10 @@ public class CompanyController extends BaseController {
         }
 
         Integer relation = companyStoreRelation.getRelation();
+        if (Objects.isNull(relation)) {
+            relation = 0;
+        }
+
         Integer applyReleation = 0;
         boolean isAddRelation = false;
 
@@ -324,7 +335,7 @@ public class CompanyController extends BaseController {
         companyStoreRelationService.update(
                 Wrappers.lambdaUpdate(CompanyStoreRelation.class)
                         .set(CompanyStoreRelation::getApplyReleation, applyReleation)
-                        .set(CompanyStoreRelation::getRelation, relation)
+                        .set(CompanyStoreRelation::getRelation, relation == 0 ? null : relation)
                         .set(CompanyStoreRelation::getStatus, isAddRelation ? APPROVAL : WORKING)
                         .eq(CompanyStoreRelation::getId, companyStoreRelation.getId())
         );
@@ -370,4 +381,13 @@ public class CompanyController extends BaseController {
         return ResBody.success();
     }
 
+    @GetMapping("companys/{companyId}/departments")
+    @ApiOperation("获取当前企业所有部门列表")
+    public ResBody getAllDepartment(@PathVariable Integer companyId) {
+
+        return ResBody.success(
+                companyMemberMapper.getAllDepartment(companyId)
+        );
+
+    }
 }

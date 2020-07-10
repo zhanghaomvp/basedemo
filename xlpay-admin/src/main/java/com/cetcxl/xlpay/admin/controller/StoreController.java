@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.constants.ResultCode;
+import com.cetcxl.xlpay.admin.dao.CompanyStoreRelationMapper;
 import com.cetcxl.xlpay.admin.dao.StoreMapper;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import com.cetcxl.xlpay.admin.entity.vo.StoreUserVO;
 import com.cetcxl.xlpay.admin.entity.vo.StoreVO;
 import com.cetcxl.xlpay.admin.service.*;
@@ -17,7 +19,6 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.entity.model.Store;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -52,6 +53,7 @@ public class StoreController extends BaseController {
 
     @Autowired
     private StoreUserService storeUserService;
+
     @Autowired
     private StoreService storeService;
 
@@ -60,6 +62,9 @@ public class StoreController extends BaseController {
 
     @Autowired
     StoreMapper storeMapper;
+
+    @Autowired
+    private CompanyStoreRelationMapper companyStoreRelationMapper;
 
     @Autowired
     private VerifyCodeService verifyCodeService;
@@ -81,6 +86,7 @@ public class StoreController extends BaseController {
 
         @ApiModelProperty(value = "验证码", required = true)
         @Pattern(regexp = PatternConstants.VERIFY_CODE)
+        @NotBlank
         String verifyCode;
 
         @ApiModelProperty(value = "商户名称", required = true)
@@ -101,6 +107,7 @@ public class StoreController extends BaseController {
 
         @ApiModelProperty(value = "统一社会信用代码", required = true)
         @NotBlank
+        @Pattern(regexp = PatternConstants.SOCIAL_CREDIT_CODE)
         String socialCreditCode;
 
         @ApiModelProperty(value = "调用上传接口返回的营业执照对应attachment_id", required = true)
@@ -122,7 +129,7 @@ public class StoreController extends BaseController {
                         .eq(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE)
         );
         if (Objects.nonNull(storeUser)) {
-            return ResBody.error(ResultCode.COMPANY_USER_EXIST);
+            return ResBody.error(ResultCode.STORE_USER_EXIST);
         }
 
         Store store = storeService.getOne(
@@ -247,9 +254,7 @@ public class StoreController extends BaseController {
     @DeleteMapping("/stores/{storeId}/company-store-relation/{id}")
     @ApiOperation("商家取消企业商家授信")
     @Transactional
-    public ResBody cancelCompanyStoreRelation(@PathVariable Integer id,
-                                              @Validated(CancelCompanyStoreRelationGroup.class)
-                                              @RequestBody StoreCompanyRelationReq req) {
+    public ResBody cancelCompanyStoreRelation(@PathVariable Integer id) {
         companyStoreRelationService.lambdaUpdate()
                 .set(CompanyStoreRelation::getApplyReleation, null)
                 .set(CompanyStoreRelation::getRelation, null)
@@ -328,6 +333,16 @@ public class StoreController extends BaseController {
         storeUser.setPassword(passwordEncoder.encode(req.getNewPassword()));
         storeUserService.updateById(storeUser);
         return ResBody.success();
+    }
+
+    @GetMapping("stores/{storeId}/company-names")
+    @ApiOperation("获取当前商家关联所有企业列表")
+    public ResBody getAllCompanyNames(@PathVariable Integer storeId) {
+
+        return ResBody.success(
+                companyStoreRelationMapper.getAllCompanyNames(storeId)
+        );
+
     }
 
 }

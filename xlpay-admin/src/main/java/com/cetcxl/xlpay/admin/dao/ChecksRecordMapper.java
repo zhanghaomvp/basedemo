@@ -1,8 +1,8 @@
 package com.cetcxl.xlpay.admin.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.cetcxl.xlpay.common.entity.model.Checks;
-import com.cetcxl.xlpay.common.entity.model.ChecksRecord;
+import com.cetcxl.xlpay.admin.entity.model.Checks;
+import com.cetcxl.xlpay.admin.entity.model.ChecksRecord;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.cetcxl.xlpay.common.entity.model;
+package com.cetcxl.xlpay.admin.entity.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

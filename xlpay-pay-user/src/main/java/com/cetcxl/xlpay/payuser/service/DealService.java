@@ -1,6 +1,7 @@
 package com.cetcxl.xlpay.payuser.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.payuser.dao.DealMapper;
 import lombok.Builder;
@@ -34,8 +35,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Builder
     public static class DealParam {
         Integer walletId;
-        Integer company;
-        Integer companyMember;
+        CompanyMember companyMember;
         Integer store;
         Deal.DealType dealType;
         BigDecimal amount;
@@ -44,38 +44,34 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     }
 
     @Transactional
-    public void dealCash(DealParam param) {
+    public Deal dealCash(DealParam param) {
         //todo 分布式锁 一定要
-        Deal deal = Deal.builder()
-                .company(param.getCompany())
-                .companyMember(param.getCompanyMember())
-                .store(param.getStore())
-                .amount(param.getAmount())
-                .type(param.getDealType())
-                .payType(CASH)
-                .info(param.getInfo())
-                .status(Deal.Status.PAID)
-                .build();
-        save(deal);
-
+        Deal deal = process(param, CASH);
         walletCashService.process(deal, param.getWalletId());
+        return deal;
     }
 
     @Transactional
-    public void dealCredit(DealParam param) {
+    public Deal dealCredit(DealParam param) {
         //todo 分布式锁 一定要
+        Deal deal = process(param, CREDIT);
+        walletCreditService.process(deal, param.getWalletId());
+        return deal;
+    }
+
+    private Deal process(DealParam param, Deal.PayType payType) {
         Deal deal = Deal.builder()
-                .company(param.getCompany())
-                .companyMember(param.getCompanyMember())
+                .company(param.getCompanyMember().getCompany())
+                .companyMember(param.getCompanyMember().getId())
+                .icNo(param.getCompanyMember().getIcNo())
                 .store(param.getStore())
                 .amount(param.getAmount())
                 .type(param.getDealType())
-                .payType(CREDIT)
+                .payType(payType)
                 .info(param.getInfo())
                 .status(Deal.Status.PAID)
                 .build();
         save(deal);
-
-        walletCreditService.process(deal, param.getWalletId());
+        return deal;
     }
 }

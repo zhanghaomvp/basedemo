@@ -8,4 +8,5 @@ public interface PatternConstants {
     String PHONE = "^\\d{11,13}$";
     String VERIFY_CODE = "^\\d{6}$";
     String PAY_PASSWORD = "^\\d{6}$";
+    String SOCIAL_CREDIT_CODE = "[A-Z0-9]{18}$";
 }

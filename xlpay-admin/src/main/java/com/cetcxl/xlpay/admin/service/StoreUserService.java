@@ -2,7 +2,7 @@ package com.cetcxl.xlpay.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.admin.dao.StoreUserMapper;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import org.springframework.stereotype.Service;
 
 /**

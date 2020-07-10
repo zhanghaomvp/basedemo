@@ -1,22 +1,38 @@
 package com.cetcxl.xlpay.admin.service;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.format.DateTimeFormat;
+import com.alibaba.excel.annotation.write.style.ColumnWidth;
+import com.alibaba.excel.annotation.write.style.ContentStyle;
+import com.alibaba.excel.annotation.write.style.HeadFontStyle;
+import com.alibaba.excel.annotation.write.style.HeadStyle;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cetcxl.xlpay.admin.controller.ChecksController;
 import com.cetcxl.xlpay.admin.dao.ChecksMapper;
+import com.cetcxl.xlpay.admin.entity.model.Checks;
+import com.cetcxl.xlpay.admin.entity.model.ChecksRecord;
 import com.cetcxl.xlpay.common.constants.CommonResultCode;
-import com.cetcxl.xlpay.common.entity.model.Checks;
-import com.cetcxl.xlpay.common.entity.model.ChecksRecord;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import lombok.Builder;
+import lombok.Data;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static com.cetcxl.xlpay.common.entity.model.Checks.Status.APPLY;
+import static com.cetcxl.xlpay.admin.entity.model.Checks.Status.*;
 
 /**
  * <p>
@@ -70,7 +86,7 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                         .update();
                 break;
 
-            case COFIRM:
+            case CONFIRM:
                 dealService.lambdaUpdate()
                         .set(Deal::getStatus, Deal.Status.CHECK_FINISH)
                         .eq(Deal::getCheckBatch, checkBatch)
@@ -161,6 +177,117 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                 .update();
 
         return checks;
+    }
+
+    public List<CheckExportRow> listCheckExport(ChecksController.ListCheckReq req) {
+
+        List<ChecksMapper.CheckDTO> checkDtos = baseMapper.listCheckExport(req);
+
+
+        return checkDtos
+                .stream()
+                .map(
+                        dto ->
+                                CheckExportRow.builder()
+                                        .storeName(dto.getStoreName())
+                                        .companyName(dto.getCompanyName())
+                                        .amount(dto.getTotalDealAmonut().toString())
+                                        .applyTime(dto.getApplyTime())
+                                        .approvalTime(dto.getApprovalTime())
+                                        .confirmTime(dto.getConfirmTime())
+                                        .denyTime(dto.getDenyTime())
+                                        .payType(dto.getPayType().getDesc())
+                                        .checkStatus(dto.getStatus().getDesc())
+                                        .build()
+                )
+                .collect(Collectors.toList());
+    }
+
+
+    @Data
+    @Builder
+    @HeadStyle(fillPatternType = FillPatternType.SOLID_FOREGROUND, fillForegroundColor = 10)
+    @HeadFontStyle(fontHeightInPoints = 15)
+    @ContentStyle(horizontalAlignment = HorizontalAlignment.CENTER)
+    public static class CheckExportRow {
+        @ExcelProperty("企业名称")
+        @ColumnWidth(25)
+        String companyName;
+
+        @ExcelProperty("商家名称")
+        @ColumnWidth(25)
+        String storeName;
+
+        @ExcelProperty("申请结算总金额")
+        @ColumnWidth(25)
+        String amount;
+
+        @ExcelProperty("申请结算时间")
+        @DateTimeFormat()
+        @ColumnWidth(40)
+        LocalDateTime applyTime;
+
+        @ExcelProperty("审核时间")
+        @ColumnWidth(40)
+        @DateTimeFormat()
+        LocalDateTime approvalTime;
+
+        @ExcelProperty("商家确认时间")
+        @ColumnWidth(40)
+        @DateTimeFormat()
+        LocalDateTime confirmTime;
+
+        @ExcelProperty("驳回时间")
+        @ColumnWidth(40)
+        @DateTimeFormat()
+        LocalDateTime denyTime;
+
+        @ExcelProperty("当前结算状态")
+        @ColumnWidth(25)
+        String checkStatus;
+
+        @ExcelProperty("结算交易类型")
+        @ColumnWidth(25)
+        String payType;
+
+
+        public enum SheetFormat {
+            待审核结算(ImmutableList.of(APPLY), ImmutableList.of("approvalTime", "confirmTime", "denyTime")),
+            待确认结算(ImmutableList.of(APPROVAL), ImmutableList.of("confirmTime")),
+            已结算(ImmutableList.of(CONFIRM), ImmutableList.of("denyTime")),
+            撤销结算(ImmutableList.of(REJECT, DENY), ImmutableList.of("confirmTime")),
+            ;
+            private List<Checks.Status> statues;
+            private List<String> excludeColumn;
+
+            SheetFormat(List<Checks.Status> statues, List<String> excludeColumn) {
+                this.statues = statues;
+                this.excludeColumn = excludeColumn;
+            }
+
+            public List<Checks.Status> getStatues() {
+                return statues;
+            }
+
+            public List<String> getExcludeColumn(boolean companyOrStore) {
+                ArrayList<String> strings = Lists.newArrayList(excludeColumn);
+                if (companyOrStore) {
+                    strings.add("companyName");
+                } else {
+                    strings.add("storeName");
+                }
+                return strings;
+            }
+
+            public static SheetFormat of(Checks.Status status) {
+                for (SheetFormat checkExportColumn : values()) {
+                    if (checkExportColumn.getStatues().contains(status)) {
+                        return checkExportColumn;
+                    }
+                }
+                throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+            }
+        }
     }
 
 }

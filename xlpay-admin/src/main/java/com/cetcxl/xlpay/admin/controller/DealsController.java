@@ -1,5 +1,6 @@
 package com.cetcxl.xlpay.admin.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.dao.DealMapper;
@@ -8,6 +9,7 @@ import com.cetcxl.xlpay.admin.service.DealService;
 import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.plugins.easyexcel.LocalDateTimeConverter;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -24,9 +26,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+import static com.cetcxl.xlpay.admin.service.DealService.DealExportRow.EXClUDE_COMPANY_NAME;
+import static com.cetcxl.xlpay.admin.service.DealService.DealExportRow.EXClUDE_STORE_NAME;
 import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
 
 @Validated
@@ -65,7 +71,7 @@ public class DealsController extends BaseController {
 
     @GetMapping("/companys/{companyId}/deals")
     @ApiOperation("企业账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> ListCompanyDeal(@Validated ListDealReq req) {
+    public ResBody<IPage<DealMapper.DealDTO>> listCompanyDeal(@Validated ListDealReq req) {
         return ResBody
                 .success(
                         dealMapper.listDeal(
@@ -77,7 +83,7 @@ public class DealsController extends BaseController {
 
     @GetMapping("/stores/{storeId}/deals")
     @ApiOperation("商家账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> ListStoreDeal(@Validated ListDealReq req) {
+    public ResBody<IPage<DealMapper.DealDTO>> listStoreDeal(@Validated ListDealReq req) {
         return ResBody
                 .success(
                         dealMapper.listDeal(
@@ -99,8 +105,12 @@ public class DealsController extends BaseController {
     @NoArgsConstructor
     @AllArgsConstructor
     @ApiModel("")
-    public static class DashboardReq {
+    public static class DashboardReq extends MybatisPlusConfig {
+
+        @NotNull(groups = DashboardCompanyGroup.class)
         Integer companyId;
+
+        @NotNull(groups = DashboardStoreGroup.class)
         Integer storeId;
 
         String department;
@@ -114,19 +124,95 @@ public class DealsController extends BaseController {
         LocalDateTime end;
     }
 
+    interface DashboardCompanyGroup {
+    }
+
     @GetMapping("/companys/{companyId}/deals/dashboard")
     @ApiOperation("企业数据看板")
-    public ResBody<DealMapper.DashboardDTO> companyDashboard(@Validated DashboardReq req, @PathVariable Integer companyId) {
+    public ResBody<DealMapper.DashboardDTO> companyDashboard(@Validated(DashboardCompanyGroup.class) DashboardReq req) {
+
         if (StringUtils.isNotBlank(req.getDepartment())) {
+
             return ResBody
                     .success(
-                            dealMapper.companyDashboardWithDepartment(req)
+                            dealService.calculationAmount(
+                                    dealMapper.companyDashboardWithDepartment(req)
+                            )
                     );
         } else {
             return ResBody
                     .success(
-                            dealMapper.companyDashboardWithOutDepartment(req)
+                            dealService.calculationAmount(
+                                    dealMapper.companyDashboardWithOutDepartment(req)
+                            )
                     );
         }
+    }
+
+    interface DashboardStoreGroup {
+    }
+
+    @GetMapping("/stores/{storeId}/deals/dashboard")
+    @ApiOperation("商家数据看板")
+    public ResBody<DealMapper.DashboardDTO> storeDashboard(@Validated(DashboardStoreGroup.class) DashboardReq req) {
+        if (StringUtils.isNotBlank(req.getDepartment())) {
+            return ResBody
+                    .success(
+                            dealService.calculationAmount(
+                                    dealMapper.storeDashboardWithCompany(req)
+                            )
+                    );
+        } else {
+            return ResBody
+                    .success(
+                            dealService.calculationAmount(
+                                    dealMapper.storeDashboardWithOutCompany(req)
+                            )
+                    );
+        }
+    }
+
+
+    @GetMapping("/store/{storeId}/deal/export")
+    @ApiOperation("商家账单明细导出")
+    public void listStoreDealExport(@Validated DealsController.ListDealReq req, HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(
+                response,
+                "商家账单明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+        );
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        DealService.DealExportRow.class
+                )
+                .excludeColumnFiledNames(EXClUDE_STORE_NAME)
+                .registerConverter(new LocalDateTimeConverter())
+                .sheet("sheet")
+                .doWrite(
+                        dealService.listDealExport(req)
+                );
+    }
+
+
+    @GetMapping("/company/{companyId}/deal/export")
+    @ApiOperation("企业账单明细导出")
+    public void listCompanyDealExport(@Validated DealsController.ListDealReq req, HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(
+                response,
+                "企业账单明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+        );
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        DealService.DealExportRow.class
+                )
+                .sheet("sheet")
+                .excludeColumnFiledNames(EXClUDE_COMPANY_NAME)
+                .registerConverter(new LocalDateTimeConverter())
+                .doWrite(
+                        dealService.listDealExport(req)
+                );
     }
 }

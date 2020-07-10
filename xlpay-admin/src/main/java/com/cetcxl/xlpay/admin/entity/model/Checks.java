@@ -1,8 +1,9 @@
-package com.cetcxl.xlpay.common.entity.model;
+package com.cetcxl.xlpay.admin.entity.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.enums.IEnum;
+import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -57,21 +58,27 @@ public class Checks implements Serializable {
     private LocalDateTime updated;
 
     public enum Status implements IEnum<Integer> {
-        APPLY(0),
-        REJECT(1),
-        APPROVAL(2),
-        DENY(3),
-        COFIRM(4),
+        APPLY(0, "待审核"),
+        REJECT(1, "审核驳回"),
+        APPROVAL(2, "待商家确认"),
+        DENY(3, "商家驳回"),
+        CONFIRM(4, "已结算"),
         ;
         private Integer status;
+        private String desc;
 
-        Status(Integer status) {
+        Status(Integer status, String desc) {
             this.status = status;
+            this.desc = desc;
         }
 
         @Override
         public Integer getValue() {
             return this.status;
+        }
+
+        public String getDesc() {
+            return this.desc;
         }
     }
 

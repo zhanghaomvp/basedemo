@@ -1,9 +1,3 @@
-DROP DATABASE IF EXISTS xinyufu;
-CREATE DATABASE xinyufu character set utf8;
-USE xinyufu;
-SET FOREIGN_KEY_CHECKS=0;
-
-
 CREATE TABLE `company_user` (
 	id INT UNSIGNED AUTO_INCREMENT,
 	`company` INT UNSIGNED,
@@ -162,6 +156,51 @@ CREATE TABLE `deal` (
 
 ALTER TABLE `deal` ADD INDEX deal_created_index ( `created` ) ;
 ALTER TABLE `deal` ADD INDEX deal_updated_index ( `updated` ) ;
+ALTER TABLE `deal` ADD INDEX deal_check_batch ( `check_batch` ) ;
 
 
+-- 7月05日
+CREATE TABLE `attachment` (
+	`id` INT UNSIGNED AUTO_INCREMENT,
+	`category` SMALLINT,
+	`file_name` VARCHAR ( 100 ),
+	`file_type` INT UNSIGNED,
+	`resoure` VARCHAR ( 100 ),
+	`status` TINYINT,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+PRIMARY KEY ( `id` )
+);
 
+CREATE TABLE `checks` (
+	`batch` INT UNSIGNED AUTO_INCREMENT,
+	`company` INT UNSIGNED,
+	`store` INT UNSIGNED,
+	`pay_type` TINYINT,
+	`total_deal_count` INT,
+	`total_deal_amonut` DECIMAL ( 13, 2 ),
+	`attachments` VARCHAR ( 300 ),
+	`info` VARCHAR ( 300 ),
+	`status` TINYINT,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY ( `batch` ),
+	INDEX checks_company_index ( company ),
+	INDEX checks_store_index ( store )
+);
+
+ALTER TABLE `store` modify COLUMN `business_license` INT UNSIGNED;
+
+CREATE TABLE `checks_record` (
+	`id` INT UNSIGNED AUTO_INCREMENT,
+	`check_batch` INT UNSIGNED,
+	`action` TINYINT,
+	`operator` INT UNSIGNED,
+	`info` VARCHAR ( 300 ),
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY ( `id` ),
+	INDEX checks_record_check_batch_index ( check_batch )
+);
+
+ALTER TABLE `deal` ADD COLUMN `ic_no` VARCHAR ( 50 );
+ALTER TABLE `deal` ADD INDEX deal_ic_no_index ( `ic_no` ) ;

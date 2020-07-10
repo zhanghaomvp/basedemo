@@ -241,6 +241,7 @@ class DealsControllerTest extends BaseTest {
                 );
     }
 
+
     @Test
     void companyDashboard_withOutDepartment() throws Exception {
         mockMvc
@@ -275,6 +276,43 @@ class DealsControllerTest extends BaseTest {
                         MockMvcResultMatchers
                                 .jsonPath("$.data.totalAmount")
                                 .value("13.0")
+                );
+    }
+
+    @Test
+    void storeDashboard_withOutDepartment() throws Exception {
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/deals/dashboard", 1)
+                                .param("begin", "2020-07-06 16:22:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.totalAmount")
+                                .value("18.0")
+                );
+    }
+
+    @Test
+    void storeDashboard_withDepartment() throws Exception {
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/stores/{storeId}/deals/dashboard", 1)
+                                .param("companyName", "中国电科")
+                                .param("begin", "2020-07-06 16:22:00")
+                                .param("end", DateTimeFormatter.ofPattern(DATE_TIME).format(LocalDateTime.now()))
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.data.totalAmount")
+                                .value("18.0")
                 );
     }
 }

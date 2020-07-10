@@ -3,8 +3,9 @@ package com.cetcxl.xlpay.admin.entity.vo;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.cetcxl.xlpay.admin.dao.ChecksRecordMapper;
-import com.cetcxl.xlpay.common.entity.model.Checks;
+import com.cetcxl.xlpay.admin.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.entity.vo.AttachmentVO;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -41,6 +42,10 @@ public class ChecksVO extends BaseVO implements Serializable {
 
     private Integer company;
 
+    private String companyName;
+
+    private String storeName;
+
     private Integer store;
 
     private Deal.PayType payType;
@@ -50,6 +55,8 @@ public class ChecksVO extends BaseVO implements Serializable {
     private BigDecimal totalDealAmonut;
 
     private String attachments;
+
+    List<AttachmentVO> attachmentVos;
 
     private Checks.Status status;
 

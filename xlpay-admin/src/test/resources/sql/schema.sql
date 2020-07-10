@@ -201,3 +201,7 @@ CREATE TABLE `checks_record` (
 	PRIMARY KEY ( `id` ),
 	INDEX checks_record_check_batch_index ( check_batch )
 );
+
+ALTER TABLE `deal` ADD COLUMN `ic_no` VARCHAR ( 50 );
+ALTER TABLE `deal` ADD INDEX deal_ic_no_index ( `ic_no` ) ;
+

@@ -1,30 +1,37 @@
 package com.cetcxl.xlpay.admin.service;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;
+import com.alibaba.excel.annotation.write.style.ContentStyle;
 import com.alibaba.excel.annotation.write.style.HeadFontStyle;
 import com.alibaba.excel.annotation.write.style.HeadStyle;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cetcxl.xlpay.admin.controller.DealsController;
 import com.cetcxl.xlpay.admin.dao.DealMapper;
 import com.cetcxl.xlpay.admin.exception.DealCashImportException;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CASH;
 import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CREDIT;
@@ -45,6 +52,63 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     WalletCashService walletCashService;
     @Autowired
     WalletCreditService walletCreditService;
+
+    @Data
+    @Builder
+    @HeadStyle(fillPatternType = FillPatternType.SOLID_FOREGROUND, fillForegroundColor = 10)
+    @HeadFontStyle(fontHeightInPoints = 15)
+    @ContentStyle(horizontalAlignment = HorizontalAlignment.CENTER)
+    public static class DealExportRow {
+        public static final List<String> EXClUDE_COMPANY_NAME = ImmutableList.of("companyName");
+        public static final List<String> EXClUDE_STORE_NAME = ImmutableList.of("storeName");
+
+        @ExcelProperty("企业名称")
+        @ColumnWidth(30)
+        String companyName;
+
+        @ExcelProperty("商家名称")
+        @ColumnWidth(30)
+        String storeName;
+
+        @ExcelProperty("姓名")
+        @ColumnWidth(25)
+        String name;
+
+        @ExcelProperty("交易金额")
+        @ColumnWidth(25)
+        String amount;
+
+        @ExcelProperty("交易时间")
+        @ColumnWidth(40)
+        LocalDateTime transTime;
+
+        @ExcelProperty("支付类型")
+        @ColumnWidth(25)
+        String payType;
+
+        @ExcelProperty("结算状态")
+        @ColumnWidth(25)
+        String status;
+    }
+
+    public List<DealExportRow> listDealExport(DealsController.ListDealReq req) {
+        List<DealMapper.DealDTO> dealDtoS = baseMapper.listDealExport(req);
+
+        return dealDtoS.stream()
+                .map(
+                        dto ->
+                                DealExportRow.builder()
+                                        .name(dto.getName())
+                                        .storeName(dto.getStoreName())
+                                        .companyName(dto.getCompanyName())
+                                        .amount(dto.getAmount().toString())
+                                        .transTime(dto.getCreated())
+                                        .payType(dto.getPayType().getDesc())
+                                        .status(dto.getStatus().getDesc())
+                                        .build()
+                )
+                .collect(Collectors.toList());
+    }
 
     @Data
     @Builder
@@ -234,4 +298,36 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     /*
      **********************信用交易 end**********************
      */
+
+    /**
+     * @param dashboardDTO
+     * @return DealMapper.DashboardDTO
+     * 计算数据面板的值
+     */
+    public DealMapper.DashboardDTO calculationAmount(DealMapper.DashboardDTO dashboardDTO) {
+
+        if (ObjectUtil.isNull(dashboardDTO)) {
+            return dashboardDTO;
+        }
+        dashboardDTO.setTotalCheckAmount(
+                dashboardDTO.getCashCheckAmount()
+                        .add(dashboardDTO.getCreditCheckAmount())
+        );
+        dashboardDTO.setCreditUncheckAmount(dashboardDTO.getCreditAmount()
+                .subtract(dashboardDTO.getCreditCheckAmount())
+        );
+        dashboardDTO.setCashUncheckAmount(
+                dashboardDTO.getCashAmount()
+                        .subtract(dashboardDTO.getCashCheckAmount())
+        );
+        dashboardDTO.setTotalUncheckAmount(
+                dashboardDTO.getTotalAmount().
+                        subtract(
+                                dashboardDTO.getCashCheckAmount()
+                                        .add(dashboardDTO.getCreditCheckAmount())
+                        )
+        );
+
+        return dashboardDTO;
+    }
 }

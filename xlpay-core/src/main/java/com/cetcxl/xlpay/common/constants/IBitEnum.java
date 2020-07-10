@@ -16,6 +16,6 @@ public interface IBitEnum {
     }
 
     default Integer close(Integer bitInt) {
-        return (1 << (getBitPos() - 1)) ^ Integer.MAX_VALUE & bitInt;
+        return ((1 << (getBitPos() - 1)) ^ Integer.MAX_VALUE) & bitInt;
     }
 }

@@ -5,6 +5,7 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
+import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
 import com.cetcxl.xlpay.payuser.service.*;
 import com.cetcxl.xlpay.payuser.util.ContextUtil;
 import io.swagger.annotations.Api;
@@ -37,6 +38,8 @@ public class PayController extends BaseController {
 
     @Autowired
     PayUserService payUserService;
+    @Autowired
+    PayService payService;
     @Autowired
     CompanyService companyService;
     @Autowired
@@ -115,6 +118,20 @@ public class PayController extends BaseController {
         return ResBody.success(walletCredit.getCreditBalance().toString());
     }
 
+    @GetMapping("/pay-user/{id}/store/{storeId}/wallets")
+    @ApiOperation("可支付钱包列表查询")
+    public ResBody<PayService.StoreWalletDTO> listStoreWallet(@PathVariable Integer storeId) {
+
+        return ResBody
+                .success(
+                        payService
+                                .listStoreWallet(
+                                        ContextUtil.getUserInfo().getPayUser(),
+                                        storeId
+                                )
+                );
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -129,7 +146,7 @@ public class PayController extends BaseController {
 
     @PostMapping("/pay-user/{id}/wallet/cash/{walletId}/deal")
     @ApiOperation("个人余额支付")
-    public ResBody payCash(
+    public ResBody<DealVO> payCash(
             @PathVariable Integer id,
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
@@ -149,21 +166,19 @@ public class PayController extends BaseController {
 
         DealService.DealParam dealParam = DealService.DealParam.builder()
                 .walletId(walletId)
-                .company(companyMember.getCompany())
-                .companyMember(companyMember.getId())
+                .companyMember(companyMember)
                 .store(req.getStoreId())
                 .amount(new BigDecimal(req.getAmount()))
                 .dealType(Deal.DealType.CASH_DEAL)
                 .info(req.getInfo())
                 .build();
 
-        dealService.dealCash(dealParam);
-        return ResBody.success();
+        return ResBody.success(DealVO.of(dealService.dealCash(dealParam), DealVO.class));
     }
 
     @PostMapping("/pay-user/{id}/wallet/credit/{walletId}/deal")
     @ApiOperation("个人信用额度支付")
-    public ResBody payCredit(
+    public ResBody<DealVO> payCredit(
             @PathVariable Integer id,
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
@@ -183,15 +198,13 @@ public class PayController extends BaseController {
 
         DealService.DealParam dealParam = DealService.DealParam.builder()
                 .walletId(walletId)
-                .company(companyMember.getCompany())
-                .companyMember(companyMember.getId())
+                .companyMember(companyMember)
                 .store(req.getStoreId())
                 .amount(new BigDecimal(req.getAmount()))
                 .dealType(Deal.DealType.CREDIT_DEAL)
                 .info(req.getInfo())
                 .build();
 
-        dealService.dealCredit(dealParam);
-        return ResBody.success();
+        return ResBody.success(DealVO.of(dealService.dealCredit(dealParam), DealVO.class));
     }
 }

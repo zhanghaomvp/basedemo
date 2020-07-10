@@ -2,6 +2,7 @@ package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.BaseTest;
+import com.cetcxl.xlpay.admin.entity.model.CompanyUser;
 import com.cetcxl.xlpay.admin.rpc.TrustlinkDataRpcService;
 import com.cetcxl.xlpay.admin.service.CompanyService;
 import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
@@ -9,7 +10,6 @@ import com.cetcxl.xlpay.admin.service.CompanyUserService;
 import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
-import com.cetcxl.xlpay.common.entity.model.CompanyUser;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.cetcxl.xlpay.common.config.MybatisPlusConfig.PageReq.PARAM_PAGE_NO;
@@ -72,7 +73,7 @@ class CompanyControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/companys/{companyId}",1)
+                                .get("/companys/{companyId}", 1)
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -102,7 +103,7 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.total").value(3)
+                                .jsonPath("$.data.total").value(2)
                 )
                 .andExpect(
                         MockMvcResultMatchers
@@ -149,20 +150,20 @@ class CompanyControllerTest extends BaseTest {
                         Optional.of(
                                 TrustlinkDataRpcService.CompanyInfo.builder()
                                         .organizationName(S_CETCXL)
-                                        .organizationCreditId(S_TEMP)
+                                        .organizationCreditId(S_SOCIAL_CREDIT_CODE)
                                         .organizationTel(S_PHONE)
                                         .organizationEmail(S_TEMP)
                                         .build()
                         )
                 )
                 .when(trustlinkDataRpcService)
-                .getCompanyInfo(eq(S_TEMP));
+                .getCompanyInfo(eq(S_SOCIAL_CREDIT_CODE));
 
         CompanyController.CompanyRegisterReq req = CompanyController.CompanyRegisterReq.builder()
                 .phone(S_PHONE)
                 .password(S_TEMP)
                 .verifyCode(S_VERIFY_CODE)
-                .socialCreditCode(S_TEMP)
+                .socialCreditCode(S_SOCIAL_CREDIT_CODE)
                 .name(S_CETCXL)
                 .build();
 
@@ -249,15 +250,7 @@ class CompanyControllerTest extends BaseTest {
                 );
 
         CompanyStoreRelation relation = companyStoreRelationService.getById(1);
-        Assert.assertTrue(
-                CompanyStoreRelation.Relation.CASH_PAY
-                        .isClose(relation.getApplyReleation())
-        );
-        Assert.assertTrue(
-                CompanyStoreRelation.Relation.CASH_PAY
-                        .isClose(relation.getRelation())
-        );
-
+        Assert.assertTrue(Objects.isNull(relation.getRelation()));
         Assert.assertTrue(CompanyStoreRelation.RelationStatus.WORKING == relation.getStatus());
 
         companyStoreRelationService.update(
@@ -300,12 +293,7 @@ class CompanyControllerTest extends BaseTest {
                         .isOpen(relation.getApplyReleation())
         );
         Assert.assertTrue(
-                CompanyStoreRelation.Relation.CASH_PAY
-                        .isClose(relation.getRelation())
-        );
-        Assert.assertFalse(
-                CompanyStoreRelation.Relation.CREDIT_PAY
-                        .isOpen(relation.getRelation())
+                Objects.isNull(relation.getRelation())
         );
         Assert.assertTrue(CompanyStoreRelation.RelationStatus.APPROVAL == relation.getStatus());
     }

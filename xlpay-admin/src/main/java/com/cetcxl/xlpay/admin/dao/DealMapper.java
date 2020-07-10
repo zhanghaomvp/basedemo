@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.controller.DealsController;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.google.common.base.Strings;
 import io.swagger.annotations.ApiModel;
+import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.annotations.Param;
@@ -17,6 +17,7 @@ import org.apache.ibatis.jdbc.SQL;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
@@ -43,6 +44,7 @@ public interface DealMapper extends BaseMapper<Deal> {
         @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime created;
         private Deal.Status status;
+        private Integer storeId;
     }
 
     static String listDealSql(DealsController.ListDealReq req) {
@@ -51,7 +53,8 @@ public interface DealMapper extends BaseMapper<Deal> {
                     "	cm.`name`,\n" +
                     "	cm.department,\n" +
                     "	c.`name`  as company_name,\n" +
-                    "	s.`name`  as store_name");
+                    "	s.`name`  as store_name,\n" +
+                    "   s.`id`    as store_id");
             FROM(" deal d ");
             INNER_JOIN("company_member cm ON d.company_member = cm.id", "store s ON d.store = s.id ", "company c ON d.company = c.id ");
             WHERE("d.type>3");
@@ -63,10 +66,10 @@ public interface DealMapper extends BaseMapper<Deal> {
                 WHERE("c.`name` like concat('%',#{req.companyName},'%')");
             }
 
-            if(StringUtils.isNotBlank(req.getStoreName())){
+            if (StringUtils.isNotBlank(req.getStoreName())) {
                 WHERE("s.`name` like concat('%',#{req.storeName},'%')");
             }
-            if (Objects.nonNull(req.getStoreId()) ) {
+            if (Objects.nonNull(req.getStoreId())) {
                 WHERE("d.store=#{req.storeId}");
             }
             if (Objects.nonNull(req.getPayType())) {
@@ -93,6 +96,9 @@ public interface DealMapper extends BaseMapper<Deal> {
     @SelectProvider(type = DealMapper.class, method = "listDealSql")
     IPage<DealDTO> listDeal(Page page, DealsController.ListDealReq req);
 
+    @SelectProvider(type = DealMapper.class, method = "listDealSql")
+    List<DealDTO> listDealExport(@Param("req") DealsController.ListDealReq req);
+
 
     @Data
     @ApiModel
@@ -102,6 +108,10 @@ public interface DealMapper extends BaseMapper<Deal> {
         private BigDecimal creditAmount;
         private BigDecimal cashCheckAmount;
         private BigDecimal creditCheckAmount;
+        private BigDecimal totalCheckAmount;
+        private BigDecimal creditUncheckAmount;
+        private BigDecimal cashUncheckAmount;
+        private BigDecimal totalUncheckAmount;
     }
 
     @Select("SELECT\n" +
@@ -113,11 +123,11 @@ public interface DealMapper extends BaseMapper<Deal> {
             "FROM\n" +
             "	deal d \n" +
             "WHERE\n" +
-            "	d.company = #{companyId} \n" +
+            "	d.company = #{req.companyId} \n" +
             "	AND d.type IN ( 4, 5 ) \n" +
-            "	AND d.created >= #{begin} \n" +
-            "	AND d.created <= #{end}")
-    DashboardDTO companyDashboardWithOutDepartment(DealsController.DashboardReq req);
+            "	AND d.created >= #{req.begin} \n" +
+            "	AND d.created <= #{req.end}")
+    DashboardDTO companyDashboardWithOutDepartment(@Param("req") DealsController.DashboardReq req);
 
     @Select("SELECT\n" +
             "	SUM( d.amount ) AS total_amount,\n" +
@@ -129,10 +139,47 @@ public interface DealMapper extends BaseMapper<Deal> {
             "	deal d \n" +
             "   INNER JOIN company_member cm ON d.company_member = cm.id \n" +
             "WHERE\n" +
-            "	d.company = #{companyId} \n" +
+            "	d.company = #{req.companyId} \n" +
             "	AND d.type IN ( 4, 5 ) \n" +
-            "	AND d.created >= #{begin} \n" +
-            "	AND d.created <= #{end} \n" +
-            "   AND cm.department like concat('%',#{department},'%')")
-    DashboardDTO companyDashboardWithDepartment(DealsController.DashboardReq req);
+            "	AND d.created >= #{req.begin} \n" +
+            "	AND d.created <= #{req.end} \n" +
+            "   AND cm.department = #{req.department}")
+    DashboardDTO companyDashboardWithDepartment(@Param("req") DealsController.DashboardReq req);
+
+
+    @Select(
+            "SELECT\n" +
+            "	SUM( d.amount ) AS total_amount,\n" +
+            "	SUM( CASE WHEN d.pay_type = 0 THEN d.amount ELSE 0 END ) AS cash_amount,\n" +
+            "	SUM( CASE WHEN d.pay_type = 1 THEN d.amount ELSE 0 END ) AS credit_amount,\n" +
+            "	SUM( CASE WHEN ( d.pay_type = 0 AND d.`status` = 2 ) THEN d.amount ELSE 0 END ) AS cash_check_amount,\n" +
+            "	SUM( CASE WHEN ( d.pay_type = 1 AND d.`status` = 2 ) THEN d.amount ELSE 0 END ) AS credit_check_amount \n" +
+            "FROM\n" +
+            "	deal d \n" +
+            "WHERE\n" +
+            "	d.store = #{req.storeId} \n" +
+            "	AND d.type IN ( 4, 5 ) \n" +
+            "	AND d.created >= #{req.begin} \n" +
+            "	AND d.created <= #{req.end}"
+    )
+    DashboardDTO storeDashboardWithOutCompany(@Param("req") DealsController.DashboardReq req);
+
+    @Select(
+            "SELECT\n" +
+            "	SUM( d.amount ) AS total_amount,\n" +
+            "	SUM( CASE WHEN d.pay_type = 0 THEN d.amount ELSE 0 END ) AS cash_amount,\n" +
+            "	SUM( CASE WHEN d.pay_type = 1 THEN d.amount ELSE 0 END ) AS credit_amount,\n" +
+            "	SUM( CASE WHEN ( d.pay_type = 0 AND d.`status` = 2 ) THEN d.amount ELSE 0 END ) AS cash_check_amount,\n" +
+            "	SUM( CASE WHEN ( d.pay_type = 1 AND d.`status` = 2 ) THEN d.amount ELSE 0 END ) AS credit_check_amount \n" +
+            "FROM\n" +
+            "	deal d \n" +
+            "   INNER JOIN company c ON d.company = c.id \n" +
+            "WHERE\n" +
+            "	d.store = #{req.storeId} \n" +
+            "	AND d.type IN ( 4, 5 ) \n" +
+            "	AND d.created >= #{req.begin} \n" +
+            "	AND d.created <= #{req.end} \n" +
+            "   AND c.name  = #{req.companyName}"
+    )
+    DashboardDTO storeDashboardWithCompany(@Param("req") DealsController.DashboardReq req);
 }

@@ -35,6 +35,8 @@ public class Deal implements Serializable {
 
     private Integer companyMember;
 
+    private String icNo;
+
     private Integer store;
 
     private BigDecimal amount;
@@ -73,35 +75,47 @@ public class Deal implements Serializable {
     }
 
     public enum PayType implements IEnum<Integer> {
-        CASH(0),
-        CREDIT(1),
+        CASH(0, "余额消费"),
+        CREDIT(1, "信用消费"),
         ;
         private Integer status;
+        private String desc;
 
-        PayType(Integer status) {
+        PayType(Integer status, String desc) {
             this.status = status;
+            this.desc = desc;
         }
 
         @Override
         public Integer getValue() {
             return this.status;
+        }
+
+        public String getDesc() {
+            return this.desc;
         }
     }
 
     public enum Status implements IEnum<Integer> {
-        PAID(0),
-        CHECKING(1),
-        CHECK_FINISH(2),
+        PAID(0, "待结算"),
+        CHECKING(1, "结算中"),
+        CHECK_FINISH(2, "已结算"),
         ;
         private Integer status;
+        private String desc;
 
-        Status(Integer status) {
+        Status(Integer status, String desc) {
             this.status = status;
+            this.desc = desc;
         }
 
         @Override
         public Integer getValue() {
             return this.status;
+        }
+
+        public String getDesc() {
+            return this.desc;
         }
     }
 }

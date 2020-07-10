@@ -1,7 +1,7 @@
 package com.cetcxl.xlpay.admin.entity.vo;
 
 import com.cetcxl.xlpay.common.entity.model.Store;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;

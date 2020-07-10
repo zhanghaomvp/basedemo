@@ -61,7 +61,7 @@ public class VerifyCodeService {
             return false;
         }
 
-        redisTemplate.delete(PREFIX_REDIS_KEY + phone);
+        //redisTemplate.delete(PREFIX_REDIS_KEY + phone);
         return true;
     }
 

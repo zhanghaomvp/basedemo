@@ -2,12 +2,16 @@ package com.cetcxl.xlpay.admin.controller;
 
 import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.admin.dao.ChecksMapper;
+import com.cetcxl.xlpay.admin.entity.model.Checks;
+import com.cetcxl.xlpay.admin.entity.model.ChecksRecord;
 import com.cetcxl.xlpay.admin.entity.vo.ChecksVO;
 import com.cetcxl.xlpay.admin.service.ChecksRecordService;
 import com.cetcxl.xlpay.admin.service.ChecksService;
 import com.cetcxl.xlpay.admin.service.DealService;
 import com.cetcxl.xlpay.admin.service.WalletCreditService;
-import com.cetcxl.xlpay.common.entity.model.*;
+import com.cetcxl.xlpay.common.entity.model.Company;
+import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,9 +32,9 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static com.cetcxl.xlpay.admin.entity.model.Checks.Status.*;
 import static com.cetcxl.xlpay.common.config.MybatisPlusConfig.PageReq.PARAM_PAGE_NO;
 import static com.cetcxl.xlpay.common.config.MybatisPlusConfig.PageReq.PARAM_PAGE_SIZE;
-import static com.cetcxl.xlpay.common.entity.model.Checks.Status.*;
 import static com.cetcxl.xlpay.common.entity.model.Deal.Status.CHECKING;
 
 class ChecksControllerTest extends BaseTest {
@@ -140,14 +144,14 @@ class ChecksControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Checks checks = checksService.getById(3);
-        Assert.assertTrue(checks.getStatus() == COFIRM);
+        Assert.assertTrue(checks.getStatus() == CONFIRM);
 
         WalletCredit nowWalletCredit = walletCreditService.getById(2);
         Assert.assertTrue(nowWalletCredit.getCreditQuota().compareTo(nowWalletCredit.getCreditBalance()) == 0);
 
         ChecksRecord checksRecord = checksRecordService.lambdaQuery()
                 .eq(ChecksRecord::getCheckBatch, checks.getBatch())
-                .eq(ChecksRecord::getAction, COFIRM)
+                .eq(ChecksRecord::getAction, CONFIRM)
                 .one();
         Assert.assertNotNull(checksRecord);
         Assert.assertTrue(checksRecord.getOperator().equals(1));
@@ -219,6 +223,23 @@ class ChecksControllerTest extends BaseTest {
     }
 
     @Test
+    void listCompanyCheck_export_withStatues() throws Exception {
+        MvcResult mvcResult = mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/company/{companyId}/deal/checks/export", 1)
+                                .param("companyId", "1")
+                                .param("statues", REJECT.name())
+                                .param("statues", APPROVAL.name())
+                                .param(PARAM_PAGE_NO, "1")
+                                .param(PARAM_PAGE_SIZE, "5")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+    }
+
+    @Test
     void listCompanyCheck_withCompanyName() throws Exception {
         mockMvc
                 .perform(
@@ -243,7 +264,7 @@ class ChecksControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/stores/{storeId}/checks", 1)
+                                .get("/stores/{storeId}/checks",  1)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -314,6 +335,8 @@ class ChecksControllerTest extends BaseTest {
                         .getInfo()
                         .equals("approval")
         );
-
+        Assertions.assertEquals(
+                checksVO.getAttachmentVos().size(), 3
+        );
     }
 }

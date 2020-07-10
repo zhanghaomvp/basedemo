@@ -6,7 +6,7 @@ public enum ResultCode implements IResultCode {
     VERIFY_CODE_FAIL(2101, "验证码校验失败"),
 
     COMPANY_EXIST(2201, "该企业已存在"),
-    COMPANY_NOT_EXIST(2202, "该企业不存在"),
+    COMPANY_NOT_EXIST(2202, "该企业不存在或企业信息不匹配"),
     COMPANY_USER_EXIST(2203, "该手机号已绑定企业"),
     COMPANY_MEMBER_EXIST(2204, "该企业成员存在"),
     COMPANY_STORE_RELATION_EXIST(2205, "企业与该商家已绑定"),

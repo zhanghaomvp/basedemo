@@ -1,7 +1,7 @@
 package com.cetcxl.xlpay.admin.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.cetcxl.xlpay.common.entity.model.StoreUser;
+import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 
 /**
  * <p>
