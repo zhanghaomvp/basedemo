@@ -30,6 +30,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +42,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
 
 @Validated
 @RestController
@@ -75,6 +78,14 @@ public class ChecksController extends BaseController {
 
         Deal.PayType payType;
         Checks.Status[] statues;
+
+
+
+        @DateTimeFormat(pattern = DATE_TIME)
+        LocalDateTime approvalTimeBegin;
+        @DateTimeFormat(pattern = DATE_TIME)
+        LocalDateTime approvalTimeEnd;
+
     }
 
     interface ListCompanyCheckGroup {

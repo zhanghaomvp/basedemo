@@ -267,6 +267,8 @@ class ChecksControllerTest extends BaseTest {
                                 .get("/stores/{storeId}/checks",  1)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
+                                .param("approvalTimeBegin","2020-06-07 00:00:00")
+                                .param("approvalTimeEnd","2020-07-08 00:00:00")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())

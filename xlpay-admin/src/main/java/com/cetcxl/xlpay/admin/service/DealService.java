@@ -14,6 +14,8 @@ import com.cetcxl.xlpay.admin.controller.DealsController;
 import com.cetcxl.xlpay.admin.dao.DealMapper;
 import com.cetcxl.xlpay.admin.exception.DealCashImportException;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
+import com.cetcxl.xlpay.common.component.RedisLockComponent;
+import com.cetcxl.xlpay.common.constants.Constants;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
@@ -59,8 +61,8 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @HeadFontStyle(fontHeightInPoints = 15)
     @ContentStyle(horizontalAlignment = HorizontalAlignment.CENTER)
     public static class DealExportRow {
-        public static final List<String> EXClUDE_COMPANY_NAME = ImmutableList.of("companyName");
-        public static final List<String> EXClUDE_STORE_NAME = ImmutableList.of("storeName");
+        public static final List<String> EXCLUDE_COMPANY_NAME = ImmutableList.of("companyName");
+        public static final List<String> EXCLUDE_STORE_NAME = ImmutableList.of("storeName");
 
         @ExcelProperty("企业名称")
         @ColumnWidth(30)
@@ -125,7 +127,6 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
      **********************余额交易 start**********************
      */
 
-    @Transactional
     public void batchDealCashForAdmin(List<DealForAdminParam> params) {
         params.forEach(
                 param -> dealCashForAdmin(param)
@@ -134,17 +135,20 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
     @Transactional
     public void dealCashForAdmin(DealForAdminParam param) {
-        //todo 分布式锁待添加
-        Deal deal = Deal.builder()
-                .company(param.getCompany())
-                .companyMember(param.getCompanyMember())
-                .amount(param.getAmount())
-                .type(param.getDealType())
-                .payType(CASH)
-                .build();
-        save(deal);
+        try (RedisLockComponent.RedisLock redisLock =
+                     new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + param.getWalletId())) {
+            Deal deal = Deal.builder()
+                    .company(param.getCompany())
+                    .companyMember(param.getCompanyMember())
+                    .amount(param.getAmount())
+                    .type(param.getDealType())
+                    .payType(CASH)
+                    .build();
 
-        walletCashService.process(deal, param.getWalletId());
+            save(deal);
+
+            walletCashService.process(deal, param.getWalletId());
+        }
     }
 
     @Data
@@ -222,7 +226,6 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
     @Transactional
     public void dealCashImport(DealCashImportRow row) throws DealCashImportException {
-        //todo 分布式锁待添加
         CompanyMember companyMember = companyMemberService.getOne(Wrappers.lambdaQuery(CompanyMember.class)
                 .eq(CompanyMember::getIcNo, row.getIcNo()));
         if (Objects.isNull(companyMember)) {
@@ -249,7 +252,8 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
             throw new DealCashImportException();
         }
 
-        try {
+        try (RedisLockComponent.RedisLock redisLock =
+                     new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + walletCash.getId())) {
             Deal deal = Deal.builder()
                     .company(ContextUtil.getUserInfo().getCompany().getId())
                     .companyMember(companyMember.getId())
@@ -273,7 +277,6 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
      **********************信用交易 start**********************
      */
 
-    @Transactional
     public void batchDealCreditForAdmin(List<DealForAdminParam> params) {
         params.forEach(
                 param -> dealCreditForAdmin(param)
@@ -282,17 +285,20 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
     @Transactional
     public void dealCreditForAdmin(DealForAdminParam param) {
-        //todo 分布式锁待添加
-        Deal deal = Deal.builder()
-                .company(param.getCompany())
-                .companyMember(param.getCompanyMember())
-                .amount(param.getAmount())
-                .type(param.getDealType())
-                .payType(CREDIT)
-                .build();
-        save(deal);
+        try (RedisLockComponent.RedisLock redisLock =
+                     new RedisLockComponent.RedisLock(Constants.KEY_CREDIT_DEAL + param.getWalletId())) {
 
-        walletCreditService.process(deal, param.getWalletId());
+            Deal deal = Deal.builder()
+                    .company(param.getCompany())
+                    .companyMember(param.getCompanyMember())
+                    .amount(param.getAmount())
+                    .type(param.getDealType())
+                    .payType(CREDIT)
+                    .build();
+            save(deal);
+
+            walletCreditService.process(deal, param.getWalletId());
+        }
     }
 
     /*

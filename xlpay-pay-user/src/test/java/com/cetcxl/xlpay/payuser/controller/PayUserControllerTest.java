@@ -29,7 +29,7 @@ class PayUserControllerTest extends BaseTest {
 
     @Test
     void register_success() throws Exception {
-        PayUserController.UserAddReq userAddReq = PayUserController.UserAddReq.builder()
+        PayUserController.RegisterReq userAddReq = PayUserController.RegisterReq.builder()
                 .icNo(S_TEMP)
                 .password(S_PAY_PASSWORD)
                 .build();
@@ -60,7 +60,7 @@ class PayUserControllerTest extends BaseTest {
 
         PayUserController.UpdatePayPasswordReq req = PayUserController.UpdatePayPasswordReq.builder()
                 .oldPassword("741852")
-                .newPassword("123456")
+                .newPassword("741852")
                 .build();
 
         mockMvc
@@ -75,7 +75,7 @@ class PayUserControllerTest extends BaseTest {
                         MockMvcResultMatchers.status().isOk()
                 );
 
-        Assert.assertTrue(passwordEncoder.matches("123456", payUserService.getById(1).getPassword()));
+        Assert.assertTrue(passwordEncoder.matches("741852", payUserService.getById(1).getPassword()));
     }
 
     @Test

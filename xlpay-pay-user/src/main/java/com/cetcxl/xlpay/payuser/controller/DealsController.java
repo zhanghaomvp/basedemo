@@ -78,13 +78,12 @@ public class DealsController extends BaseController {
     @ApiOperation("企业账单详情查询")
     public ResBody<DealVO> deal(@PathVariable Integer dealId) {
         Deal deal = dealService.getById(dealId);
-
         DealVO dealVO = DealVO.of(deal, DealVO.class);
+
         dealVO.setCompanyName(companyService.getById(deal.getCompany()).getName());
         if (Deal.Status.CHECK_FINISH == deal.getStatus()) {
             dealVO.setCheckFinishTime(deal.getUpdated());
         }
-
         return ResBody.success(dealVO);
     }
 }

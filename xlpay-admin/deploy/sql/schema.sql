@@ -1,3 +1,9 @@
+DROP DATABASE IF EXISTS xinyufu;
+CREATE DATABASE xinyufu character set utf8;
+USE xinyufu;
+SET FOREIGN_KEY_CHECKS=0;
+
+
 CREATE TABLE `company_user` (
 	id INT UNSIGNED AUTO_INCREMENT,
 	`company` INT UNSIGNED,

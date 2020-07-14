@@ -7,10 +7,10 @@ import com.cetcxl.xlpay.admin.rpc.TrustlinkDataRpcService;
 import com.cetcxl.xlpay.admin.service.CompanyService;
 import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
 import com.cetcxl.xlpay.admin.service.CompanyUserService;
-import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,7 +131,7 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.total").value(1)
+                                .jsonPath("$.data.total").value(2)
                 )
                 .andExpect(
                         MockMvcResultMatchers
@@ -204,7 +204,7 @@ class CompanyControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .post("/companys/{companyId}/stores/{storeId}/company-store-relation", 1, 3)
+                                .post("/companys/{companyId}/stores/{storeId}/company-store-relation", 1, 4)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -212,14 +212,14 @@ class CompanyControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data.id").value(4)
+                                .jsonPath("$.data.id").value(5)
                 )
                 .andExpect(
                         MockMvcResultMatchers
                                 .jsonPath("$.data.applyReleation").value(3)
                 );
 
-        Assert.assertTrue(companyStoreRelationService.removeById(3));
+        Assert.assertTrue(companyStoreRelationService.removeById(5));
     }
 
     @Test
@@ -296,6 +296,13 @@ class CompanyControllerTest extends BaseTest {
                 Objects.isNull(relation.getRelation())
         );
         Assert.assertTrue(CompanyStoreRelation.RelationStatus.APPROVAL == relation.getStatus());
+
+        companyStoreRelationService.update(
+                Wrappers.lambdaUpdate(CompanyStoreRelation.class)
+                        .set(CompanyStoreRelation::getRelation, 1)
+                        .set(CompanyStoreRelation::getApplyReleation, null)
+                        .eq(CompanyStoreRelation::getId, relation.getId())
+        );
     }
 
     @Test

@@ -81,7 +81,7 @@ class PayControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data").value("100.00")
+                                .jsonPath("$.data.creditBalance").value("100.0")
                 );
     }
 
@@ -133,7 +133,7 @@ class PayControllerTest extends BaseTest {
 
         PayController.PayReq req = PayController.PayReq.builder()
                 .amount("5")
-                .storeId(1)
+                .storeId(2)
                 .info(S_TEMP)
                 .password(S_PAY_PASSWORD)
                 .build();
@@ -142,7 +142,7 @@ class PayControllerTest extends BaseTest {
                 .perform(
                         MockMvcRequestBuilders
                                 .post("/pay-user/{id}/wallet/credit/{walletId}/deal",
-                                        3, 3)
+                                        2, 2)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_VALUE)
@@ -165,7 +165,7 @@ class PayControllerTest extends BaseTest {
         Assertions.assertTrue(S_TEMP.equals(deal.getInfo()));
         Assertions.assertTrue(Deal.PayType.CREDIT == deal.getPayType());
 
-        WalletCredit newWalletCredit = walletCreditService.getById(3);
+        WalletCredit newWalletCredit = walletCreditService.getById(2);
         Assertions.assertTrue(
                 newWalletCredit.getCreditBalance()
                         .add(new BigDecimal("5"))

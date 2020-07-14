@@ -31,8 +31,8 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static com.cetcxl.xlpay.admin.service.DealService.DealExportRow.EXClUDE_COMPANY_NAME;
-import static com.cetcxl.xlpay.admin.service.DealService.DealExportRow.EXClUDE_STORE_NAME;
+import static com.cetcxl.xlpay.admin.service.DealService.DealExportRow.EXCLUDE_COMPANY_NAME;
+import static com.cetcxl.xlpay.admin.service.DealService.DealExportRow.EXCLUDE_STORE_NAME;
 import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
 
 @Validated
@@ -186,7 +186,7 @@ public class DealsController extends BaseController {
                         response.getOutputStream(),
                         DealService.DealExportRow.class
                 )
-                .excludeColumnFiledNames(EXClUDE_STORE_NAME)
+                .excludeColumnFiledNames(EXCLUDE_STORE_NAME)
                 .registerConverter(new LocalDateTimeConverter())
                 .sheet("sheet")
                 .doWrite(
@@ -209,7 +209,7 @@ public class DealsController extends BaseController {
                         DealService.DealExportRow.class
                 )
                 .sheet("sheet")
-                .excludeColumnFiledNames(EXClUDE_COMPANY_NAME)
+                .excludeColumnFiledNames(EXCLUDE_COMPANY_NAME)
                 .registerConverter(new LocalDateTimeConverter())
                 .doWrite(
                         dealService.listDealExport(req)

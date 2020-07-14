@@ -48,6 +48,7 @@ public interface StoreMapper extends BaseMapper<Store> {
             if (StringUtils.isNotBlank(name)) {
                 WHERE(" s.name like concat('%',#{name},'%')");
             }
+            WHERE("csr.relation > 0");
         }}.toString();
     }
 
@@ -58,14 +59,25 @@ public interface StoreMapper extends BaseMapper<Store> {
     static String listCompanyStoresNotWithRelationSql(String name) {
         return new SQL() {{
 
-            SELECT("s.*");
+            SELECT("s.*,'' as relation,'' as apply_releation,'' as  relation_status ,'' as csr_id");
             FROM(" store s");
             WHERE("NOT EXISTS ( SELECT 1 FROM company_store_relation csr WHERE csr.company = #{companyId} AND s.id = csr.store )");
             if (StringUtils.isNotBlank(name)) {
                 WHERE(" s.name like concat('%',#{name},'%')");
             }
-            ORDER_BY(" s.id desc");
-        }}.toString();
+
+        }}.toString()
+                + " union all " +
+                new SQL() {{
+
+                    SELECT("s.*,csr.relation,csr.apply_releation,csr.`status` as relation_status ,csr.id as csr_id");
+                    FROM("store s");
+                    INNER_JOIN(" company_store_relation csr on s.id = csr.store ");
+                    WHERE("csr.company = #{companyId} AND csr.relation is null");
+                    if (StringUtils.isNotBlank(name)) {
+                        WHERE(" s.name like concat('%',#{name},'%')");
+                    }
+                }}.toString();
     }
 
     @SelectProvider(type = StoreMapper.class, method = "listCompanyStoresNotWithRelationSql")

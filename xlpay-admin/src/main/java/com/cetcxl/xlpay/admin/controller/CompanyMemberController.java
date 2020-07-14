@@ -121,7 +121,6 @@ public class CompanyMemberController extends BaseController {
     @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/status")
     @ApiOperation("企业成员余额账户状态修改")
     public ResBody updateWalletCashStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCashStatusReq req) {
-        //todo 分布式锁待添加
         WalletCash walletCash = walletCashService.getById(walletId);
         if (Objects.isNull(walletCash)) {
             return ResBody.error(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
@@ -316,7 +315,6 @@ public class CompanyMemberController extends BaseController {
     @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/status")
     @ApiOperation("企业成员信用钱包状态修改")
     public ResBody updateWalletCreditStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCreditStatusReq req) {
-        //todo 分布式锁待添加
         WalletCredit walletCredit = walletCreditService.getById(walletId);
         if (Objects.isNull(walletCredit)) {
             return ResBody.error(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);

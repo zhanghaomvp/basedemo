@@ -1,13 +1,13 @@
 package com.cetcxl.xlpay.admin.controller;
 
 import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
-import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Attachment;
 import com.cetcxl.xlpay.common.entity.vo.AttachmentVO;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.common.service.AttachmentService;
+import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.service.XstoreService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

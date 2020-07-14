@@ -11,9 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.math.BigDecimal;
 
-import static com.cetcxl.xlpay.common.constants.CommonResultCode.SYSTEM_LOGIC_ERROR;
 import static com.cetcxl.xlpay.payuser.constants.ResultCode.WALLET_BALANCE_NOT_ENOUGH;
 
 /**
@@ -32,15 +31,8 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
     @Transactional
     public void process(Deal deal, Integer walletId) {
         WalletCredit walletCredit = getById(walletId);
-        if (Objects.isNull(walletCredit)) {
-            throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
-        }
 
-        if (walletCredit.getCreditBalance()
-                .subtract(deal.getAmount())
-                .signum() == -1) {
-            throw new BaseRuntimeException(WALLET_BALANCE_NOT_ENOUGH);
-        }
+        checkEnoughBalance(walletCredit, deal.getAmount());
 
         WalletCreditFlow creditFlow = WalletCreditFlow.builder()
                 .walletCredit(walletCredit.getId())
@@ -62,5 +54,13 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                         .set(WalletCredit::getCreditQuota, creditFlow.getQuota())
                         .eq(WalletCredit::getId, walletCredit.getId())
         );
+    }
+
+    public void checkEnoughBalance(WalletCredit walletCredit, BigDecimal amount) {
+        if (walletCredit.getCreditBalance()
+                .subtract(amount)
+                .signum() == -1) {
+            throw new BaseRuntimeException(WALLET_BALANCE_NOT_ENOUGH);
+        }
     }
 }

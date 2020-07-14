@@ -35,7 +35,7 @@ public class BaseTest {
     public static final String S_SHOP = "shop";
     public static final String S_PHONE = "19999999999";
     public static final String S_ICNO = "511528198909010018";
-    public static final String S_PAY_PASSWORD = "123456";
+    public static final String S_PAY_PASSWORD = "741852";
 
     public static WireMockServer wireMockServer;
 

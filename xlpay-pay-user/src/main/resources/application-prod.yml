@@ -7,7 +7,7 @@ spring:
   redis:
     host: redis
   datasource:
-    url: jdbc:mysql://mysql:3306/xinyufu?serverTimezone=UTC&autoReconnect=true&failOverReadOnly=false&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://mysql:3306/xinyufu?serverTimezone=Asia/Shanghai&autoReconnect=true&failOverReadOnly=false&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: passsword
     initialization-mode: never

@@ -121,6 +121,12 @@ public interface ChecksMapper extends BaseMapper<Checks> {
             if (StringUtils.isNotBlank(req.getCompanyName())) {
                 WHERE("c1.name like concat('%',#{req.companyName},'%')");
             }
+            if (Objects.nonNull(req.getApprovalTimeBegin())) {
+                WHERE("cr2.created >=#{req.approvalTimeBegin}");
+            }
+            if (Objects.nonNull(req.getApprovalTimeEnd())) {
+                WHERE("cr2.created <=#{req.approvalTimeEnd}");
+            }
             ORDER_BY(" batch asc ");
         }}.toString();
     }

@@ -134,7 +134,6 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
 
     @Transactional
     public void payment(Deal deal) {
-        //// TODO: 2020/7/5 分布式锁
         WalletCredit walletCredit = lambdaQuery()
                 .eq(WalletCredit::getCompanyMember, deal.getCompanyMember())
                 .one();

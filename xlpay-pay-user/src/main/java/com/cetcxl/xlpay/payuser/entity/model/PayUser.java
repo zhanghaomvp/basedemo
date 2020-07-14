@@ -33,6 +33,8 @@ public class PayUser implements Serializable {
 
     private String icNo;
 
+    private String phone;
+
     private String password;
 
     private Integer functions;

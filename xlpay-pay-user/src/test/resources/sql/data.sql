@@ -1,3 +1,5 @@
+-- $10$TcTaUT0x6USCDexzR.McsegoKMs/izIvO4SbjTcr7Wq3kY6hDozhy  : kobekaka
+-- $2a$10$rWc4u0VwAVtBxMjOuGPNRehLZfCSP30Odis5cnP2tSt/9NCfXaKNi :741852
 INSERT INTO `pay_user`(`id`, `ic_no`, `password`, `functions`, `identity_flag`, `status`)
  VALUES (1, '511528198909010018', '$2a$10$rWc4u0VwAVtBxMjOuGPNRehLZfCSP30Odis5cnP2tSt/9NCfXaKNi', 1, NULL, 1);
 INSERT INTO `pay_user`(`id`, `ic_no`, `password`, `functions`, `identity_flag`, `status`)

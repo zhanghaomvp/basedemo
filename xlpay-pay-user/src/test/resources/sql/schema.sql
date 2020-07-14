@@ -12,3 +12,5 @@ IF
 		PRIMARY KEY ( `id` ),
 	INDEX pay_user_ic_no_index ( ic_no )
 	);
+
+ALTER TABLE `pay_user` ADD COLUMN `phone` VARCHAR ( 20 );

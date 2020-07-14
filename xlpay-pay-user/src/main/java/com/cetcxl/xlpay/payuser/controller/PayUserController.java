@@ -3,9 +3,14 @@ package com.cetcxl.xlpay.payuser.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
+import com.cetcxl.xlpay.common.entity.model.Company;
+import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.payuser.constants.ResultCode;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
+import com.cetcxl.xlpay.payuser.entity.vo.PayUserVO;
+import com.cetcxl.xlpay.payuser.service.CompanyMemberService;
+import com.cetcxl.xlpay.payuser.service.CompanyService;
 import com.cetcxl.xlpay.payuser.service.PayUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -26,8 +31,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.Objects;
 
-import static com.cetcxl.xlpay.payuser.constants.ResultCode.PAY_USER_NO_PASSWORD_PAY_IS_EXIST;
-import static com.cetcxl.xlpay.payuser.constants.ResultCode.PAY_USER_NO_PASSWORD_PAY_NO_EXIST;
+import static com.cetcxl.xlpay.payuser.constants.ResultCode.*;
 
 @Validated
 @RestController
@@ -39,17 +43,50 @@ public class PayUserController extends BaseController {
     @Autowired
     private PayUserService payUserService;
 
+    @Autowired
+    CompanyService companyService;
+    @Autowired
+    CompanyMemberService companyMemberService;
+
+    @GetMapping("/pay-user")
+    @ApiOperation("信链钱包查询")
+    @Transactional
+    public ResBody<PayUserVO> getPayUser(String socialCreditCode, String icNo) {
+        Company company = companyService.lambdaQuery()
+                .eq(Company::getSocialCreditCode, socialCreditCode)
+                .one();
+        if (Objects.isNull(company)) {
+            return ResBody.error(COMPANY_NOT_EXIST);
+        }
+
+        CompanyMember companyMember = companyMemberService.lambdaQuery()
+                .eq(CompanyMember::getIcNo, icNo)
+                .eq(CompanyMember::getCompany, company.getId())
+                .one();
+        if (Objects.isNull(companyMember)) {
+            return ResBody.error(COMPANY_MEMBER_NOT_EXIST);
+        }
+
+        PayUser payUser = payUserService.lambdaQuery()
+                .eq(PayUser::getIcNo, icNo)
+                .one();
+
+        return ResBody.success(PayUserVO.of(payUser, PayUserVO.class));
+    }
 
     @Data
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     @ApiModel("信链钱包开通请求体")
-    public static class UserAddReq {
+    public static class RegisterReq {
 
         @ApiModelProperty(value = "身份证", required = true)
         @NotBlank
         String icNo;
+
+        @ApiModelProperty
+        String phone;
 
         @ApiModelProperty(value = "支付密码", required = true)
         @Pattern(regexp = PatternConstants.PAY_PASSWORD)
@@ -59,7 +96,7 @@ public class PayUserController extends BaseController {
     @PostMapping("/pay-user")
     @ApiOperation("信链钱包开通")
     @Transactional
-    public ResBody register(@RequestBody @Validated UserAddReq req) {
+    public ResBody register(@RequestBody @Validated RegisterReq req) {
         PayUser payUser = payUserService
                 .getOne(
                         Wrappers.lambdaQuery(PayUser.class)
@@ -101,7 +138,7 @@ public class PayUserController extends BaseController {
 
         PayUser payUser = payUserService.getById(id);
         if (!passwordEncoder.matches(req.oldPassword, payUser.getPassword())) {
-            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_EXIST);
+            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
         }
 
         payUserService.update(
@@ -153,4 +190,5 @@ public class PayUserController extends BaseController {
         );
         return ResBody.success();
     }
+
 }

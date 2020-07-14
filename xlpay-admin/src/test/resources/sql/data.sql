@@ -51,6 +51,8 @@ INSERT INTO `company_store_relation`(`id`, `company`, `store`, `relation`, `appl
 VALUES (2, 1, 2, 1, 3, 0);
 INSERT INTO `company_store_relation`(`id`, `company`, `store`, `relation`, `apply_releation`, `status`)
 VALUES (3, 2, 1, 3, NULL, 1);
+INSERT INTO `company_store_relation`(`id`, `company`, `store`, `relation`, `apply_releation`, `status`)
+VALUES (4, 1, 3, null, 3, 0);
 
 INSERT INTO `deal`(`id`, `company`, `company_member`, `store`, `ic_no`, `amount`, `type`, `pay_type`, `info`, `check_batch`, `status`, `created`, `updated`)
 VALUES (1, 1, 1, 1, '511528198909010018', 1.00, 4, 0, 'test', NULL, 0, '2020-07-06 16:22:28', '2020-07-06 16:22:28');

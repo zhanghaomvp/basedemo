@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: xlpay-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xlpay-admin
+  template:
+    metadata:
+      labels:
+        app: xlpay-admin
+    spec:
+      imagePullSecrets:
+      - name: xyf-ci-docker
+      containers:
+      - name: xlpay-admin
+        image: 172.16.101.214:5000/xlpay-admin:latest
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        args: ["--spring.datasource.password=root001"]
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xlpay-admin
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: xlpay-admin
+    

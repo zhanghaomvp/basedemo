@@ -3,9 +3,12 @@ package com.cetcxl.xlpay.payuser.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.*;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.payuser.constants.ResultCode;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
+import com.cetcxl.xlpay.payuser.entity.vo.WalletCreditVO;
 import com.cetcxl.xlpay.payuser.service.*;
 import com.cetcxl.xlpay.payuser.util.ContextUtil;
 import io.swagger.annotations.Api;
@@ -26,8 +29,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 import static com.cetcxl.xlpay.common.constants.CommonResultCode.SYSTEM_LOGIC_ERROR;
-import static com.cetcxl.xlpay.payuser.constants.ResultCode.COMPANY_NOT_EXIST;
-import static com.cetcxl.xlpay.payuser.constants.ResultCode.WALLET_RELATION_NOT_EXIST;
+import static com.cetcxl.xlpay.payuser.constants.ResultCode.*;
 
 @Validated
 @RestController
@@ -89,7 +91,7 @@ public class PayController extends BaseController {
 
     @GetMapping("/pay-user/{id}/company/{socialCreditCode}/wallet/credit")
     @ApiOperation("个人信用额度查询")
-    public ResBody<String> getCreditBalance(@PathVariable Integer id, @PathVariable String socialCreditCode) {
+    public ResBody<WalletCreditVO> getCreditBalance(@PathVariable Integer id, @PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
 
         if (!payUser.getId().equals(id)) {
@@ -115,7 +117,7 @@ public class PayController extends BaseController {
                         .eq(WalletCredit::getCompanyMember, companyMember.getId())
         );
 
-        return ResBody.success(walletCredit.getCreditBalance().toString());
+        return ResBody.success(WalletCreditVO.of(walletCredit, WalletCreditVO.class));
     }
 
     @GetMapping("/pay-user/{id}/store/{storeId}/wallets")
@@ -150,9 +152,23 @@ public class PayController extends BaseController {
             @PathVariable Integer id,
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
-        WalletCash walletCash = walletCashService.getById(walletId);
-        CompanyMember companyMember = companyMemberService.getById(walletCash.getCompanyMember());
+        PayUser payUser = payUserService.getById(id);
+        if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
+            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+        }
 
+        WalletCash walletCash = walletCashService.getById(walletId);
+        if (Objects.isNull(walletCash)) {
+            throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
+        }
+        if (WalletCash.WalletCashStaus.DISABLE == walletCash.getStatus()) {
+            return ResBody.error(WALLET_DISABLE);
+        }
+
+        //此处先做一次初步校验 实际扣款分布式锁加好后 还需再次校验
+        walletCashService.checkEnoughBalance(walletCash, new BigDecimal(req.getAmount()));
+
+        CompanyMember companyMember = companyMemberService.getById(walletCash.getCompanyMember());
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getOne(
                 Wrappers.lambdaQuery(CompanyStoreRelation.class)
                         .eq(CompanyStoreRelation::getCompany, companyMember.getCompany())
@@ -182,9 +198,23 @@ public class PayController extends BaseController {
             @PathVariable Integer id,
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
-        WalletCredit walletCredit = walletCreditService.getById(walletId);
-        CompanyMember companyMember = companyMemberService.getById(walletCredit.getCompanyMember());
+        PayUser payUser = payUserService.getById(id);
+        if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
+            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+        }
 
+        WalletCredit walletCredit = walletCreditService.getById(walletId);
+        if (Objects.isNull(walletCredit)) {
+            throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
+        }
+        if (WalletCredit.WalletCreditStaus.DISABLE == walletCredit.getStatus()) {
+            return ResBody.error(WALLET_DISABLE);
+        }
+
+        //此处先做一次初步校验 实际扣款分布式锁加好后 还需再次校验
+        walletCreditService.checkEnoughBalance(walletCredit, new BigDecimal(req.getAmount()));
+
+        CompanyMember companyMember = companyMemberService.getById(walletCredit.getCompanyMember());
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getOne(
                 Wrappers.lambdaQuery(CompanyStoreRelation.class)
                         .eq(CompanyStoreRelation::getCompany, companyMember.getCompany())

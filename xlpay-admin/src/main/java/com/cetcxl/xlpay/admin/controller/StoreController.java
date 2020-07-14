@@ -20,6 +20,7 @@ import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.entity.model.Store;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

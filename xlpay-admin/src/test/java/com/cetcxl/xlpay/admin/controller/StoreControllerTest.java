@@ -6,10 +6,10 @@ import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
 import com.cetcxl.xlpay.admin.service.StoreService;
 import com.cetcxl.xlpay.admin.service.StoreUserService;
-import com.cetcxl.xlpay.admin.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.entity.model.Store;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -200,6 +200,13 @@ class StoreControllerTest extends BaseTest {
         Assert.assertTrue(
                 Objects.isNull(newRelation.getApplyReleation())
         );
+
+        companyStoreRelationService.lambdaUpdate()
+                .set(CompanyStoreRelation::getRelation, 1)
+                .set(CompanyStoreRelation::getApplyReleation, 3)
+                .set(CompanyStoreRelation::getStatus, CompanyStoreRelation.RelationStatus.APPROVAL)
+                .eq(CompanyStoreRelation::getId, 2)
+                .update();
     }
 
     @Test
@@ -224,6 +231,13 @@ class StoreControllerTest extends BaseTest {
 
         CompanyStoreRelation newRelation = companyStoreRelationService.getById(2);
         Assert.assertTrue(Objects.isNull(newRelation.getRelation()));
+
+        companyStoreRelationService.lambdaUpdate()
+                .set(CompanyStoreRelation::getRelation, 1)
+                .set(CompanyStoreRelation::getApplyReleation, 3)
+                .set(CompanyStoreRelation::getStatus, CompanyStoreRelation.RelationStatus.APPROVAL)
+                .eq(CompanyStoreRelation::getId, 2)
+                .update();
     }
 
 

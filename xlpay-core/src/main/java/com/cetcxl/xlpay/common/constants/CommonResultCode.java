@@ -7,6 +7,8 @@ public enum CommonResultCode implements IResultCode {
     SESSION_INVALID(9004, "已在其他地方重新登录 请确认"),
     LOGIN_FAIL(9005, "请确认用户名存在或者密码是否正确"),
     FILE_TYPE_NOT_SUPPORT(9006, "文件类型不支持"),
+    REDIS_LOCK_ERROR(9007, "竞争激烈，请稍后再试"),
+
 
     VERIFY_SIGN_HEAD_MISS(9101, "sign api head param miss"),
     VERIFY_SIGN_PUBLIC_KEY_MISS(9102, "sign api public key miss"),

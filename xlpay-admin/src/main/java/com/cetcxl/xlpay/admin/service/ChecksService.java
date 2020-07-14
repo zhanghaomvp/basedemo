@@ -11,8 +11,11 @@ import com.cetcxl.xlpay.admin.controller.ChecksController;
 import com.cetcxl.xlpay.admin.dao.ChecksMapper;
 import com.cetcxl.xlpay.admin.entity.model.Checks;
 import com.cetcxl.xlpay.admin.entity.model.ChecksRecord;
+import com.cetcxl.xlpay.common.component.RedisLockComponent;
 import com.cetcxl.xlpay.common.constants.CommonResultCode;
+import com.cetcxl.xlpay.common.constants.Constants;
 import com.cetcxl.xlpay.common.entity.model.Deal;
+import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +57,7 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
     @Transactional
     public void process(Integer operator, int checkBatch, Checks.Status status, String info) {
         Checks checks = getById(checkBatch);
+        //todo check状态安全性检查
         checks.setStatus(status);
         checks.appendInfo(info);
         updateById(checks);
@@ -98,7 +102,22 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                             .eq(Deal::getCheckBatch, checkBatch)
                             .list();
 
-                    deals.forEach(deal -> walletCreditService.payment(deal));
+                    List<String> walletIdLists = deals.stream()
+                            .map(
+                                    deal ->
+                                            Constants.KEY_CREDIT_DEAL +
+                                                    walletCreditService.
+                                                            lambdaQuery()
+                                                            .eq(WalletCredit::getCompanyMember, deal.getCompanyMember())
+                                                            .one()
+                                                            .getId()
+                            )
+                            .collect(Collectors.toList());
+
+                    try (RedisLockComponent.RedisLock redisLock =
+                                 new RedisLockComponent.RedisLock(walletIdLists)) {
+                        deals.forEach(deal -> walletCreditService.payment(deal));
+                    }
                 }
 
                 break;
