@@ -120,7 +120,7 @@ public class StoreController extends BaseController {
     @ApiOperation("商家注册")
     @Transactional
     public ResBody<StoreUserVO> register(@RequestBody @Validated StoreRegisterReq req) {
-        if (!verifyCodeService.checkVerifyCode(req.getPhone(), req.getVerifyCode())) {
+        if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
             return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
         }
 
@@ -320,7 +320,7 @@ public class StoreController extends BaseController {
     @ApiOperation("重置商家登录密码")
     public ResBody resetLoginPassword(@Validated @RequestBody StoreController.ResetloginPasswordReq req) {
 
-        if (!verifyCodeService.checkVerifyCode(req.getPhone(), req.getVerifyCode())) {
+        if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
             return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
         }
         StoreUser storeUser = storeUserService.lambdaQuery()

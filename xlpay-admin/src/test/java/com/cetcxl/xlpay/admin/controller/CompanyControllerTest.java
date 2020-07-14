@@ -143,7 +143,7 @@ class CompanyControllerTest extends BaseTest {
     void register_success() throws Exception {
         Mockito.doReturn(true)
                 .when(verifyCodeService)
-                .checkVerifyCode(eq(S_PHONE), eq(S_VERIFY_CODE));
+                .checkVerifyCode(eq(S_VERIFY_CODE), eq(S_PHONE));
 
         Mockito
                 .doReturn(
@@ -310,7 +310,7 @@ class CompanyControllerTest extends BaseTest {
 
         Mockito.doReturn(true)
                 .when(verifyCodeService)
-                .checkVerifyCode(eq("17360026771"), eq(S_VERIFY_CODE));
+                .checkVerifyCode(eq(S_VERIFY_CODE), eq("17360026771"));
 
         CompanyController.ResetloginPasswordReq req = CompanyController.ResetloginPasswordReq.builder()
                 .phone("17360026771")

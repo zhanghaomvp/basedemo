@@ -2,6 +2,7 @@ package com.cetcxl.xlpay.payuser.config;
 
 import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +20,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.AUTHENTICATION_ERROR;
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.SESSION_INVALID;
+
 @EnableWebSecurity
 @Configuration
 @Order(1)
+@Slf4j
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -75,7 +80,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 )
                 .permitAll()
                 .and()
-                .sessionManagement().maximumSessions(1).sessionRegistry(sessionRegistry).maxSessionsPreventsLogin(true)
+                .exceptionHandling()
+                .authenticationEntryPoint(
+                        (req, res, e) -> {
+                            log.error("authenticationEntryPoint error : {} ", e);
+                            resolveResponse(res, ResBody.error(AUTHENTICATION_ERROR));
+                        }
+                )
+                .and()
+                .sessionManagement()
+                .maximumSessions(1)
+                .sessionRegistry(sessionRegistry)
+                .expiredSessionStrategy(
+                        event -> {
+                            log.error("sessionAuthenticationFailureHandler error : {} ", event.getSessionInformation());
+                            resolveResponse(event.getResponse(), ResBody.error(SESSION_INVALID));
+                        }
+                )
                 .and()
                 .and()
         ;

@@ -59,7 +59,7 @@ public interface StoreMapper extends BaseMapper<Store> {
     static String listCompanyStoresNotWithRelationSql(String name) {
         return new SQL() {{
 
-            SELECT("s.*,'' as relation,'' as apply_releation,'' as  relation_status ,'' as csr_id");
+            SELECT("s.*, null as relation, null as apply_releation, null as  relation_status, null as csr_id");
             FROM(" store s");
             WHERE("NOT EXISTS ( SELECT 1 FROM company_store_relation csr WHERE csr.company = #{companyId} AND s.id = csr.store )");
             if (StringUtils.isNotBlank(name)) {

@@ -11,7 +11,6 @@ import com.cetcxl.xlpay.payuser.service.PayService;
 import com.cetcxl.xlpay.payuser.service.WalletCashService;
 import com.cetcxl.xlpay.payuser.service.WalletCreditService;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +23,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
 
 import static com.cetcxl.xlpay.common.entity.model.Deal.DealType.CASH_DEAL;
 
@@ -58,8 +55,7 @@ class PayControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/pay-user/{id}/company/{socialCreditCode}/wallet/cash",
-                                        1, S_CETCXL)
+                                .get("/pay-user/company/{socialCreditCode}/wallet/cash", S_CETCXL)
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -74,8 +70,7 @@ class PayControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/pay-user/{id}/company/{socialCreditCode}/wallet/credit",
-                                        1, S_CETCXL)
+                                .get("/pay-user/company/{socialCreditCode}/wallet/credit", S_CETCXL)
                                 .accept(MediaType.APPLICATION_JSON_VALUE)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -99,8 +94,7 @@ class PayControllerTest extends BaseTest {
         String content = mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .post("/pay-user/{id}/wallet/cash/{walletId}/deal",
-                                        2, 2)
+                                .post("/pay-user/wallet/cash/{walletId}/deal", 2)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_VALUE)
@@ -129,6 +123,12 @@ class PayControllerTest extends BaseTest {
 
     @Test
     void payCredit() throws Exception {
+        setAuthentication(
+                PayUser.builder()
+                        .id(2)
+                        .build()
+        );
+
         WalletCredit oldWalletCredit = walletCreditService.getById(2);
 
         PayController.PayReq req = PayController.PayReq.builder()
@@ -141,8 +141,7 @@ class PayControllerTest extends BaseTest {
         String content = mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .post("/pay-user/{id}/wallet/credit/{walletId}/deal",
-                                        2, 2)
+                                .post("/pay-user/wallet/credit/{walletId}/deal", 2)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_VALUE)
@@ -174,38 +173,27 @@ class PayControllerTest extends BaseTest {
     }
 
     @Test
-    void listStoreWallet() throws Exception {
+    void storeWallet() throws Exception {
         MvcResult mvcResult = mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/pay-user/{id}/store/{storeId}/wallets", 1, 1)
+                                .get("/pay-user/store/{storeId}/wallets", 1, 1)
+                                .param("socialCreditCode", "cetcxl")
                                 .accept(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
-        JsonNode jsonNode = objectMapper.readTree(mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
-        List<PayService.StoreWalletDTO> storeWalletDTOS = objectMapper
+        PayService.StoreWalletDTO dto = objectMapper
                 .readValue(
-                        jsonNode.get("data").toString(),
-                        new TypeReference<List<PayService.StoreWalletDTO>>() {
+                        mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8),
+                        new TypeReference<ResBody<PayService.StoreWalletDTO>>() {
                         }
-                );
+                )
+                .getData();
 
-        Assertions.assertFalse(
-                storeWalletDTOS.stream()
-                        .filter(storeWalletDTO -> storeWalletDTO.getCompanyName().equals("中国电科"))
-                        .filter(storeWalletDTO -> Objects.nonNull(storeWalletDTO.getCreditWallets()))
-                        .findAny()
-                        .isPresent()
-        );
-
-        Assertions.assertTrue(
-                storeWalletDTOS.stream()
-                        .filter(storeWalletDTO -> storeWalletDTO.getCompanyName().equals("三十所"))
-                        .filter(storeWalletDTO -> storeWalletDTO.getCashWallets().getCashBalance().toString().equals("100.0"))
-                        .findFirst()
-                        .isPresent()
-        );
+        Assertions.assertEquals(dto.getCompanyName(), "中国电科");
+        Assertions.assertNull(dto.getCreditWallet());
+        Assertions.assertTrue(dto.getCashWallet().getCashBalance().intValue() > 0);
     }
 }

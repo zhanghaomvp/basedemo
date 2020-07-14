@@ -2,6 +2,11 @@ server:
   port: 8082
   servlet:
     context-path: /xlpay-pay-user
+    session:
+      timeout: 129600
+      cookie:
+        max-age: 129600
+
 
 spring:
   redis:

@@ -58,14 +58,10 @@ public class PayController extends BaseController {
     @Autowired
     DealService dealService;
 
-    @GetMapping("/pay-user/{id}/company/{socialCreditCode}/wallet/cash")
+    @GetMapping("/pay-user/company/{socialCreditCode}/wallet/cash")
     @ApiOperation("个人余额查询")
-    public ResBody<String> getCashBalance(@PathVariable Integer id, @PathVariable String socialCreditCode) {
+    public ResBody<String> getCashBalance(@PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
-
-        if (!payUser.getId().equals(id)) {
-            return ResBody.error(SYSTEM_LOGIC_ERROR);
-        }
 
         Company company = companyService.getOne(
                 Wrappers.lambdaQuery(Company.class)
@@ -89,14 +85,10 @@ public class PayController extends BaseController {
         return ResBody.success(walletCash.getCashBalance().toString());
     }
 
-    @GetMapping("/pay-user/{id}/company/{socialCreditCode}/wallet/credit")
+    @GetMapping("/pay-user/company/{socialCreditCode}/wallet/credit")
     @ApiOperation("个人信用额度查询")
-    public ResBody<WalletCreditVO> getCreditBalance(@PathVariable Integer id, @PathVariable String socialCreditCode) {
+    public ResBody<WalletCreditVO> getCreditBalance(@PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
-
-        if (!payUser.getId().equals(id)) {
-            return ResBody.error(SYSTEM_LOGIC_ERROR);
-        }
 
         Company company = companyService.getOne(
                 Wrappers.lambdaQuery(Company.class)
@@ -120,17 +112,17 @@ public class PayController extends BaseController {
         return ResBody.success(WalletCreditVO.of(walletCredit, WalletCreditVO.class));
     }
 
-    @GetMapping("/pay-user/{id}/store/{storeId}/wallets")
+    @GetMapping("/pay-user/store/{storeId}/wallets")
     @ApiOperation("可支付钱包列表查询")
-    public ResBody<PayService.StoreWalletDTO> listStoreWallet(@PathVariable Integer storeId) {
+    public ResBody<PayService.StoreWalletDTO> storeWallet(@PathVariable Integer storeId, String socialCreditCode) {
 
         return ResBody
                 .success(
                         payService
-                                .listStoreWallet(
+                                .storeWallet(
                                         ContextUtil.getUserInfo().getPayUser(),
-                                        storeId
-                                )
+                                        socialCreditCode,
+                                        storeId)
                 );
     }
 
@@ -146,13 +138,15 @@ public class PayController extends BaseController {
         String info;
     }
 
-    @PostMapping("/pay-user/{id}/wallet/cash/{walletId}/deal")
+    @PostMapping("/pay-user/wallet/cash/{walletId}/deal")
     @ApiOperation("个人余额支付")
     public ResBody<DealVO> payCash(
-            @PathVariable Integer id,
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
-        PayUser payUser = payUserService.getById(id);
+        PayUser payUser = payUserService
+                .getById(
+                        ContextUtil.getUserInfo().getPayUser().getId()
+                );
         if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
             return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
         }
@@ -192,13 +186,15 @@ public class PayController extends BaseController {
         return ResBody.success(DealVO.of(dealService.dealCash(dealParam), DealVO.class));
     }
 
-    @PostMapping("/pay-user/{id}/wallet/credit/{walletId}/deal")
+    @PostMapping("/pay-user/wallet/credit/{walletId}/deal")
     @ApiOperation("个人信用额度支付")
     public ResBody<DealVO> payCredit(
-            @PathVariable Integer id,
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
-        PayUser payUser = payUserService.getById(id);
+        PayUser payUser = payUserService
+                .getById(
+                        ContextUtil.getUserInfo().getPayUser().getId()
+                );
         if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
             return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
         }

@@ -2,10 +2,12 @@ package com.cetcxl.xlpay.common.service;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -20,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 public class VerifyCodeService {
-    private static final String PREFIX_REDIS_KEY = "verify.code:";
+    private static final String PREFIX_REDIS_KEY = "verify.code.";
     private static final String CONTENT_TEMPLATE = "您的验证码是:%s,短信2分钟内有效。";
     private static final int EXPIRE_MINUTE = 2;
 
@@ -42,26 +44,36 @@ public class VerifyCodeService {
         }
 
         redisTemplate.opsForValue().set(
-                PREFIX_REDIS_KEY + phone,
-                verifyCode,
+                PREFIX_REDIS_KEY + verifyCode,
+                phone,
                 EXPIRE_MINUTE,
                 TimeUnit.MINUTES
         );
         return true;
     }
 
-    public boolean checkVerifyCode(String phone, String code) {
-        if (JUMP_VERIFY_CODE.equals(code)) {
+    public boolean checkVerifyCode(String verifyCode, String phone) {
+        if (JUMP_VERIFY_CODE.equals(verifyCode)) {
             return true;
         }
 
-        String real = (String) redisTemplate.opsForValue().get(PREFIX_REDIS_KEY + phone);
-        if (!code.equals(real)) {
+        String real = (String) redisTemplate.opsForValue().get(PREFIX_REDIS_KEY + verifyCode);
+        if (!phone.equals(real)) {
             return false;
         }
 
         //redisTemplate.delete(PREFIX_REDIS_KEY + phone);
         return true;
+    }
+
+    public Optional<String> getPhone(String verifyCode) {
+        String phone = (String) redisTemplate.opsForValue().get(PREFIX_REDIS_KEY + verifyCode);
+
+        if (StringUtils.isNotBlank(phone)) {
+            return Optional.of(phone);
+        }
+
+        return Optional.empty();
     }
 
     private static final int BASE_VERIFY_CODE = 100000;

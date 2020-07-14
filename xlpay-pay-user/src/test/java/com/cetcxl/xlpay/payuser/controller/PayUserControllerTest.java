@@ -7,6 +7,7 @@ import com.cetcxl.xlpay.payuser.service.PayUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -27,10 +28,39 @@ class PayUserControllerTest extends BaseTest {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Override
+    @BeforeEach
+    public void setUp() {
+        super.setUp();
+        setAuthentication(
+                PayUser.builder()
+                        .id(1)
+                        .build()
+        );
+    }
+
+    @Test
+    void getPayUser() throws Exception {
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/pay-user")
+                                .param("socialCreditCode", "cetcxl")
+                                .param("icNo", "511528198909010018")
+                )
+                .andExpect(
+                        MockMvcResultMatchers.status().isOk()
+                )
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("$.data.phone")
+                        .value("17360026771"));
+    }
+
     @Test
     void register_success() throws Exception {
         PayUserController.RegisterReq userAddReq = PayUserController.RegisterReq.builder()
                 .icNo(S_TEMP)
+                .phone(S_PHONE)
                 .password(S_PAY_PASSWORD)
                 .build();
 
@@ -56,6 +86,52 @@ class PayUserControllerTest extends BaseTest {
     }
 
     @Test
+    void register_error() throws Exception {
+        PayUserController.RegisterReq userAddReq = PayUserController.RegisterReq.builder()
+                .icNo("511528198909010018")
+                .phone(S_TEMP)
+                .password(S_PAY_PASSWORD)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .post("/pay-user")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(userAddReq))
+                )
+                .andExpect(
+                        MockMvcResultMatchers.status().isOk()
+                )
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value("ERROR")
+                );
+
+        userAddReq = PayUserController.RegisterReq.builder()
+                .icNo(S_TEMP)
+                .phone("17360026771")
+                .password(S_PAY_PASSWORD)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .post("/pay-user")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(userAddReq))
+                )
+                .andExpect(
+                        MockMvcResultMatchers.status().isOk()
+                )
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value("ERROR")
+                );
+
+    }
+
+    @Test
     void updatePayPassword_Success() throws Exception {
 
         PayUserController.UpdatePayPasswordReq req = PayUserController.UpdatePayPasswordReq.builder()
@@ -66,7 +142,7 @@ class PayUserControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .patch("/pay-user/{id}/password", 1)
+                                .patch("/pay-user/password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -88,7 +164,7 @@ class PayUserControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .patch("/pay-user/{id}/secret-free-payment", 1)
+                                .patch("/pay-user/secret-free-payment")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                 )
@@ -98,4 +174,5 @@ class PayUserControllerTest extends BaseTest {
         Assert.assertEquals(new Integer(0), payUserService.getById(1).getFunctions());
 
     }
+
 }

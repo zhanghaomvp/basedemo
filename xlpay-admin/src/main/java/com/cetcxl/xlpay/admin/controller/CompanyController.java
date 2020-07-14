@@ -114,7 +114,7 @@ public class CompanyController extends BaseController {
     @ApiOperation("企业注册")
     @Transactional
     public ResBody<CompanyUserVO> register(@RequestBody @Validated final CompanyRegisterReq req) {
-        if (!verifyCodeService.checkVerifyCode(req.getPhone(), req.getVerifyCode())) {
+        if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
             return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
         }
 
@@ -366,7 +366,7 @@ public class CompanyController extends BaseController {
     @ApiOperation("重置企业登录密码")
     public ResBody resetLoginPassword(@Validated @RequestBody ResetloginPasswordReq req) {
 
-        if (!verifyCodeService.checkVerifyCode(req.getPhone(), req.getVerifyCode())) {
+        if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
             return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
         }
         CompanyUser companyUser = companyUserService.lambdaQuery()

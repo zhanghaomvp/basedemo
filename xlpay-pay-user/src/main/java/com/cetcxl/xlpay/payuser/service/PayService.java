@@ -1,9 +1,7 @@
 package com.cetcxl.xlpay.payuser.service;
 
-import com.cetcxl.xlpay.common.entity.model.CompanyMember;
-import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
-import com.cetcxl.xlpay.common.entity.model.WalletCash;
-import com.cetcxl.xlpay.common.entity.model.WalletCredit;
+import com.cetcxl.xlpay.common.constants.CommonResultCode;
+import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.entity.vo.WalletCashVO;
@@ -15,12 +13,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import static com.cetcxl.xlpay.payuser.constants.ResultCode.WALLET_RELATION_NOT_EXIST;
 
@@ -52,141 +46,63 @@ public class PayService {
     @ApiModel
     public static class StoreWalletDTO {
         String companyName;
-        WalletCashVO cashWallets;
-        WalletCreditVO creditWallets;
+        WalletCashVO cashWallet;
+        WalletCreditVO creditWallet;
     }
 
-    public List<StoreWalletDTO> listStoreWallet(PayUser payUser, Integer storeId) {
+    public StoreWalletDTO storeWallet(PayUser payUser, String socialCreditCode, Integer storeId) {
 
-        List<CompanyStoreRelation> companyStoreRelations = companyStoreRelationService.lambdaQuery()
+        Company company = companyService
+                .lambdaQuery()
+                .eq(Company::getSocialCreditCode, socialCreditCode)
+                .one();
+        if (Objects.isNull(company)) {
+            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+        }
+
+        CompanyStoreRelation companyStoreRelation = companyStoreRelationService.lambdaQuery()
                 .eq(CompanyStoreRelation::getStore, storeId)
+                .eq(CompanyStoreRelation::getCompany, company.getId())
                 .ge(CompanyStoreRelation::getRelation, 0)
-                .list();
+                .one();
 
-        if (CollectionUtils.isEmpty(companyStoreRelations)) {
+        if (Objects.isNull(companyStoreRelation)) {
             throw new BaseRuntimeException(WALLET_RELATION_NOT_EXIST);
         }
 
-        List<CompanyMember> companyMembers = companyMemberService.lambdaQuery()
+        CompanyMember companyMember = companyMemberService.lambdaQuery()
                 .eq(CompanyMember::getIcNo, payUser.getIcNo())
-                .in(
-                        CompanyMember::getCompany,
-                        companyStoreRelations
-                                .stream()
-                                .map(companyStoreRelation -> companyStoreRelation.getCompany())
-                                .collect(Collectors.toList())
-                )
-                .list();
+                .eq(CompanyMember::getCompany, company.getId())
+                .one();
 
-        List<WalletCash> walletCashes = walletCashService.lambdaQuery()
-                .in(
-                        WalletCash::getCompanyMember,
-                        companyMembers.stream()
-                                .map(CompanyMember::getId)
-                                .collect(Collectors.toList()))
-                .list()
-                .stream()
-                .filter(
-                        walletCash -> {
-                            Integer company = companyMembers.stream()
-                                    .filter(companyMember -> companyMember.getId().equals(walletCash.getCompanyMember()))
-                                    .findFirst()
-                                    .get()
-                                    .getCompany();
+        StoreWalletDTO storeWalletDTO = StoreWalletDTO.builder()
+                .companyName(company.getName())
+                .build();
 
-                            return companyStoreRelations.stream()
-                                    .filter(companyStoreRelation -> companyStoreRelation.getCompany().equals(company))
-                                    .filter(
-                                            companyStoreRelation ->
-                                                    CompanyStoreRelation.Relation.CASH_PAY
-                                                            .isOpen(companyStoreRelation.getRelation())
-                                    )
-                                    .findAny()
-                                    .isPresent();
-                        }
-                )
-                .collect(Collectors.toList());
+        if (CompanyStoreRelation.Relation.CASH_PAY
+                .isOpen(companyStoreRelation.getRelation())) {
+            storeWalletDTO.setCashWallet(
+                    WalletCashVO.of(
+                            walletCashService
+                                    .lambdaQuery()
+                                    .eq(WalletCash::getCompanyMember, companyMember.getId())
+                                    .one(),
+                            WalletCashVO.class)
+            );
+        }
 
-        List<WalletCredit> walletCredits = walletCreditService.lambdaQuery()
-                .in(
-                        WalletCredit::getCompanyMember,
-                        companyMembers.stream()
-                                .map(CompanyMember::getId)
-                                .collect(Collectors.toList()))
-                .list()
-                .stream()
-                .filter(
-                        walletCredit -> {
-                            Integer company = companyMembers.stream()
-                                    .filter(companyMember -> companyMember.getId().equals(walletCredit.getCompanyMember()))
-                                    .findFirst()
-                                    .get()
-                                    .getCompany();
+        if (CompanyStoreRelation.Relation.CREDIT_PAY
+                .isOpen(companyStoreRelation.getRelation())) {
+            storeWalletDTO.setCreditWallet(
+                    WalletCreditVO.of(
+                            walletCreditService
+                                    .lambdaQuery()
+                                    .eq(WalletCredit::getCompanyMember, companyMember.getId())
+                                    .one(),
+                            WalletCreditVO.class)
+            );
+        }
 
-                            return companyStoreRelations.stream()
-                                    .filter(companyStoreRelation -> companyStoreRelation.getCompany().equals(company))
-                                    .filter(
-                                            companyStoreRelation ->
-                                                    CompanyStoreRelation.Relation.CREDIT_PAY
-                                                            .isOpen(companyStoreRelation.getRelation())
-                                    )
-                                    .findAny()
-                                    .isPresent();
-                        }
-                )
-                .collect(Collectors.toList());
-
-
-        Map<Integer, StoreWalletDTO> storeWalletDtoMap = companyMembers.stream()
-                .collect(
-                        Collectors.toMap(
-                                CompanyMember::getId,
-                                companyMember ->
-                                        StoreWalletDTO.builder()
-                                                .companyName(
-                                                        companyService
-                                                                .getById(companyMember.getCompany())
-                                                                .getName()
-                                                )
-                                                .build()
-                        )
-                );
-
-        List<StoreWalletDTO> storeWalletDtoS = storeWalletDtoMap.entrySet()
-                .stream()
-                .map(
-                        entry -> {
-                            Optional<WalletCash> cashOptional = walletCashes.stream()
-                                    .filter(
-                                            walletCash ->
-                                                    walletCash
-                                                            .getCompanyMember()
-                                                            .equals(entry.getKey())
-                                    ).findFirst();
-
-                            if (cashOptional.isPresent()) {
-                                entry.getValue()
-                                        .setCashWallets(WalletCashVO.of(cashOptional.get(), WalletCashVO.class));
-                            }
-
-                            Optional<WalletCredit> creditOptional = walletCredits.stream()
-                                    .filter(
-                                            walletCredit ->
-                                                    walletCredit
-                                                            .getCompanyMember()
-                                                            .equals(entry.getKey())
-                                    ).findFirst();
-
-                            if (creditOptional.isPresent()) {
-                                entry.getValue()
-                                        .setCreditWallets(WalletCreditVO.of(creditOptional.get(), WalletCreditVO.class));
-                            }
-
-                            return entry.getValue();
-                        }
-                )
-                .collect(Collectors.toList());
-
-        return storeWalletDtoS;
+        return storeWalletDTO;
     }
 }

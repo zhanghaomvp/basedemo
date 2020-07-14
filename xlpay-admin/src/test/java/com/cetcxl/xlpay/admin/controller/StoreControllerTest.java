@@ -63,7 +63,7 @@ class StoreControllerTest extends BaseTest {
     void store_register_success() throws Exception {
         Mockito.doReturn(true)
                 .when(verifyCodeService)
-                .checkVerifyCode(eq(S_PHONE), eq(S_VERIFY_CODE));
+                .checkVerifyCode(eq(S_VERIFY_CODE), eq(S_PHONE));
 
         StoreController.StoreRegisterReq req = StoreController.StoreRegisterReq.builder()
                 .phone(S_PHONE)
