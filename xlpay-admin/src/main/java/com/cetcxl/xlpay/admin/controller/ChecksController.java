@@ -270,7 +270,7 @@ public class ChecksController extends BaseController {
 
         resolveExcelResponseHeader(
                 response,
-                sheetFormat.name() + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+                sheetFormat.name() + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
         );
 
         EasyExcel
@@ -297,7 +297,7 @@ public class ChecksController extends BaseController {
 
         resolveExcelResponseHeader(
                 response,
-                sheetFormat.name() + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+                sheetFormat.name() + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
         );
 
         EasyExcel

@@ -94,6 +94,9 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
         @ExcelProperty("身份证号")
         @ColumnWidth(50)
         String icNo;
+        @ExcelProperty("手机号")
+        @ColumnWidth(20)
+        String phone;
         @ExcelProperty("工号")
         String employeeNo;
         @ExcelProperty("部门")
@@ -121,6 +124,7 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                                 WalletCreditExportRow.builder()
                                         .name(dto.getName())
                                         .icNo(dto.getIcNo())
+                                        .phone(dto.getPhone())
                                         .employeeNo(dto.getEmployeeNo())
                                         .department(dto.getDepartment())
                                         .status(dto.getStatus().getDesc())

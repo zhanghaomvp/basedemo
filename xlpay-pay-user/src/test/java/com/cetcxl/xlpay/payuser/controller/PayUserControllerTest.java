@@ -156,6 +156,11 @@ class PayUserControllerTest extends BaseTest {
 
     @Test
     void updateNoPayFunction_Success() throws Exception {
+        setAuthentication(
+                PayUser.builder()
+                        .id(2)
+                        .build()
+        );
 
         PayUserController.UpdateNoPayFunctionReq req = PayUserController.UpdateNoPayFunctionReq.builder()
                 .isOpen(false)
@@ -171,7 +176,7 @@ class PayUserControllerTest extends BaseTest {
                 .andExpect(
                         MockMvcResultMatchers.status().isOk()
                 );
-        Assert.assertEquals(new Integer(0), payUserService.getById(1).getFunctions());
+        Assert.assertEquals(new Integer(0), payUserService.getById(2).getFunctions());
 
     }
 

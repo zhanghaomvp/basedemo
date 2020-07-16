@@ -26,7 +26,7 @@ public interface WalletCreditMapper extends BaseMapper<WalletCredit> {
         private String icNo;
         private String department;
         private String employeeNo;
-
+        private String phone;
         private BigDecimal creditBalance;
         private BigDecimal creditUsed;
         private BigDecimal creditQuota;

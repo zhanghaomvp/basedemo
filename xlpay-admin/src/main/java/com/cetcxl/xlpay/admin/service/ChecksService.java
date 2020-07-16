@@ -57,24 +57,19 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
     @Transactional
     public void process(Integer operator, int checkBatch, Checks.Status status, String info) {
         Checks checks = getById(checkBatch);
-        //todo check状态安全性检查
-        checks.setStatus(status);
-        checks.appendInfo(info);
-        updateById(checks);
-
-        checksRecordService.save(
-                ChecksRecord.builder()
-                        .checkBatch(checks.getBatch())
-                        .action(status)
-                        .operator(operator)
-                        .build()
-        );
 
         switch (status) {
             case APPROVAL:
+                if (APPLY != checks.getStatus()) {
+                    throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+                }
                 break;
 
             case REJECT:
+                if (CONFIRM == checks.getStatus()) {
+                    throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+                }
+
                 dealService.lambdaUpdate()
                         .set(Deal::getStatus, Deal.Status.PAID)
                         .set(Deal::getCheckBatch, null)
@@ -83,6 +78,10 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                 break;
 
             case DENY:
+                if (CONFIRM == checks.getStatus()) {
+                    throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+                }
+
                 dealService.lambdaUpdate()
                         .set(Deal::getStatus, Deal.Status.PAID)
                         .set(Deal::getCheckBatch, null)
@@ -91,6 +90,10 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                 break;
 
             case CONFIRM:
+                if (APPROVAL != checks.getStatus()) {
+                    throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+                }
+
                 dealService.lambdaUpdate()
                         .set(Deal::getStatus, Deal.Status.CHECK_FINISH)
                         .eq(Deal::getCheckBatch, checkBatch)
@@ -112,6 +115,7 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                                                             .one()
                                                             .getId()
                             )
+                            .distinct()
                             .collect(Collectors.toList());
 
                     try (RedisLockComponent.RedisLock redisLock =
@@ -119,12 +123,22 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                         deals.forEach(deal -> walletCreditService.payment(deal));
                     }
                 }
-
                 break;
 
             default:
-
         }
+
+        checks.setStatus(status);
+        checks.appendInfo(info);
+        updateById(checks);
+
+        checksRecordService.save(
+                ChecksRecord.builder()
+                        .checkBatch(checkBatch)
+                        .action(status)
+                        .operator(operator)
+                        .build()
+        );
     }
 
     @Transactional

@@ -12,6 +12,7 @@ import com.cetcxl.xlpay.payuser.service.WalletCashService;
 import com.cetcxl.xlpay.payuser.service.WalletCreditService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 
 import static com.cetcxl.xlpay.common.entity.model.Deal.DealType.CASH_DEAL;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PayControllerTest extends BaseTest {
     @Autowired
@@ -61,7 +63,7 @@ class PayControllerTest extends BaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(
                         MockMvcResultMatchers
-                                .jsonPath("$.data").value("10.00")
+                                .jsonPath("$.data").value(Matchers.notNullValue())
                 );
     }
 
@@ -114,11 +116,64 @@ class PayControllerTest extends BaseTest {
 
         Deal deal = dealService.getById(dealVO.getId());
 
-        Assertions.assertTrue(S_TEMP.equals(deal.getInfo()));
-        Assertions.assertTrue(CASH_DEAL == deal.getType());
+        assertTrue(S_TEMP.equals(deal.getInfo()));
+        assertTrue(CASH_DEAL == deal.getType());
 
         BigDecimal newCashBalance = walletCashService.getById(2).getCashBalance();
-        Assertions.assertTrue(newCashBalance.add(new BigDecimal("5")).compareTo(oldCashBalance) == 0);
+        assertTrue(newCashBalance.add(new BigDecimal("5")).compareTo(oldCashBalance) == 0);
+    }
+
+    @Test
+    void payCash_noPassword_success() throws Exception {
+        PayController.PayReq req = PayController.PayReq.builder()
+                .amount("1")
+                .storeId(1)
+                .info(S_TEMP)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .post("/pay-user/wallet/cash/{walletId}/deal", 1)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON_VALUE)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value(Matchers.is(ResBody.Status.OK.name()))
+                );
+    }
+
+    @Test
+    void payCash_noPassword_error() throws Exception {
+        setAuthentication(
+                PayUser.builder()
+                        .id(2)
+                        .build()
+        );
+
+        PayController.PayReq req = PayController.PayReq.builder()
+                .amount("1")
+                .storeId(1)
+                .info(S_TEMP)
+                .build();
+
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .post("/pay-user/wallet/cash/{walletId}/deal", 2)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(req))
+                                .accept(MediaType.APPLICATION_JSON_VALUE)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers
+                                .jsonPath("$.status").value(Matchers.is(ResBody.Status.ERROR.name()))
+                );
+
     }
 
     @Test
@@ -161,11 +216,11 @@ class PayControllerTest extends BaseTest {
 
         Deal deal = dealService.getById(dealVO.getId());
 
-        Assertions.assertTrue(S_TEMP.equals(deal.getInfo()));
-        Assertions.assertTrue(Deal.PayType.CREDIT == deal.getPayType());
+        assertTrue(S_TEMP.equals(deal.getInfo()));
+        assertTrue(Deal.PayType.CREDIT == deal.getPayType());
 
         WalletCredit newWalletCredit = walletCreditService.getById(2);
-        Assertions.assertTrue(
+        assertTrue(
                 newWalletCredit.getCreditBalance()
                         .add(new BigDecimal("5"))
                         .compareTo(oldWalletCredit.getCreditBalance()) == 0
@@ -177,8 +232,7 @@ class PayControllerTest extends BaseTest {
         MvcResult mvcResult = mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/pay-user/store/{storeId}/wallets", 1, 1)
-                                .param("socialCreditCode", "cetcxl")
+                                .get("/pay-user/company/{socialCreditCode}/store/{storeId}/wallets", "cetcxl", 1)
                                 .accept(MediaType.APPLICATION_JSON_UTF8_VALUE)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -194,6 +248,6 @@ class PayControllerTest extends BaseTest {
 
         Assertions.assertEquals(dto.getCompanyName(), "中国电科");
         Assertions.assertNull(dto.getCreditWallet());
-        Assertions.assertTrue(dto.getCashWallet().getCashBalance().intValue() > 0);
+        assertTrue(dto.getCashWallet().getCashBalance().intValue() > 0);
     }
 }

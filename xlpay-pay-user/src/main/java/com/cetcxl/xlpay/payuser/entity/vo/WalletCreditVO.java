@@ -2,6 +2,7 @@ package com.cetcxl.xlpay.payuser.entity.vo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
 import io.swagger.annotations.ApiModel;
 import lombok.*;
@@ -33,4 +34,7 @@ public class WalletCreditVO extends BaseVO implements Serializable {
     private BigDecimal creditBalance;
 
     private BigDecimal creditQuota;
+
+    private WalletCredit.WalletCreditStaus status;
+
 }

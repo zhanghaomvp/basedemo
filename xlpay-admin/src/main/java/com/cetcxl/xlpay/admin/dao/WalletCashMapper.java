@@ -28,6 +28,7 @@ public interface WalletCashMapper extends BaseMapper<WalletCash> {
         private String employeeNo;
         private BigDecimal cashBalance;
         private WalletCash.WalletCashStaus status;
+        private String phone;
     }
 
     IPage<WalletCashDTO> listWalletCash(Page page, Integer companyId, String department, String name);

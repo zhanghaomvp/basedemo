@@ -18,7 +18,8 @@
         cm.`name`,
         cm.ic_no,
         cm.department,
-        cm.employee_no
+        cm.employee_no,
+        cm.phone
         FROM
         company c,
         company_member cm

@@ -13,18 +13,16 @@ import com.cetcxl.xlpay.payuser.entity.vo.PayUserVO;
 import com.cetcxl.xlpay.payuser.service.CompanyMemberService;
 import com.cetcxl.xlpay.payuser.service.CompanyService;
 import com.cetcxl.xlpay.payuser.service.PayUserService;
+import com.cetcxl.xlpay.payuser.service.UserDetailServiceImpl;
 import com.cetcxl.xlpay.payuser.util.ContextUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +33,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.cetcxl.xlpay.common.constants.CommonResultCode.VERIFY_CODE_UNAVAILABLE;
-import static com.cetcxl.xlpay.payuser.constants.ResultCode.COMPANY_MEMBER_NOT_EXIST;
-import static com.cetcxl.xlpay.payuser.constants.ResultCode.COMPANY_NOT_EXIST;
+import static com.cetcxl.xlpay.payuser.constants.ResultCode.*;
 
 @Validated
 @RestController
@@ -56,8 +53,12 @@ public class PayUserController extends BaseController {
     CompanyMemberService companyMemberService;
 
     @GetMapping("/pay-user")
-    @ApiOperation("信链钱包查询")
-    @Transactional
+    @ApiOperation("信链钱包当前身份是否支持以及钱包是否开通接口")
+    @ApiResponses({
+            @ApiResponse(code = 3001, message = "绑定企业不存在"),
+            @ApiResponse(code = 3002, message = "绑定企业成员不存在"),
+            @ApiResponse(code = 2002, message = "信链钱包未开通")
+    })
     public ResBody<PayUserVO> getPayUser(String socialCreditCode, String icNo) {
         Company company = companyService.lambdaQuery()
                 .eq(Company::getSocialCreditCode, socialCreditCode)
@@ -77,8 +78,21 @@ public class PayUserController extends BaseController {
         PayUser payUser = payUserService.lambdaQuery()
                 .eq(PayUser::getIcNo, icNo)
                 .one();
+        if (Objects.isNull(payUser)) {
+            return ResBody.error(PAY_USER_NOT_EXIST);
+        }
 
-        return ResBody.success(PayUserVO.of(payUser, PayUserVO.class));
+        PayUserVO payUserVO = PayUserVO.of(payUser, PayUserVO.class);
+
+        Object principal = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+        if (principal instanceof UserDetailServiceImpl.PayUserInfo) {
+            payUserVO.setCookieAlive(true);
+        }
+
+        return ResBody.success(payUserVO);
     }
 
     @Data
@@ -104,7 +118,6 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user")
     @ApiOperation("信链钱包开通")
-    @Transactional
     public ResBody register(@RequestBody @Validated RegisterReq req) {
         int count = payUserService.count(
                 Wrappers.lambdaQuery(PayUser.class)
@@ -124,6 +137,15 @@ public class PayUserController extends BaseController {
                         .build()
         );
 
+        return ResBody.success();
+    }
+
+    @GetMapping("/pay-user/heartbeat")
+    @ApiOperation("C端用户登录状态校验状态接口")
+    @ApiResponses({
+            @ApiResponse(code = 9003, message = "验证失败 请重新登录"),
+    })
+    public ResBody heartbeat() {
         return ResBody.success();
     }
 
@@ -184,6 +206,10 @@ public class PayUserController extends BaseController {
         );
 
         Integer functions = payUser.getFunctions();
+        if (Objects.isNull(functions)) {
+            functions = 0;
+        }
+
         if (req.isOpen) {
             functions = PayUser.PayUserFuntion.NO_PASSWORD_PAY.open(functions);
         } else {
@@ -213,7 +239,6 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user/password/initial/verify-code")
     @ApiOperation("重置密码发送验证码")
-    @Transactional
     public ResBody resetSendVerifyCode(@Validated @RequestBody ResetSendVerifyCodeReq req) {
         PayUser payUser = payUserService.lambdaQuery()
                 .eq(PayUser::getIcNo, req.getIcNo())
@@ -241,7 +266,6 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user/password/initial")
     @ApiOperation("重置密码设置新密码")
-    @Transactional
     public ResBody resetPassword(@RequestBody @Validated ResetPasswordReq req) {
         Optional<String> optional = verifyCodeService.getPhone(req.getVerifyCode());
         if (!optional.isPresent()) {

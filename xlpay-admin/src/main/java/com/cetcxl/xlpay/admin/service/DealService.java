@@ -112,6 +112,25 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                 .collect(Collectors.toList());
     }
 
+    public List<DealExportRow> listDetailExport(Integer batch) {
+        List<DealMapper.DealDTO> dealDtoS = baseMapper.listCheckDealsExport(batch);
+
+        return dealDtoS.stream()
+                .map(
+                        dto ->
+                                DealExportRow.builder()
+                                        .name(dto.getName())
+                                        .storeName(dto.getStoreName())
+                                        .companyName(dto.getCompanyName())
+                                        .amount(dto.getAmount().toString())
+                                        .transTime(dto.getCreated())
+                                        .payType(dto.getPayType().getDesc())
+                                        .status(dto.getStatus().getDesc())
+                                        .build()
+                )
+                .collect(Collectors.toList());
+    }
+
     @Data
     @Builder
     public static class DealForAdminParam {
@@ -160,9 +179,16 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     public static class DealCashImportRow {
         @ExcelProperty("姓名")
         String name;
+        @ExcelProperty("工号")
+        String employeeNo;
         @ExcelProperty("身份证号")
         @ColumnWidth(50)
         String icNo;
+        @ExcelProperty("手机号")
+        @ColumnWidth(20)
+        String phone;
+        @ExcelProperty("部门")
+        String department;
         @ExcelProperty("变更类型(充值/扣减)")
         @ColumnWidth(30)
         String type;
@@ -175,15 +201,21 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                             DealCashImportRow
                                     .builder()
                                     .name("张三")
+                                    .employeeNo("10001")
                                     .icNo("511528209909010018")
+                                    .phone("15828580081")
+                                    .department("区块链")
                                     .type("充值")
                                     .amount("100")
                                     .build(),
                             DealCashImportRow
                                     .builder()
                                     .name("李四")
+                                    .employeeNo("10002")
                                     .icNo("511528209909010020")
+                                    .phone("15828580082")
                                     .type("扣减")
+                                    .department("重点实验室")
                                     .amount("50")
                                     .build()
                     );

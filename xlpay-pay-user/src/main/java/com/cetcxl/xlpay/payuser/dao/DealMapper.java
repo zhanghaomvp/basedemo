@@ -33,8 +33,6 @@ public interface DealMapper extends BaseMapper<Deal> {
         private Integer id;
         private BigDecimal amount;
         private Deal.PayType payType;
-
-        private String name;
         private String storeName;
         @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime created;
@@ -46,9 +44,13 @@ public interface DealMapper extends BaseMapper<Deal> {
                     "	s.`name`  as store_name,\n" +
                     "   s.`id`    as store_id");
             FROM(" deal d ");
-            INNER_JOIN("store s ON d.store = s.id ");
+            INNER_JOIN(
+                    " company c ON d.company = c.id ",
+                    "store s ON d.store = s.id "
+            );
             WHERE("d.type>3");
             WHERE("d.ic_no =  #{icNo}");
+            WHERE("c.`social_credit_code` = #{req.socialCreditCode}");
             if (StringUtils.isNotBlank(req.getStoreName())) {
                 WHERE("s.`name` like concat('%',#{req.storeName},'%')");
             }

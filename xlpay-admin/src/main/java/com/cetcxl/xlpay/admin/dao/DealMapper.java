@@ -57,7 +57,7 @@ public interface DealMapper extends BaseMapper<Deal> {
                     "   s.`id`    as store_id");
             FROM(" deal d ");
             INNER_JOIN("company_member cm ON d.company_member = cm.id", "store s ON d.store = s.id ", "company c ON d.company = c.id ");
-            WHERE("d.type>3");
+            WHERE("d.type IN (4, 5)");
             if (Objects.nonNull(req.getCompanyId())) {
                 WHERE("d.company=#{req.companyId}");
             }
@@ -182,4 +182,27 @@ public interface DealMapper extends BaseMapper<Deal> {
             "   AND c.name  = #{req.companyName}"
     )
     DashboardDTO storeDashboardWithCompany(@Param("req") DealsController.DashboardReq req);
+
+    static String listDetailExportSql(Integer batch) {
+        return new SQL() {{
+            SELECT("d.*,\n" +
+                    "	cm.`name`,\n" +
+                    "	cm.department,\n" +
+                    "	c.`name`  as company_name,\n" +
+                    "	s.`name`  as store_name,\n" +
+                    "   s.`id`    as store_id");
+            FROM(" deal d ");
+            INNER_JOIN(
+                    "company_member cm ON d.company_member = cm.id",
+                    "store s ON d.store = s.id ",
+                    "company c ON d.company = c.id "
+            );
+            WHERE("d.type IN (4, 5)");
+            WHERE("d.check_batch = #{batch}");
+        }}.toString();
+    }
+
+    @SelectProvider(type = DealMapper.class, method = "listDetailExportSql")
+    List<DealDTO> listCheckDealsExport(@Param("batch") Integer batch);
+
 }

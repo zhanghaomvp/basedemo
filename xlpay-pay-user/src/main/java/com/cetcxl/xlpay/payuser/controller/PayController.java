@@ -23,7 +23,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -112,9 +111,9 @@ public class PayController extends BaseController {
         return ResBody.success(WalletCreditVO.of(walletCredit, WalletCreditVO.class));
     }
 
-    @GetMapping("/pay-user/store/{storeId}/wallets")
+    @GetMapping("/pay-user/company/{socialCreditCode}/store/{storeId}/wallets")
     @ApiOperation("可支付钱包列表查询")
-    public ResBody<PayService.StoreWalletDTO> storeWallet(@PathVariable Integer storeId, String socialCreditCode) {
+    public ResBody<PayService.StoreWalletDTO> storeWallet(@PathVariable Integer storeId, @PathVariable String socialCreditCode) {
 
         return ResBody
                 .success(
@@ -134,7 +133,7 @@ public class PayController extends BaseController {
     public static class PayReq {
         @NotNull Integer storeId;
         @NotNull String amount;
-        @NotBlank String password;
+        String password;
         String info;
     }
 
@@ -147,8 +146,12 @@ public class PayController extends BaseController {
                 .getById(
                         ContextUtil.getUserInfo().getPayUser().getId()
                 );
-        if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
-            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+        BigDecimal decimal = new BigDecimal(req.getAmount());
+
+        if (!payService.checkNoPasswordPayValid(payUser, decimal)) {
+            if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
+                return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+            }
         }
 
         WalletCash walletCash = walletCashService.getById(walletId);
@@ -160,7 +163,7 @@ public class PayController extends BaseController {
         }
 
         //此处先做一次初步校验 实际扣款分布式锁加好后 还需再次校验
-        walletCashService.checkEnoughBalance(walletCash, new BigDecimal(req.getAmount()));
+        walletCashService.checkEnoughBalance(walletCash, decimal);
 
         CompanyMember companyMember = companyMemberService.getById(walletCash.getCompanyMember());
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getOne(
@@ -178,7 +181,7 @@ public class PayController extends BaseController {
                 .walletId(walletId)
                 .companyMember(companyMember)
                 .store(req.getStoreId())
-                .amount(new BigDecimal(req.getAmount()))
+                .amount(decimal)
                 .dealType(Deal.DealType.CASH_DEAL)
                 .info(req.getInfo())
                 .build();
@@ -195,8 +198,12 @@ public class PayController extends BaseController {
                 .getById(
                         ContextUtil.getUserInfo().getPayUser().getId()
                 );
-        if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
-            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+        BigDecimal decimal = new BigDecimal(req.getAmount());
+
+        if (!payService.checkNoPasswordPayValid(payUser, decimal)) {
+            if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
+                return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+            }
         }
 
         WalletCredit walletCredit = walletCreditService.getById(walletId);
@@ -208,7 +215,7 @@ public class PayController extends BaseController {
         }
 
         //此处先做一次初步校验 实际扣款分布式锁加好后 还需再次校验
-        walletCreditService.checkEnoughBalance(walletCredit, new BigDecimal(req.getAmount()));
+        walletCreditService.checkEnoughBalance(walletCredit, decimal);
 
         CompanyMember companyMember = companyMemberService.getById(walletCredit.getCompanyMember());
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getOne(
@@ -226,7 +233,7 @@ public class PayController extends BaseController {
                 .walletId(walletId)
                 .companyMember(companyMember)
                 .store(req.getStoreId())
-                .amount(new BigDecimal(req.getAmount()))
+                .amount(decimal)
                 .dealType(Deal.DealType.CREDIT_DEAL)
                 .info(req.getInfo())
                 .build();

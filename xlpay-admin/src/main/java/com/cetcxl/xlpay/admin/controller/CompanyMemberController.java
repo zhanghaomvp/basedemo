@@ -91,7 +91,7 @@ public class CompanyMemberController extends BaseController {
     public void listWalletCashExport(@Validated ListWalletReq req, HttpServletResponse response) throws Exception {
         resolveExcelResponseHeader(
                 response,
-                "余额管理明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+                "余额管理明细" + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
         );
 
         EasyExcel
@@ -274,7 +274,7 @@ public class CompanyMemberController extends BaseController {
                 req.getDepartment(),
                 req.getName()
         );
-        
+
         return ResBody.success(iPage);
     }
 
@@ -283,7 +283,7 @@ public class CompanyMemberController extends BaseController {
     public void listWalletCreditExport(@Validated ListWalletReq req, HttpServletResponse response) throws Exception {
         resolveExcelResponseHeader(
                 response,
-                "信用管理明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+                "信用管理明细" + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
         );
 
         EasyExcel

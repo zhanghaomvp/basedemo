@@ -57,7 +57,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/pay-user").permitAll()
+                .antMatchers("/pay-user", "/pay-user/password/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -103,7 +103,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private void resolveResponse(HttpServletResponse res, Object o) throws IOException {
-        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         PrintWriter out = res.getWriter();
         out.write(mapper.writeValueAsString(o));
         out.flush();

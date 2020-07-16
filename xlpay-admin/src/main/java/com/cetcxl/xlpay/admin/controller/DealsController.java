@@ -61,6 +61,8 @@ public class DealsController extends BaseController {
         Deal.PayType payType;
         Deal.Status status;
 
+        Integer checkBatch;
+
         @NotNull
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime begin;
@@ -155,7 +157,7 @@ public class DealsController extends BaseController {
     @GetMapping("/stores/{storeId}/deals/dashboard")
     @ApiOperation("商家数据看板")
     public ResBody<DealMapper.DashboardDTO> storeDashboard(@Validated(DashboardStoreGroup.class) DashboardReq req) {
-        if (StringUtils.isNotBlank(req.getDepartment())) {
+        if (StringUtils.isNotBlank(req.getCompanyName())) {
             return ResBody
                     .success(
                             dealService.calculationAmount(
@@ -178,7 +180,7 @@ public class DealsController extends BaseController {
     public void listStoreDealExport(@Validated DealsController.ListDealReq req, HttpServletResponse response) throws Exception {
         resolveExcelResponseHeader(
                 response,
-                "商家账单明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+                "商家账单明细" + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
         );
 
         EasyExcel
@@ -200,7 +202,7 @@ public class DealsController extends BaseController {
     public void listCompanyDealExport(@Validated DealsController.ListDealReq req, HttpServletResponse response) throws Exception {
         resolveExcelResponseHeader(
                 response,
-                "企业账单明细" + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())
+                "企业账单明细" + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
         );
 
         EasyExcel
@@ -213,6 +215,49 @@ public class DealsController extends BaseController {
                 .registerConverter(new LocalDateTimeConverter())
                 .doWrite(
                         dealService.listDealExport(req)
+                );
+    }
+
+
+    @GetMapping("/company/check/{batch}/deals/export")
+    @ApiOperation("企业结算详情明细导出")
+    public void listCompanyCheckExport(@PathVariable Integer batch, HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(
+                response,
+                "企业结算详情明细" + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
+        );
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        DealService.DealExportRow.class
+                )
+                .sheet("sheet")
+                .excludeColumnFiledNames(EXCLUDE_COMPANY_NAME)
+                .registerConverter(new LocalDateTimeConverter())
+                .doWrite(
+                        dealService.listDetailExport(batch)
+                );
+    }
+
+    @GetMapping("/store/check/{batch}/deals/export")
+    @ApiOperation("商家结算详情明细导出")
+    public void listStoreCheckExport(@PathVariable Integer batch, HttpServletResponse response) throws Exception {
+        resolveExcelResponseHeader(
+                response,
+                "商家结算详情明细" + DateTimeFormatter.ISO_DATE.format(LocalDateTime.now())
+        );
+
+        EasyExcel
+                .write(
+                        response.getOutputStream(),
+                        DealService.DealExportRow.class
+                )
+                .sheet("sheet")
+                .excludeColumnFiledNames(EXCLUDE_STORE_NAME)
+                .registerConverter(new LocalDateTimeConverter())
+                .doWrite(
+                        dealService.listDetailExport(batch)
                 );
     }
 }

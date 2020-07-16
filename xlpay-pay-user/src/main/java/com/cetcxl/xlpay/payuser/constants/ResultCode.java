@@ -6,7 +6,7 @@ import com.cetcxl.xlpay.common.constants.IResultCode;
 public enum ResultCode implements IResultCode {
 
     PAY_USER_EXIST(2001, "信链钱包支付已开通"),
-    PAY_USER_NOT_EXIST(2002, "信链钱包支付已开通"),
+    PAY_USER_NOT_EXIST(2002, "信链钱包未开通"),
     PAY_USER_PASSWORD_NOT_CORRECT(2003, "原支付密码输入错误"),
     PAY_USER_NO_PASSWORD_PAY_NO_EXIST(2004, "你已经关闭免密支付成功"),
     PAY_USER_NO_PASSWORD_PAY_IS_EXIST(2004, "你已经开通免密支付成功"),

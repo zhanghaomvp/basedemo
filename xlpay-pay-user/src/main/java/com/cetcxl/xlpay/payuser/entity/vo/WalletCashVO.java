@@ -1,5 +1,6 @@
 package com.cetcxl.xlpay.payuser.entity.vo;
 
+import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
 import io.swagger.annotations.ApiModel;
 import lombok.*;
@@ -28,4 +29,6 @@ public class WalletCashVO extends BaseVO implements Serializable {
     private Integer id;
 
     private BigDecimal cashBalance;
+
+    private WalletCash.WalletCashStaus status;
 }

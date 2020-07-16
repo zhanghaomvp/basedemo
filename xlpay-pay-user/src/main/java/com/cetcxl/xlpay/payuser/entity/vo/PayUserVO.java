@@ -36,4 +36,7 @@ public class PayUserVO extends BaseVO implements Serializable {
     private Integer identityFlag;
 
     private PayUser.PayUserStatus status;
+
+    private Boolean cookieAlive;
+
 }

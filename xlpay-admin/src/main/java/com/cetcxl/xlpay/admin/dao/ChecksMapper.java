@@ -90,9 +90,9 @@ public interface ChecksMapper extends BaseMapper<Checks> {
                     " company_user cu1 ON cr1.operator = cu1.id ",
                     " checks_record cr2 ON c.batch = cr2.check_batch AND cr2.action = 2 ",
                     " company_user cu2 ON cr2.operator = cu2.id ",
-                    " checks_record cr3 ON c.batch = cr3.check_batch AND cr3.action = 3 ",
+                    " checks_record cr3 ON c.batch = cr3.check_batch AND cr3.action = 4 ",
                     " company_user cu3 ON cr3.operator = cu3.id ",
-                    " checks_record cr4 ON c.batch = cr4.check_batch AND cr4.action = 4 ",
+                    " checks_record cr4 ON c.batch = cr4.check_batch AND cr4.action = 3 ",
                     " company_user cu4 ON cr3.operator = cu4.id "
             );
 

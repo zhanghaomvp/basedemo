@@ -68,7 +68,7 @@ VALUES (5, 1, 2, 1, '511528198909010019', 5.00, 5, 1, 'test', 3, 1);
 INSERT INTO `checks`(`batch`, `company`, `store`, `pay_type`, `total_deal_count`, `total_deal_amonut`, `attachments`, `info`, `status`)
 VALUES (1, 1, 1, 0, 1, 5.00, NULL, '[{"status":"APPLY","info":"apply"}]', 0);
 INSERT INTO `checks`(`batch`, `company`, `store`, `pay_type`, `total_deal_count`, `total_deal_amonut`, `attachments`, `info`, `status`)
-VALUES (2, 1, 1, 0, 1, 5.00, NULL, '[{"status":"APPLY","info":"apply"},{"status":"REJECT","info":"reject"}]', 1);
+VALUES (2, 1, 1, 0, 1, 5.00, NULL, '[{"status":"APPLY","info":"apply"},{"status":"REJECT","info":"reject"}]', 0);
 INSERT INTO `checks`(`batch`, `company`, `store`, `pay_type`, `total_deal_count`, `total_deal_amonut`, `attachments`, `info`, `status`)
 VALUES (3, 1, 1, 1, 1, 5.00, '1,2,3', '[{"status":"APPLY","info":"apply"},{"status":"APPROVAL","info":"approval"}]', 2);
 

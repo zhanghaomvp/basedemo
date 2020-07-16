@@ -82,11 +82,14 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
     public static class WalletCashExportRow {
         @ExcelProperty("姓名")
         String name;
+        @ExcelProperty("工号")
+        String employeeNo;
         @ExcelProperty("身份证号")
         @ColumnWidth(50)
         String icNo;
-        @ExcelProperty("工号")
-        String employeeNo;
+        @ExcelProperty("手机号")
+        @ColumnWidth(20)
+        String phone;
         @ExcelProperty("部门")
         String department;
         @ExcelProperty("余额")
@@ -108,6 +111,7 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                                         .name(dto.getName())
                                         .icNo(dto.getIcNo())
                                         .employeeNo(dto.getEmployeeNo())
+                                        .phone(dto.getPhone())
                                         .department(dto.getDepartment())
                                         .balance(dto.getCashBalance().toString())
                                         .status(dto.getStatus().getDesc())
