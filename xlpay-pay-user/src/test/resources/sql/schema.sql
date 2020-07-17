@@ -14,3 +14,5 @@ IF
 	);
 
 ALTER TABLE `pay_user` ADD COLUMN `phone` VARCHAR ( 20 );
+ALTER TABLE `pay_user` ADD COLUMN `locked_dead_line` TIMESTAMP;
+

@@ -47,10 +47,13 @@ public class PayUser implements Serializable {
 
     private LocalDateTime updated;
 
+    private LocalDateTime lockedDeadLine;
+
 
     public enum PayUserStatus implements IEnum<Integer> {
         DISABLE(0),
         ACTIVE(1),
+        LOCKED(2),
         ;
         private Integer status;
 

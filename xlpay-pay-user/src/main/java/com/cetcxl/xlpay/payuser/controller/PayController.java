@@ -146,17 +146,13 @@ public class PayController extends BaseController {
                 .getById(
                         ContextUtil.getUserInfo().getPayUser().getId()
                 );
-        BigDecimal decimal = new BigDecimal(req.getAmount());
 
-        if (!payService.checkNoPasswordPayValid(payUser, decimal)) {
-            if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
-                return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
-            }
-        }
+        BigDecimal decimal = new BigDecimal(req.getAmount());
+        payUserService.checkPayValid(payUser, req.getPassword(), decimal);
 
         WalletCash walletCash = walletCashService.getById(walletId);
         if (Objects.isNull(walletCash)) {
-            throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
+            return ResBody.error(SYSTEM_LOGIC_ERROR);
         }
         if (WalletCash.WalletCashStaus.DISABLE == walletCash.getStatus()) {
             return ResBody.error(WALLET_DISABLE);
@@ -198,13 +194,9 @@ public class PayController extends BaseController {
                 .getById(
                         ContextUtil.getUserInfo().getPayUser().getId()
                 );
-        BigDecimal decimal = new BigDecimal(req.getAmount());
 
-        if (!payService.checkNoPasswordPayValid(payUser, decimal)) {
-            if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
-                return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
-            }
-        }
+        BigDecimal decimal = new BigDecimal(req.getAmount());
+        payUserService.checkPayValid(payUser, req.getPassword(), decimal);
 
         WalletCredit walletCredit = walletCreditService.getById(walletId);
         if (Objects.isNull(walletCredit)) {

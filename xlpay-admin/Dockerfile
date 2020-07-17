@@ -3,4 +3,4 @@ ENV TZ Asia/Shanghai
 VOLUME /tmp
 EXPOSE 8080
 COPY ./target/xlpay-admin-1.0-SNAPSHOT.jar /app.jar
-ENTRYPOINT ["java", "-Xms512m", "-Xmx1024m", "-jar", "/app.jar", "--spring.profiles.active=prod"]
+ENTRYPOINT ["java", "-Xms512m", "-Xmx1024m", "-jar", "/app.jar"]

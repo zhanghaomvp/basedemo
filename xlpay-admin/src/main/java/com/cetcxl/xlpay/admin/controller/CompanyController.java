@@ -159,7 +159,6 @@ public class CompanyController extends BaseController {
                     new TransactionSynchronizationAdapter() {
                         @Override
                         public void afterCommit() {
-                            // todo 异步线程控制
                             trustlinkDataRpcService.syncCompanyEmployee(req.getSocialCreditCode());
                         }
                     }
