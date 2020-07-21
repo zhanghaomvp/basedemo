@@ -20,8 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.io.IOException;
-
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -48,7 +46,7 @@ public class BaseTest {
     public MockMvc mockMvc;
 
     @BeforeAll
-    public static void setup() throws IOException {
+    public static void setup() throws Exception {
         wireMockServer = new WireMockServer(
                 options()
                         .port(8089)
@@ -63,7 +61,7 @@ public class BaseTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .alwaysDo(print())

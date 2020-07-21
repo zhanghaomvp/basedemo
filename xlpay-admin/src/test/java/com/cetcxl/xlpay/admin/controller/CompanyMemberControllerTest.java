@@ -6,7 +6,9 @@ import com.cetcxl.xlpay.admin.service.WalletCashService;
 import com.cetcxl.xlpay.admin.service.WalletCreditFlowService;
 import com.cetcxl.xlpay.admin.service.WalletCreditService;
 import com.cetcxl.xlpay.common.entity.model.*;
+import com.cetcxl.xlpay.common.service.ChainCodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,13 +36,33 @@ public class CompanyMemberControllerTest extends BaseTest {
 
     @Override
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
 
         setAuthentication(
                 Company.builder()
                         .id(1)
                         .build()
+        );
+
+        WireMock.stubFor(
+                WireMock
+                        .post(
+                                WireMock
+                                        .urlPathEqualTo("/cc_manager/fabric/invoke")
+                        )
+                        .willReturn(
+                                WireMock
+                                        .okJson(
+                                                objectMapper
+                                                        .writeValueAsString(
+                                                                ChainCodeService.Result.builder()
+                                                                        .code(0)
+                                                                        .build()
+                                                        )
+                                        )
+                        )
+
         );
     }
 

@@ -4,6 +4,7 @@ import com.cetcxl.xlpay.BaseTest;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.service.ChainCodeService;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
 import com.cetcxl.xlpay.payuser.service.DealService;
@@ -12,6 +13,7 @@ import com.cetcxl.xlpay.payuser.service.WalletCashService;
 import com.cetcxl.xlpay.payuser.service.WalletCreditService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +43,7 @@ class PayControllerTest extends BaseTest {
 
     @BeforeEach
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
 
         setAuthentication(
@@ -49,6 +51,26 @@ class PayControllerTest extends BaseTest {
                         .id(1)
                         .icNo(S_ICNO)
                         .build()
+        );
+
+        WireMock.stubFor(
+                WireMock
+                        .post(
+                                WireMock
+                                        .urlPathEqualTo("/cc_manager/fabric/invoke")
+                        )
+                        .willReturn(
+                                WireMock
+                                        .okJson(
+                                                objectMapper
+                                                        .writeValueAsString(
+                                                                ChainCodeService.Result.builder()
+                                                                        .code(0)
+                                                                        .build()
+                                                        )
+                                        )
+                        )
+
         );
     }
 

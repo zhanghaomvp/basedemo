@@ -74,4 +74,37 @@ class DealsControllerTest extends BaseTest {
                         MockMvcResultMatchers.jsonPath("$.data.companyName").value("中国电科")
                 );
     }
+
+    @Test
+    void listDealAmounts_success() throws Exception {
+        setAuthentication(
+                PayUser.builder()
+                        .id(1)
+                        .icNo(S_ICNO)
+                        .build()
+        );
+
+        MvcResult mvcResult = mockMvc
+                .perform(
+                        MockMvcRequestBuilders
+                                .get("/pay-user/deals/amounts", 1)
+                                .param("socialCreditCode", "cetcxl")
+                                .param("storeName", "shop1")
+                                .param("begin", "2020-07-01 00:00:00")
+                                .accept(MediaType.APPLICATION_JSON_UTF8)
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        JsonNode jsonNode = objectMapper.readTree(mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        DealMapper.DealAmountsDTO dealAmountsDTO = objectMapper
+                .readValue(
+                        jsonNode.get("data").toString(),
+                        DealMapper.DealAmountsDTO.class
+                );
+        Assertions.assertTrue(
+                dealAmountsDTO.getCashAmount().intValue() > 0
+        );
+
+    }
 }

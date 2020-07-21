@@ -1,0 +1,16 @@
+version: '2'
+
+networks:
+  xl_app:
+
+services:
+  xlpay-pay-user:
+    container_name: xlpay-pay-user
+    image: xlpay-pay-user
+    networks:
+      - xl_app
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 8083:8080
+    command: java -Xms512m -Xmx1024m -jar /app.jar --spring.profiles.active=prod --spring.datasource.password=$MYSQL_PASSWORD

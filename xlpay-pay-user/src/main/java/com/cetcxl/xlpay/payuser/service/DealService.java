@@ -29,6 +29,10 @@ import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CREDIT;
 @Service
 public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Autowired
+    CompanyService companyService;
+    @Autowired
+    StoreService storeService;
+    @Autowired
     WalletCashService walletCashService;
     @Autowired
     WalletCreditService walletCreditService;
@@ -50,7 +54,15 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
         try (RedisLockComponent.RedisLock redisLock =
                      new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + param.getWalletId())) {
             Deal deal = process(param, CASH);
-            walletCashService.process(deal, param.getWalletId());
+            walletCashService.process(
+                    deal,
+                    WalletCashService.WalletCashProcessParam.builder()
+                            .company(companyService.getById(param.getCompanyMember().getCompany()))
+                            .companyMember(param.getCompanyMember())
+                            .walletId(param.getWalletId())
+                            .store(storeService.getById(param.getStore()))
+                            .build()
+            );
             return deal;
         }
     }
@@ -60,7 +72,15 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
         try (RedisLockComponent.RedisLock redisLock =
                      new RedisLockComponent.RedisLock(Constants.KEY_CREDIT_DEAL + param.getWalletId())) {
             Deal deal = process(param, CREDIT);
-            walletCreditService.process(deal, param.getWalletId());
+            walletCreditService.process(
+                    deal,
+                    WalletCreditService.WalletCreditProcessParam.builder()
+                            .company(companyService.getById(param.getCompanyMember().getCompany()))
+                            .companyMember(param.getCompanyMember())
+                            .walletId(param.getWalletId())
+                            .store(storeService.getById(param.getStore()))
+                            .build()
+            );
             return deal;
         }
     }

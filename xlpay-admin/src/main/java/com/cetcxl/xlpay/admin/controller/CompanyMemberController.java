@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.admin.constants.ResultCode;
 import com.cetcxl.xlpay.admin.dao.WalletCashMapper;
 import com.cetcxl.xlpay.admin.dao.WalletCreditMapper;
+import com.cetcxl.xlpay.admin.service.CompanyMemberService;
 import com.cetcxl.xlpay.admin.service.DealService;
 import com.cetcxl.xlpay.admin.service.WalletCashService;
 import com.cetcxl.xlpay.admin.service.WalletCreditService;
@@ -51,6 +52,9 @@ import static com.cetcxl.xlpay.common.constants.CommonResultCode.SYSTEM_LOGIC_ER
 @RestController
 @Api(tags = "企业成员相关接口")
 public class CompanyMemberController extends BaseController {
+    @Autowired
+    CompanyMemberService companyMemberService;
+
     @Autowired
     WalletCashService walletCashService;
     @Autowired
@@ -158,8 +162,8 @@ public class CompanyMemberController extends BaseController {
     ) {
         DealService.DealForAdminParam param = DealService.DealForAdminParam
                 .builder()
-                .company(ContextUtil.getUserInfo().getCompany().getId())
-                .companyMember(companyMemberId)
+                .company(ContextUtil.getUserInfo().getCompany())
+                .companyMember(companyMemberService.getById(companyMemberId))
                 .walletId(walletId)
                 .dealType(req.getDealType())
                 .amount(new BigDecimal(req.getAmount()))
@@ -199,8 +203,8 @@ public class CompanyMemberController extends BaseController {
                         i ->
                                 DealService.DealForAdminParam
                                         .builder()
-                                        .company(ContextUtil.getUserInfo().getCompany().getId())
-                                        .companyMember(companyMemberIds.get(i))
+                                        .company(ContextUtil.getUserInfo().getCompany())
+                                        .companyMember(companyMemberService.getById(companyMemberIds.get(i)))
                                         .walletId(walletIds.get(i))
                                         .dealType(req.getDealType())
                                         .amount(new BigDecimal(req.getAmount()))
@@ -349,8 +353,8 @@ public class CompanyMemberController extends BaseController {
     ) {
         DealService.DealForAdminParam param = DealService.DealForAdminParam
                 .builder()
-                .company(ContextUtil.getUserInfo().getCompany().getId())
-                .companyMember(companyMemberId)
+                .company(ContextUtil.getUserInfo().getCompany())
+                .companyMember(companyMemberService.getById(companyMemberId))
                 .walletId(walletId)
                 .dealType(Deal.DealType.ADMIN_QUOTA)
                 .amount(new BigDecimal(req.getQuota()))
@@ -386,8 +390,8 @@ public class CompanyMemberController extends BaseController {
                         i ->
                                 DealService.DealForAdminParam
                                         .builder()
-                                        .company(ContextUtil.getUserInfo().getCompany().getId())
-                                        .companyMember(companyMemberIds.get(i))
+                                        .company(ContextUtil.getUserInfo().getCompany())
+                                        .companyMember(companyMemberService.getById(companyMemberIds.get(i)))
                                         .walletId(walletIds.get(i))
                                         .dealType(Deal.DealType.ADMIN_QUOTA)
                                         .amount(new BigDecimal(req.getQuota()))

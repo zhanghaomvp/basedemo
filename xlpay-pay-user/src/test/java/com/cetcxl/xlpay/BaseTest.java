@@ -47,7 +47,7 @@ public class BaseTest {
     public MockMvc mockMvc;
 
     @BeforeAll
-    public static void setup() throws IOException {
+    public static void setup() throws Exception {
         wireMockServer = new WireMockServer(
                 options()
                         .port(8089)
@@ -62,7 +62,7 @@ public class BaseTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .alwaysDo(print())

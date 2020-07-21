@@ -11,12 +11,15 @@ import com.cetcxl.xlpay.admin.controller.ChecksController;
 import com.cetcxl.xlpay.admin.dao.ChecksMapper;
 import com.cetcxl.xlpay.admin.entity.model.Checks;
 import com.cetcxl.xlpay.admin.entity.model.ChecksRecord;
+import com.cetcxl.xlpay.common.chaincode.entity.CheckSlip;
+import com.cetcxl.xlpay.common.chaincode.enums.PayType;
 import com.cetcxl.xlpay.common.component.RedisLockComponent;
 import com.cetcxl.xlpay.common.constants.CommonResultCode;
 import com.cetcxl.xlpay.common.constants.Constants;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
+import com.cetcxl.xlpay.common.service.ChainCodeService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -53,6 +56,13 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
     DealService dealService;
     @Autowired
     WalletCreditService walletCreditService;
+
+    @Autowired
+    ChainCodeService chainCodeService;
+    @Autowired
+    CompanyService companyService;
+    @Autowired
+    StoreService storeService;
 
     @Transactional
     public void process(Integer operator, int checkBatch, Checks.Status status, String info) {
@@ -99,12 +109,14 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                         .eq(Deal::getCheckBatch, checkBatch)
                         .update();
 
-                if (checks.getPayType() == Deal.PayType.CREDIT) {
-                    List<Deal> deals = dealService
-                            .lambdaQuery()
-                            .eq(Deal::getCheckBatch, checkBatch)
-                            .list();
+                String companySocialCreditCode = companyService.getById(checks.getCompany()).getSocialCreditCode();
+                String businessSocialCreditCode = storeService.getById(checks.getStore()).getSocialCreditCode();
+                List<Deal> deals = dealService
+                        .lambdaQuery()
+                        .eq(Deal::getCheckBatch, checkBatch)
+                        .list();
 
+                if (checks.getPayType() == Deal.PayType.CREDIT) {
                     List<String> walletIdLists = deals.stream()
                             .map(
                                     deal ->
@@ -121,8 +133,44 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                     try (RedisLockComponent.RedisLock redisLock =
                                  new RedisLockComponent.RedisLock(walletIdLists)) {
                         deals.forEach(deal -> walletCreditService.payment(deal));
+
+                        //XXX 涉及钱包调整 此处上链需要在分布式锁范围中
+                        chainCodeService.saveCheckSlip(
+                                CheckSlip.builder()
+                                        .checkNo(checks.getBatch().toString())
+                                        .companySocialCreditCode(companySocialCreditCode)
+                                        .businessSocialCreditCode(businessSocialCreditCode)
+                                        .totalDeal(checks.getTotalDealCount().toString())
+                                        .totalAmount(checks.getTotalDealAmonut().toString())
+                                        .checkType(PayType.CREDIT)
+                                        .tradeNos(
+                                                deals.stream()
+                                                        .map(deal -> deal.getId().toString())
+                                                        .collect(Collectors.toList())
+                                        )
+                                        .build()
+                        );
                     }
+
+                } else {
+
+                    chainCodeService.saveCheckSlip(
+                            CheckSlip.builder()
+                                    .checkNo(checks.getBatch().toString())
+                                    .companySocialCreditCode(companySocialCreditCode)
+                                    .businessSocialCreditCode(businessSocialCreditCode)
+                                    .totalDeal(checks.getTotalDealCount().toString())
+                                    .totalAmount(checks.getTotalDealAmonut().toString())
+                                    .checkType(PayType.CASH)
+                                    .tradeNos(
+                                            deals.stream()
+                                                    .map(deal -> deal.getId().toString())
+                                                    .collect(Collectors.toList())
+                                    )
+                                    .build()
+                    );
                 }
+
                 break;
 
             default:

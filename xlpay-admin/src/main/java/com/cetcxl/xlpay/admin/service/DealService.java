@@ -16,6 +16,7 @@ import com.cetcxl.xlpay.admin.exception.DealCashImportException;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
 import com.cetcxl.xlpay.common.component.RedisLockComponent;
 import com.cetcxl.xlpay.common.constants.Constants;
+import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
@@ -135,8 +136,8 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Builder
     public static class DealForAdminParam {
         Integer walletId;
-        Integer company;
-        Integer companyMember;
+        Company company;
+        CompanyMember companyMember;
         Deal.DealType dealType;
         BigDecimal amount;
         BigDecimal quota;
@@ -157,8 +158,8 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
         try (RedisLockComponent.RedisLock redisLock =
                      new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + param.getWalletId())) {
             Deal deal = Deal.builder()
-                    .company(param.getCompany())
-                    .companyMember(param.getCompanyMember())
+                    .company(param.getCompany().getId())
+                    .companyMember(param.getCompanyMember().getId())
                     .amount(param.getAmount())
                     .type(param.getDealType())
                     .payType(CASH)
@@ -166,7 +167,14 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
             save(deal);
 
-            walletCashService.process(deal, param.getWalletId());
+            walletCashService.process(
+                    deal,
+                    WalletCashService.WalletCashProcessParam.builder()
+                            .walletId(param.getWalletId())
+                            .company(param.getCompany())
+                            .companyMember(param.getCompanyMember())
+                            .build()
+            );
         }
     }
 
@@ -295,7 +303,14 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                     .build();
             save(deal);
 
-            walletCashService.process(deal, walletCash.getId());
+            walletCashService.process(
+                    deal,
+                    WalletCashService.WalletCashProcessParam.builder()
+                            .walletId(walletCash.getId())
+                            .company(ContextUtil.getUserInfo().getCompany())
+                            .companyMember(companyMember)
+                            .build()
+            );
         } catch (Exception e) {
             throw new DealCashImportException(e);
         }
@@ -321,15 +336,22 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                      new RedisLockComponent.RedisLock(Constants.KEY_CREDIT_DEAL + param.getWalletId())) {
 
             Deal deal = Deal.builder()
-                    .company(param.getCompany())
-                    .companyMember(param.getCompanyMember())
+                    .company(param.getCompany().getId())
+                    .companyMember(param.getCompanyMember().getId())
                     .amount(param.getAmount())
                     .type(param.getDealType())
                     .payType(CREDIT)
                     .build();
             save(deal);
 
-            walletCreditService.process(deal, param.getWalletId());
+            walletCreditService.process(
+                    deal,
+                    WalletCreditService.WalletCreditProcessParam.builder()
+                            .walletId(param.getWalletId())
+                            .company(param.getCompany())
+                            .companyMember(param.getCompanyMember())
+                            .build()
+            );
         }
     }
 

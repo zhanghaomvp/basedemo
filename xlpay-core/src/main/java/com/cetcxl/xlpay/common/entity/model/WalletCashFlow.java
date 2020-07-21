@@ -76,6 +76,9 @@ public class WalletCashFlow implements Serializable {
                 break;
             case MINUS:
                 setBalance(this.balance.subtract(this.getAmount()));
+                if (this.balance.signum() == -1) {
+                    throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
+                }
                 break;
             default:
         }

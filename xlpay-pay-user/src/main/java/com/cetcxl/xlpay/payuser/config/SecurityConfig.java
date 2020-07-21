@@ -20,8 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import static com.cetcxl.xlpay.common.constants.CommonResultCode.AUTHENTICATION_ERROR;
-import static com.cetcxl.xlpay.common.constants.CommonResultCode.SESSION_INVALID;
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.*;
 
 @EnableWebSecurity
 @Configuration
@@ -67,7 +66,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         }
                 )
                 .failureHandler(
-                        (req, res, e) -> resolveResponse(res, ResBody.error(e.getMessage()))
+                        (req, res, e) -> {
+                            log.error("formLogin failureHandler error : {} ", e);
+                            resolveResponse(res, ResBody.error(LOGIN_FAIL));
+                        }
                 )
                 .permitAll()
                 .and()

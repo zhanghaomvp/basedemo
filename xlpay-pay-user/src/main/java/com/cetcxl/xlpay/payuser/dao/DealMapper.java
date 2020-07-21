@@ -48,7 +48,7 @@ public interface DealMapper extends BaseMapper<Deal> {
                     " company c ON d.company = c.id ",
                     "store s ON d.store = s.id "
             );
-            WHERE("d.type>3");
+            WHERE("d.type in(4,5)");
             WHERE("d.ic_no =  #{icNo}");
             WHERE("c.`social_credit_code` = #{req.socialCreditCode}");
             if (StringUtils.isNotBlank(req.getStoreName())) {
@@ -68,4 +68,39 @@ public interface DealMapper extends BaseMapper<Deal> {
 
     @SelectProvider(type = DealMapper.class, method = "listDealSql")
     IPage<DealDTO> listDeal(Page page, DealsController.ListDealReq req, String icNo);
+
+
+    @Data
+    @ApiModel
+    class DealAmountsDTO {
+        private BigDecimal cashAmount;
+        private BigDecimal creditAmount;
+    }
+
+    static String listDealAmountsSql(DealsController.ListDealReq req) {
+        return new SQL() {{
+            SELECT("  SUM( CASE WHEN d.pay_type = 0 THEN d.amount ELSE 0 END ) AS cash_amount,\n" +
+                    "  SUM( CASE WHEN d.pay_type = 1 THEN d.amount ELSE 0 END ) AS credit_amount ");
+            FROM(" deal d ");
+            INNER_JOIN(
+                    " company c ON d.company = c.id ",
+                    "store s ON d.store = s.id "
+            );
+            WHERE("d.type in(4,5)");
+            WHERE("d.ic_no =  #{icNo}");
+            WHERE("c.`social_credit_code` = #{req.socialCreditCode}");
+            if (StringUtils.isNotBlank(req.getStoreName())) {
+                WHERE("s.`name` like concat('%',#{req.storeName},'%')");
+            }
+            if (Objects.nonNull(req.getBegin())) {
+                WHERE("d.created >= #{req.begin}");
+            }
+            if (Objects.nonNull(req.getEnd())) {
+                WHERE("d.created <= #{req.end}");
+            }
+        }}.toString();
+    }
+
+    @SelectProvider(type = DealMapper.class, method = "listDealAmountsSql")
+    DealAmountsDTO listDealAmounts(DealsController.ListDealReq req, String icNo);
 }

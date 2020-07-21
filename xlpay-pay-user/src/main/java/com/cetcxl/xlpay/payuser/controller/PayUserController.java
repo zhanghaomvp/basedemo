@@ -165,7 +165,7 @@ public class PayUserController extends BaseController {
         private String newPassword;
     }
 
-    @PatchMapping("/pay-user/password")
+    @PostMapping("/pay-user/password")
     @ApiOperation("钱包支付密码修改")
     public ResBody updatePayPassword(@RequestBody @Validated UpdatePayPasswordReq req) {
 
@@ -198,7 +198,7 @@ public class PayUserController extends BaseController {
 
     }
 
-    @PatchMapping(value = "/pay-user/secret-free-payment")
+    @PostMapping(value = "/pay-user/secret-free-payment")
     @ApiOperation("小额免密支付功能")
     public ResBody updateNoPayFunction(@RequestBody @Validated UpdateNoPayFunctionReq req) {
         PayUser payUser = payUserService.getById(

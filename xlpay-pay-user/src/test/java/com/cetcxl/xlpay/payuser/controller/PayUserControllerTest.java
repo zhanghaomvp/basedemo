@@ -30,7 +30,7 @@ class PayUserControllerTest extends BaseTest {
 
     @Override
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         setAuthentication(
                 PayUser.builder()
@@ -142,7 +142,7 @@ class PayUserControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .patch("/pay-user/password")
+                                .post("/pay-user/password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -169,7 +169,7 @@ class PayUserControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .patch("/pay-user/secret-free-payment")
+                                .post("/pay-user/secret-free-payment")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(req))
                 )

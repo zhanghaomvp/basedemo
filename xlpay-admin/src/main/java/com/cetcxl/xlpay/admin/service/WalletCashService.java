@@ -7,10 +7,13 @@ import com.alibaba.excel.annotation.write.style.HeadStyle;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.admin.dao.WalletCashMapper;
-import com.cetcxl.xlpay.common.entity.model.Deal;
-import com.cetcxl.xlpay.common.entity.model.WalletCash;
-import com.cetcxl.xlpay.common.entity.model.WalletCashFlow;
+import com.cetcxl.xlpay.common.chaincode.entity.Order;
+import com.cetcxl.xlpay.common.chaincode.entity.PersonalWallet;
+import com.cetcxl.xlpay.common.chaincode.enums.DealType;
+import com.cetcxl.xlpay.common.chaincode.enums.PayType;
+import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
+import com.cetcxl.xlpay.common.service.ChainCodeService;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -36,10 +39,20 @@ import static com.cetcxl.xlpay.admin.constants.ResultCode.COMPANY_MEMBER_WALLET_
 public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash> {
     @Autowired
     WalletCashFlowService walletCashFlowService;
+    @Autowired
+    ChainCodeService chainCodeService;
+
+    @Data
+    @Builder
+    public static class WalletCashProcessParam {
+        Integer walletId;
+        Company company;
+        CompanyMember companyMember;
+    }
 
     @Transactional
-    public void process(Deal deal, Integer walletId) {
-        WalletCash walletCash = getById(walletId);
+    public void process(Deal deal, WalletCashProcessParam param) {
+        WalletCash walletCash = getById(param.getWalletId());
         if (Objects.isNull(walletCash)) {
             throw new BaseRuntimeException(COMPANY_MEMBER_WALLET_NOT_EXIST);
         }
@@ -53,12 +66,16 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                 .build();
 
         WalletCashFlow.CashFlowType flowType = null;
+        DealType dealType = null;
+
         switch (deal.getType()) {
             case ADMIN_RECHARGE:
                 flowType = WalletCashFlow.CashFlowType.PLUS;
+                dealType = DealType.RECHARGE;
                 break;
             case ADMIN_REDUCE:
                 flowType = WalletCashFlow.CashFlowType.MINUS;
+                dealType = DealType.CONSUME;
                 break;
             default:
         }
@@ -72,6 +89,27 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                         .lambdaUpdate(WalletCash.class)
                         .set(WalletCash::getCashBalance, cashFlow.getBalance())
                         .eq(WalletCash::getId, walletCash.getId())
+        );
+
+        chainCodeService.saveDealingRecord(
+                Order.builder()
+                        .tradeNo(deal.getId().toString())
+                        .companySocialCreditCode(param.getCompany().getSocialCreditCode())
+                        .identityCard(param.getCompanyMember().getIcNo())
+                        .amount(cashFlow.getAmount().toString())
+                        .dealType(dealType)
+                        .employeeWalletNo(walletCash.getId().toString())
+                        .payType(PayType.CASH)
+                        .build(),
+                PersonalWallet.builder()
+                        .personalWalletNo(walletCash.getId().toString())
+                        .personalCashBalance(cashFlow.getBalance().toString())
+                        .amount(cashFlow.getAmount().toString())
+                        .dealType(dealType)
+                        .payType(PayType.CASH)
+                        .tradeNo(deal.getId().toString())
+                        .build(),
+                null
         );
     }
 

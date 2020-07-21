@@ -33,7 +33,7 @@ import static com.cetcxl.xlpay.payuser.entity.model.PayUser.PayUserStatus.*;
 public class PayUserService extends ServiceImpl<PayUserMapper, PayUser> {
     public static final String KEY_PAY_PASSWORD_ERROR_COUNT = "xlpay.payuser.password.error.count.";
     public static final int PASSWORD_ERROR_COUNT_LIMIT = 5;
-    private static final long expireMinute = 30L;
+    private static final long EXPIRE_MINUTE = 30L;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -75,7 +75,7 @@ public class PayUserService extends ServiceImpl<PayUserMapper, PayUser> {
                 .increment(key);
 
         if (!hasKey) {
-            redisTemplate.expire(key, expireMinute, TimeUnit.MINUTES);
+            redisTemplate.expire(key, EXPIRE_MINUTE, TimeUnit.MINUTES);
         }
 
         if (increment < PASSWORD_ERROR_COUNT_LIMIT) {

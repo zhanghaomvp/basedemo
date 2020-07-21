@@ -141,6 +141,10 @@ public class PayService {
                                 .in(Deal::getType, ImmutableList.of(CASH_DEAL, CREDIT_DEAL))
                 );
 
+        if (Objects.isNull(map)) {
+            return true;
+        }
+
         Object sum = map.get("SUM");
         if (Objects.isNull(sum)) {
             return true;

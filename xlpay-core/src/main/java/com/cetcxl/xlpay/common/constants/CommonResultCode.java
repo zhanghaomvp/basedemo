@@ -17,6 +17,12 @@ public enum CommonResultCode implements IResultCode {
 
     XSTORE_UPLOAD_FAIL(9201, "xstore upload error"),
     XSTORE_DOWNLOAD_FAIL(9202, "xstore download error"),
+
+    CHAIN_CODE_LACK_CHAIN_CODE_IP(9301, "缺少chainCodeIp"),
+    CHAIN_CODE_REQUEST_ERROR(9302, "上链网络访问请求失败"),
+    CHAIN_CODE_SAVE_DEALING_RECORD_ERROR(9303, "交易记录上链失败"),
+    CHAIN_CODE_SAVE_CHECK_SLIP_ERROR(9304, "结算记录上链失败"),
+    CHAIN_CODE_SIGN_ERROR(9305, "上链签名失败"),
     ;
 
     private int code;

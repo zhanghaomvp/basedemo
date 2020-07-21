@@ -8,10 +8,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.admin.constants.ResultCode;
 import com.cetcxl.xlpay.admin.dao.WalletCreditMapper;
-import com.cetcxl.xlpay.common.entity.model.Deal;
-import com.cetcxl.xlpay.common.entity.model.WalletCredit;
-import com.cetcxl.xlpay.common.entity.model.WalletCreditFlow;
+import com.cetcxl.xlpay.common.chaincode.entity.Order;
+import com.cetcxl.xlpay.common.chaincode.entity.PersonalWallet;
+import com.cetcxl.xlpay.common.chaincode.enums.PayType;
+import com.cetcxl.xlpay.common.constants.CommonResultCode;
+import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
+import com.cetcxl.xlpay.common.service.ChainCodeService;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -23,6 +26,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.cetcxl.xlpay.common.chaincode.enums.DealType.LIMIT_CHANGE;
 
 /**
  * <p>
@@ -36,31 +41,39 @@ import java.util.stream.Collectors;
 public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletCredit> {
     @Autowired
     WalletCreditFlowService walletCreditFlowService;
+    @Autowired
+    ChainCodeService chainCodeService;
+
+    @Data
+    @Builder
+    public static class WalletCreditProcessParam {
+        Integer walletId;
+        Company company;
+        CompanyMember companyMember;
+    }
 
     @Transactional
-    public void process(Deal deal, Integer walletId) {
-        WalletCredit walletCredit = getById(walletId);
+    public void process(Deal deal, WalletCreditProcessParam param) {
+        WalletCredit walletCredit = getById(param.getWalletId());
         if (Objects.isNull(walletCredit)) {
             throw new BaseRuntimeException(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
         }
 
-        if (deal.getType() == Deal.DealType.ADMIN_QUOTA) {
-            adjustQuota(deal, walletCredit);
-        }
-    }
-
-    private void adjustQuota(Deal deal, WalletCredit walletCredit) {
         WalletCreditFlow creditFlow = WalletCreditFlow.builder()
                 .walletCredit(walletCredit.getId())
                 .deal(deal.getId())
                 .info("")
                 .build();
 
+        if (deal.getType() != Deal.DealType.ADMIN_QUOTA) {
+            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+        }
+
+        WalletCreditFlow.CreditFlowType flowType = null;
+
         BigDecimal subtract = deal.getAmount()
                 .subtract(walletCredit.getCreditQuota());
         boolean isPlus = subtract.signum() > 0;
-
-        WalletCreditFlow.CreditFlowType flowType = null;
         if (isPlus) {
             flowType = WalletCreditFlow.CreditFlowType.QUOTA_PLUS;
         } else {
@@ -81,6 +94,28 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                         .set(WalletCredit::getCreditBalance, creditFlow.getBalance())
                         .set(WalletCredit::getCreditQuota, creditFlow.getQuota())
                         .eq(WalletCredit::getId, walletCredit.getId())
+        );
+
+        chainCodeService.saveDealingRecord(
+                Order.builder()
+                        .tradeNo(deal.getId().toString())
+                        .companySocialCreditCode(param.getCompany().getSocialCreditCode())
+                        .identityCard(param.getCompanyMember().getIcNo())
+                        .amount(creditFlow.getAmount().toString())
+                        .dealType(LIMIT_CHANGE)
+                        .employeeWalletNo(walletCredit.getId().toString())
+                        .payType(PayType.CREDIT)
+                        .build(),
+                PersonalWallet.builder()
+                        .personalWalletNo(walletCredit.getId().toString())
+                        .personalCreditBalance(creditFlow.getBalance().toString())
+                        .personalCreditLimit(creditFlow.getQuota().toString())
+                        .amount(creditFlow.getAmount().toString())
+                        .dealType(LIMIT_CHANGE)
+                        .payType(PayType.CREDIT)
+                        .tradeNo(deal.getId().toString())
+                        .build(),
+                null
         );
     }
 

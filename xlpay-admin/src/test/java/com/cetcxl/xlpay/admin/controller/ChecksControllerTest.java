@@ -13,8 +13,10 @@ import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.service.ChainCodeService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matchers;
@@ -50,12 +52,32 @@ class ChecksControllerTest extends BaseTest {
 
     @Override
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         setAuthentication(
                 Company.builder()
                         .id(1)
                         .build()
+        );
+
+        WireMock.stubFor(
+                WireMock
+                        .post(
+                                WireMock
+                                        .urlPathEqualTo("/cc_manager/fabric/invoke")
+                        )
+                        .willReturn(
+                                WireMock
+                                        .okJson(
+                                                objectMapper
+                                                        .writeValueAsString(
+                                                                ChainCodeService.Result.builder()
+                                                                        .code(0)
+                                                                        .build()
+                                                        )
+                                        )
+                        )
+
         );
     }
 
@@ -264,11 +286,11 @@ class ChecksControllerTest extends BaseTest {
         mockMvc
                 .perform(
                         MockMvcRequestBuilders
-                                .get("/stores/{storeId}/checks",  1)
+                                .get("/stores/{storeId}/checks", 1)
                                 .param(PARAM_PAGE_NO, "1")
                                 .param(PARAM_PAGE_SIZE, "5")
-                                .param("approvalTimeBegin","2020-06-07 00:00:00")
-                                .param("approvalTimeEnd","2020-07-08 00:00:00")
+                                .param("approvalTimeBegin", "2020-06-07 00:00:00")
+                                .param("approvalTimeEnd", "2020-07-08 00:00:00")
                                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 )
                 .andExpect(MockMvcResultMatchers.status().isOk())

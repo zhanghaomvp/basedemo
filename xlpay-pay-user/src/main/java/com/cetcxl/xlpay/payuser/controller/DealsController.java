@@ -56,10 +56,9 @@ public class DealsController extends BaseController {
 
         Deal.PayType payType;
 
-        @NotNull
         @DateTimeFormat(pattern = DATE_TIME)
-        LocalDateTime begin;
         @NotNull
+        LocalDateTime begin;
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime end;
     }
@@ -68,6 +67,7 @@ public class DealsController extends BaseController {
     @ApiOperation("企业账单查询")
     public ResBody<IPage<DealMapper.DealDTO>> listDeal(@Validated ListDealReq req) {
 
+        req.setEnd(req.getBegin().plusMonths(1));
         return ResBody
                 .success(
                         dealMapper.listDeal(
@@ -89,5 +89,19 @@ public class DealsController extends BaseController {
             dealVO.setCheckFinishTime(deal.getUpdated());
         }
         return ResBody.success(dealVO);
+    }
+
+    @GetMapping("/pay-user/deals/amounts")
+    @ApiOperation("企业账单统筹数据查询")
+    public ResBody<DealMapper.DealAmountsDTO> listDealAmount(@Validated ListDealReq req) {
+
+        req.setEnd(req.getBegin().plusMonths(1));
+        return ResBody
+                .success(
+                        dealMapper.listDealAmounts(
+                                req,
+                                ContextUtil.getUserInfo().getPayUser().getIcNo()
+                        )
+                );
     }
 }

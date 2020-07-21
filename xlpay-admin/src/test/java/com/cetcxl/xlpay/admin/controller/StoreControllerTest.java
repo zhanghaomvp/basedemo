@@ -52,7 +52,7 @@ class StoreControllerTest extends BaseTest {
 
     @Override
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
 
         storeController = (StoreController) AopProxyUtils.getSingletonTarget(storeController);
