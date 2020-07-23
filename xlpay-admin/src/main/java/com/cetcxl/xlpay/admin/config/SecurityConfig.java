@@ -33,9 +33,6 @@ import static com.cetcxl.xlpay.common.constants.CommonResultCode.*;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    SessionRegistry sessionRegistry;
-
-    @Autowired
     private ObjectMapper mapper;
 
     @Bean
@@ -108,7 +105,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .sessionManagement()
                 .maximumSessions(1)
-                .sessionRegistry(sessionRegistry)
                 .expiredSessionStrategy(
                         event -> {
                             log.error("sessionAuthenticationFailureHandler error : {} ", event.getSessionInformation());

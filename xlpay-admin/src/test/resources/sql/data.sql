@@ -1,4 +1,4 @@
---
+-- $2a$10$UU4xXSNv9FIkgHc/wN79GeeePSWYZm79TXEtgV0iTHM9Erk3fur8i   kobekaka1
 INSERT INTO `company`(`id`, `name`, `contact`, `phone`, `email`, `social_credit_code`, `functions`, `STATUS`)
  VALUES (1, '中国电科', NULL, '17360026771', NULL, 'cetcxl', 1, 1);
 INSERT INTO `company`(`id`, `name`, `contact`, `phone`, `email`, `social_credit_code`, `functions`, `STATUS`)

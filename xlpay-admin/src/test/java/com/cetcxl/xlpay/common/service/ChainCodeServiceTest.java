@@ -9,6 +9,7 @@ import com.cetcxl.xlpay.common.chaincode.enums.DealType;
 import com.cetcxl.xlpay.common.chaincode.enums.PayType;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,6 +21,7 @@ import java.util.List;
  * @date: 2020/7/13 8:57
  */
 @Slf4j
+@Disabled
 public class ChainCodeServiceTest extends BaseTest {
     @Autowired
     ChainCodeService chainCodeService;

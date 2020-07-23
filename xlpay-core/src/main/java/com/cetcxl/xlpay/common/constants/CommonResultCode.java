@@ -9,7 +9,7 @@ public enum CommonResultCode implements IResultCode {
     FILE_TYPE_NOT_SUPPORT(9006, "文件类型不支持"),
     REDIS_LOCK_ERROR(9007, "竞争激烈，请稍后再试"),
     VERIFY_CODE_UNAVAILABLE(9007, "竞争激烈，请稍后再试"),
-
+    FILE_OVERSIZE(9008, "上传文件超过支持文件大小"),
 
     VERIFY_SIGN_HEAD_MISS(9101, "sign api head param miss"),
     VERIFY_SIGN_PUBLIC_KEY_MISS(9102, "sign api public key miss"),

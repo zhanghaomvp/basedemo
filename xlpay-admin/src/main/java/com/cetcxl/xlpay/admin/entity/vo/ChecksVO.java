@@ -1,5 +1,6 @@
 package com.cetcxl.xlpay.admin.entity.vo;
 
+import com.alibaba.excel.annotation.format.DateTimeFormat;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.cetcxl.xlpay.admin.dao.ChecksRecordMapper;
@@ -7,6 +8,7 @@ import com.cetcxl.xlpay.admin.entity.model.Checks;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.vo.AttachmentVO;
 import com.cetcxl.xlpay.common.entity.vo.BaseVO;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +20,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
 
 /**
  * <p>
@@ -60,8 +64,10 @@ public class ChecksVO extends BaseVO implements Serializable {
 
     private Checks.Status status;
 
+    @JsonFormat(pattern = DATE_TIME)
     private LocalDateTime created;
 
+    @JsonFormat(pattern = DATE_TIME)
     private LocalDateTime updated;
 
     private String info;

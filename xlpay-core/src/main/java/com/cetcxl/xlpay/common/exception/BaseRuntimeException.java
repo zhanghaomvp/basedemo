@@ -9,7 +9,7 @@ public class BaseRuntimeException extends RuntimeException {
     private IResultCode resultCode;
 
     public BaseRuntimeException(IResultCode resultCode) {
-        super();
+        super(resultCode.getErrorMessage());
         this.resultCode = resultCode;
     }
 

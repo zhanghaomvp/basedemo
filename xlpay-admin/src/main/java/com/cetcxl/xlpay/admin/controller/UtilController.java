@@ -28,7 +28,6 @@ import javax.validation.constraints.Pattern;
 public class UtilController extends BaseController {
     @Autowired
     private VerifyCodeService verifyCodeService;
-
     @Autowired
     private AttachmentService attachmentService;
     @Autowired
@@ -55,7 +54,7 @@ public class UtilController extends BaseController {
     public ResBody<AttachmentVO> upload(
             @RequestParam("file") MultipartFile file
     ) {
-        AttachmentVO attachmentVO = AttachmentVO.of(xstoreService.uploadFile(file), AttachmentVO.class);
+        AttachmentVO attachmentVO = AttachmentVO.of(attachmentService.addXstoreFile(file), AttachmentVO.class);
         return ResBody.success(attachmentVO);
     }
 

@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -27,10 +26,6 @@ import static com.cetcxl.xlpay.common.constants.CommonResultCode.*;
 @Order(1)
 @Slf4j
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    @Autowired
-    SessionRegistry sessionRegistry;
-
     @Autowired
     private ObjectMapper mapper;
 
@@ -92,7 +87,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .sessionManagement()
                 .maximumSessions(1)
-                .sessionRegistry(sessionRegistry)
                 .expiredSessionStrategy(
                         event -> {
                             log.error("sessionAuthenticationFailureHandler error : {} ", event.getSessionInformation());

@@ -8,6 +8,7 @@ import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.payuser.constants.ResultCode;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
+import com.cetcxl.xlpay.payuser.entity.vo.WalletCashVO;
 import com.cetcxl.xlpay.payuser.entity.vo.WalletCreditVO;
 import com.cetcxl.xlpay.payuser.service.*;
 import com.cetcxl.xlpay.payuser.util.ContextUtil;
@@ -59,7 +60,7 @@ public class PayController extends BaseController {
 
     @GetMapping("/pay-user/company/{socialCreditCode}/wallet/cash")
     @ApiOperation("个人余额查询")
-    public ResBody<String> getCashBalance(@PathVariable String socialCreditCode) {
+    public ResBody<WalletCashVO> getCashBalance(@PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
 
         Company company = companyService.getOne(
@@ -80,8 +81,7 @@ public class PayController extends BaseController {
                 Wrappers.lambdaQuery(WalletCash.class)
                         .eq(WalletCash::getCompanyMember, companyMember.getId())
         );
-
-        return ResBody.success(walletCash.getCashBalance().toString());
+        return ResBody.success(WalletCashVO.of(walletCash, WalletCashVO.class));
     }
 
     @GetMapping("/pay-user/company/{socialCreditCode}/wallet/credit")

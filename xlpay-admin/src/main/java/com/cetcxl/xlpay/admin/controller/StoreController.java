@@ -289,7 +289,7 @@ public class StoreController extends BaseController {
     public void generateQrCode(HttpServletResponse response, @PathVariable Integer storeId) throws Exception {
         resolvePicResponseHeader(response, "qr-code");
         QrCodeUtil.generate(
-                storeService.getQrCodeContent(storeId),
+                storeService.getQrCodeContent(storeId,storeService.getById(storeId).getName()),
                 300,
                 300,
                 StringUtils.EMPTY,

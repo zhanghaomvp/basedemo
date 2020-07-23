@@ -1,5 +1,11 @@
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 129600
+      cookie:
+        max-age: 129600
+        name: xlpay-payuser
 
 spring:
   redis:
@@ -9,6 +15,14 @@ spring:
     username: root
     password: passsword
     initialization-mode: never
+  session:
+    redis:
+      namespace: xlpay.payuser.session
+    store-type: redis
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
 
 mybatis-plus:
   type-enums-package: com.cetcxl.xlpay.common.entity.model,com.cetcxl.xlpay.payuser.entity.model
@@ -32,3 +46,16 @@ http:
   sign-api:
     private-key: 123
     public-key-map: "{test: 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtotQMHikmnsVotokVvnyZMtI6A3lgC1rnzW+V6SWnNUMQ1MZe8RzuoNhEN4q75jN26K2S0QC5LgdPbTMZj36c3s7Yx/DsL1IewlzjszUfcF7frR+X7dDtAP+el3DHfGOHcDQoV4XcHPH7jVnrwb1/Q6sO6BCuwaEKxn9xILCcBQIDAQAB'}"
+
+chain-code:
+  chainCodeSwitch: false
+  readAddress: luna #智能合约chaincode
+  chainCodeIp: http://172.16.5.27/cc_manager
+  chainCodeName: creditpaychaincode
+  appKey: d2919d48f76e4a94a7840b6fa1226117
+  appSecret: 84846d0bf9dd4460a4fa875e879c2a3d
+  chainCodeVersion:
+  channelName:
+  imgAddress:
+    localpath: /creditpay_images
+    imagePath: /creditpay_images

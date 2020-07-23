@@ -1,11 +1,11 @@
 server:
-  port: 8082
+  port: 8083
   servlet:
-    context-path: /xlpay-pay-user
     session:
       timeout: 129600
       cookie:
         max-age: 129600
+        name: xlpay-payuser
 
 spring:
   redis:
@@ -15,11 +15,18 @@ spring:
     username: root
     password: admin
     initialization-mode: never
+  session:
+    redis:
+      namespace: xlpay.payuser.session
+    store-type: redis
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
 
 mybatis-plus:
   type-enums-package: com.cetcxl.xlpay.common.entity.model,com.cetcxl.xlpay.payuser.entity.model
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  ## log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 sms:
   sms-bao:

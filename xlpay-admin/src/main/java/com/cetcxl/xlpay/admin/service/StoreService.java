@@ -19,9 +19,9 @@ import java.util.Base64;
 public class StoreService extends ServiceImpl<StoreMapper, Store> {
     private static final String PREFIX_QR_CODE = "xlpay.store.";
 
-    public String getQrCodeContent(Integer storeId) {
-        return Base64.getEncoder().encodeToString(
-                (PREFIX_QR_CODE + storeId).getBytes()
+    public String getQrCodeContent(Integer storeId,String storeName) {
+        return PREFIX_QR_CODE+Base64.getEncoder().encodeToString(
+                (storeId+"+"+storeName).getBytes()
         );
     }
 }

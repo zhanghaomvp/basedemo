@@ -59,6 +59,10 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
             throw new BaseRuntimeException(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
         }
 
+        if (!walletCredit.getCompanyMember().equals(deal.getCompanyMember())) {
+            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+        }
+
         WalletCreditFlow creditFlow = WalletCreditFlow.builder()
                 .walletCredit(walletCredit.getId())
                 .deal(deal.getId())
@@ -101,7 +105,7 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                         .tradeNo(deal.getId().toString())
                         .companySocialCreditCode(param.getCompany().getSocialCreditCode())
                         .identityCard(param.getCompanyMember().getIcNo())
-                        .amount(creditFlow.getAmount().toString())
+                        .amount(creditFlow.getQuota().toString())
                         .dealType(LIMIT_CHANGE)
                         .employeeWalletNo(walletCredit.getId().toString())
                         .payType(PayType.CREDIT)
@@ -110,7 +114,7 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                         .personalWalletNo(walletCredit.getId().toString())
                         .personalCreditBalance(creditFlow.getBalance().toString())
                         .personalCreditLimit(creditFlow.getQuota().toString())
-                        .amount(creditFlow.getAmount().toString())
+                        .amount(creditFlow.getQuota().toString())
                         .dealType(LIMIT_CHANGE)
                         .payType(PayType.CREDIT)
                         .tradeNo(deal.getId().toString())

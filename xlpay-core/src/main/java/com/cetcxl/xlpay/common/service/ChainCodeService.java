@@ -16,7 +16,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -35,14 +34,12 @@ import static com.cetcxl.xlpay.common.constants.CommonResultCode.*;
  **/
 @Slf4j
 @Component
-public class ChainCodeService implements InitializingBean {
+public class ChainCodeService {
 
     @Autowired
     private ChainCodeConfiguration configuration;
     @Autowired
     private RestTemplate restTemplate;
-
-    private String CHAIN_IP;
 
     /**
      * 交易记录上链
@@ -76,6 +73,7 @@ public class ChainCodeService implements InitializingBean {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
+            log.error("saveDealingRecord error :" + result.getMsg());
             throw new BaseRuntimeException(CHAIN_CODE_SAVE_DEALING_RECORD_ERROR);
         }
     }
@@ -100,6 +98,7 @@ public class ChainCodeService implements InitializingBean {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
+            log.error("saveCheckSlip error :" + result.getMsg());
             throw new BaseRuntimeException(CHAIN_CODE_SAVE_CHECK_SLIP_ERROR);
         }
     }
@@ -123,7 +122,8 @@ public class ChainCodeService implements InitializingBean {
     }
 
     private Result sendRequest(JSONObject jsonObject) {
-        if (StringUtils.isBlank(CHAIN_IP)) {
+        String chainIp = configuration.getChainCodeIp() + ChainCodeConstant.FABRIC_INVOKE;
+        if (StringUtils.isBlank(chainIp)) {
             throw new BaseRuntimeException(CHAIN_CODE_LACK_CHAIN_CODE_IP);
         }
 
@@ -135,17 +135,12 @@ public class ChainCodeService implements InitializingBean {
         headers.setAccept(Lists.newArrayList(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(jsonObject.toJSONString(), headers);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(CHAIN_IP, httpEntity, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(chainIp, httpEntity, String.class);
 
         if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
             throw new BaseRuntimeException(CHAIN_CODE_REQUEST_ERROR);
         }
 
         return JSON.parseObject(responseEntity.getBody(), Result.class);
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        CHAIN_IP = configuration.getChainCodeIp() + ChainCodeConstant.FABRIC_INVOKE;
     }
 }

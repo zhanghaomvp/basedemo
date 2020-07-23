@@ -27,10 +27,10 @@
         c.id = #{companyId}
         AND cm.company = c.id
         <if test="department != null">
-            AND cm.department = #{department}
+            AND cm.department like concat('%',#{department},'%')
         </if>
         <if test="name != null">
-            AND cm.`name` = #{name}
+            AND cm.`name` like concat('%',#{name},'%')
         </if>
         ) t
         WHERE

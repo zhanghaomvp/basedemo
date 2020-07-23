@@ -178,6 +178,8 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
 
         checks.setStatus(status);
         checks.appendInfo(info);
+        // updateById updated时间不会自动更新 注意显示更新
+        checks.setUpdated(LocalDateTime.now());
         updateById(checks);
 
         checksRecordService.save(

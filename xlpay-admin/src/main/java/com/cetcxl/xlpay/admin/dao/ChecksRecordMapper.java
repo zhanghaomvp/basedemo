@@ -3,6 +3,7 @@ package com.cetcxl.xlpay.admin.dao;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cetcxl.xlpay.admin.entity.model.Checks;
 import com.cetcxl.xlpay.admin.entity.model.ChecksRecord;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,8 @@ import org.apache.ibatis.annotations.Select;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.cetcxl.xlpay.common.constants.PatternConstants.DATE_TIME;
 
 /**
  * <p>
@@ -29,6 +32,7 @@ public interface ChecksRecordMapper extends BaseMapper<ChecksRecord> {
         private Checks.Status action;
         private Integer operator;
         private String info;
+        @JsonFormat(pattern = DATE_TIME)
         private LocalDateTime created;
     }
 

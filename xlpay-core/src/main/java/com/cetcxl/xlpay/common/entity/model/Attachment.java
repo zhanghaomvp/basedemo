@@ -11,9 +11,8 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
-/**
+/**b
  * <p>
  *
  * </p>
@@ -62,22 +61,36 @@ public class Attachment implements Serializable {
     }
 
     public enum FileType implements IEnum<Integer> {
-        PICTURE(0, MediaType.ANY_IMAGE_TYPE, new String[]{"jpg", "png"}),
-        EXCEL(1, MediaType.MICROSOFT_EXCEL, new String[]{"xlsx"}),
-        WORD(2, MediaType.MICROSOFT_WORD, new String[]{}),
+        PICTURE(0, MediaType.ANY_IMAGE_TYPE, new String[]{"jpg", "jpeg", "png"}, 1024 * 500),
+        EXCEL(1, MediaType.MICROSOFT_EXCEL, new String[]{"xlsx"}, -1),
+        WORD(2, MediaType.MICROSOFT_WORD, new String[]{}, -1),
+        Other(99, MediaType.OCTET_STREAM, new String[]{}, -1),
         ;
+
+        static int DEFAULT_MAX_SIZE = 1024 * 1024 * 20;
+
         private Integer value;
         private MediaType mediaType;
         private String[] suffixs;
+        //单位 字节
+        private Integer maxSize;
 
-        FileType(Integer value, MediaType mediaType, String[] suffixs) {
+        FileType(Integer value, MediaType mediaType, String[] suffixs, Integer maxSize) {
             this.value = value;
             this.mediaType = mediaType;
             this.suffixs = suffixs;
+            this.maxSize = maxSize;
         }
 
         public MediaType getMediaType() {
             return mediaType;
+        }
+
+        public Integer getMaxSize() {
+            if (this.maxSize < 0) {
+                return DEFAULT_MAX_SIZE;
+            }
+            return this.maxSize;
         }
 
         @Override
@@ -85,16 +98,16 @@ public class Attachment implements Serializable {
             return this.value;
         }
 
-        public static Optional<FileType> of(String suffix) {
+        public static FileType of(String suffix) {
             for (FileType fileType : values()) {
                 String[] suffixs = fileType.suffixs;
                 for (String s : suffixs) {
                     if (s.contains(suffix)) {
-                        return Optional.of(fileType);
+                        return fileType;
                     }
                 }
             }
-            return Optional.empty();
+            return Other;
         }
     }
 

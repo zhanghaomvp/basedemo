@@ -11,6 +11,7 @@ import com.cetcxl.xlpay.common.chaincode.entity.Order;
 import com.cetcxl.xlpay.common.chaincode.entity.PersonalWallet;
 import com.cetcxl.xlpay.common.chaincode.enums.DealType;
 import com.cetcxl.xlpay.common.chaincode.enums.PayType;
+import com.cetcxl.xlpay.common.constants.CommonResultCode;
 import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.service.ChainCodeService;
@@ -56,6 +57,9 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
         if (Objects.isNull(walletCash)) {
             throw new BaseRuntimeException(COMPANY_MEMBER_WALLET_NOT_EXIST);
         }
+        if (!walletCash.getCompanyMember().equals(deal.getCompanyMember())) {
+            throw new BaseRuntimeException(CommonResultCode.SYSTEM_LOGIC_ERROR);
+        }
 
         WalletCashFlow cashFlow = WalletCashFlow.builder()
                 .walletCash(walletCash.getId())
@@ -66,16 +70,15 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                 .build();
 
         WalletCashFlow.CashFlowType flowType = null;
-        DealType dealType = null;
-
+        String orderAmount = null;
         switch (deal.getType()) {
             case ADMIN_RECHARGE:
                 flowType = WalletCashFlow.CashFlowType.PLUS;
-                dealType = DealType.RECHARGE;
+                orderAmount = cashFlow.getAmount().toString();
                 break;
             case ADMIN_REDUCE:
                 flowType = WalletCashFlow.CashFlowType.MINUS;
-                dealType = DealType.CONSUME;
+                orderAmount = cashFlow.getAmount().negate().toString();
                 break;
             default:
         }
@@ -96,16 +99,16 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                         .tradeNo(deal.getId().toString())
                         .companySocialCreditCode(param.getCompany().getSocialCreditCode())
                         .identityCard(param.getCompanyMember().getIcNo())
-                        .amount(cashFlow.getAmount().toString())
-                        .dealType(dealType)
+                        .amount(orderAmount)
+                        .dealType(DealType.RECHARGE)
                         .employeeWalletNo(walletCash.getId().toString())
                         .payType(PayType.CASH)
                         .build(),
                 PersonalWallet.builder()
                         .personalWalletNo(walletCash.getId().toString())
                         .personalCashBalance(cashFlow.getBalance().toString())
-                        .amount(cashFlow.getAmount().toString())
-                        .dealType(dealType)
+                        .amount(orderAmount)
+                        .dealType(DealType.RECHARGE)
                         .payType(PayType.CASH)
                         .tradeNo(deal.getId().toString())
                         .build(),

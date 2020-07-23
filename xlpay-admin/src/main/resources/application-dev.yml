@@ -1,19 +1,28 @@
 server:
   port: 8080
-
+  servlet:
+    session:
+      cookie:
+        name: xlpay-admin
 spring:
   redis:
     host: 127.0.0.1
   datasource:
-    url: jdbc:mysql://172.16.0.99:3306/xinyufu?serverTimezone=Asia/Shanghai&autoReconnect=true&failOverReadOnly=false&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/xinyufu?serverTimezone=Asia/Shanghai&autoReconnect=true&failOverReadOnly=false&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: admin
     initialization-mode: never
+  session:
+    redis:
+      namespace: xlpay.admin.session
+    store-type: redis
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
 
 mybatis-plus:
   type-enums-package: com.cetcxl.xlpay.common.entity.model,com.cetcxl.xlpay.admin.entity.model
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 sms:
   sms-bao:
