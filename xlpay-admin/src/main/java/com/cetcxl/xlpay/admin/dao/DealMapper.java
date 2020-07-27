@@ -90,6 +90,7 @@ public interface DealMapper extends BaseMapper<Deal> {
             if (Objects.nonNull(req.getEnd())) {
                 WHERE("d.created <= #{req.end}");
             }
+            ORDER_BY("d.id desc");
         }}.toString();
     }
 

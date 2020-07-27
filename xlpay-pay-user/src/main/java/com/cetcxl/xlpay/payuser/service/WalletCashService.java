@@ -81,7 +81,11 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                         .payType(PayType.CASH)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(walletCash.getId().toString())
+                        .personalWalletNo(
+                                param.getCompany().getSocialCreditCode() +
+                                        "." +
+                                        param.getCompanyMember().getIcNo()
+                        )
                         .personalCashBalance(cashFlow.getBalance().toString())
                         .amount(cashFlow.getAmount().toString())
                         .dealType(DealType.CONSUME)

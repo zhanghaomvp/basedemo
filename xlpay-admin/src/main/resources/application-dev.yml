@@ -29,7 +29,7 @@ sms:
     name: guoyubin
     password: guoyubin
     url: http://api.smsbao.com/sms
-    sign: 【年轮小程序】
+    sign: 【信誉付】
 
 xstor:
   appId: 190710000110001
@@ -48,8 +48,8 @@ chain-code:
   readAddress: luna #智能合约chaincode
   chainCodeIp: http://172.16.5.27/cc_manager
   chainCodeName: creditpaychaincode
-  appKey: d2919d48f76e4a94a7840b6fa1226117
-  appSecret: 84846d0bf9dd4460a4fa875e879c2a3d
+  appKey: a4423c0f2242429eb672e79bd19b43b2
+  appSecret: 3db845b089d741c3a7b9529b4ab2cfed
   chainCodeVersion:
   channelName:
   imgAddress:

@@ -68,6 +68,7 @@ public class ChainCodeService {
 
         json.put("args", args);
         json.put("fcn", ChainCodeConstant.SAVE_DEALING_RECORD_FUNC);
+        json.put("func", ChainCodeConstant.FABRIC_INVOKE);
 
         log.info("交易记录上链请求数据[{}]", json.toString());
         Result result = sendRequest(json);
@@ -93,6 +94,7 @@ public class ChainCodeService {
         JSONObject json = initialRequestJson();
         json.put("args", new String[]{JSONObject.toJSONString(checkSlip)});
         json.put("fcn", ChainCodeConstant.SAVE_CHECK_SLIP_FUNC);
+        json.put("func", ChainCodeConstant.FABRIC_INVOKE);
 
         log.info("结算记录上链请求数据[{}]", json.toString());
         Result result = sendRequest(json);
@@ -102,6 +104,78 @@ public class ChainCodeService {
             throw new BaseRuntimeException(CHAIN_CODE_SAVE_CHECK_SLIP_ERROR);
         }
     }
+
+    /**
+     * 根据交易单号获取链上订单信息
+     * @param tradeNo 交易单号
+     */
+    public void queryOrderInfo(String tradeNo) {
+        if (!configuration.getChainCodeSwitch()) {
+            return;
+        }
+
+        JSONObject json = initialRequestJson();
+        json.put("args", new String[]{tradeNo});
+        json.put("fcn", ChainCodeConstant.QUERY_DEALING_RECORD_FUNC);
+        json.put("func", ChainCodeConstant.FABRIC_QUERY);
+
+        log.info("根据交易单号:[{}],获取链上订单信息", tradeNo);
+        Result result = sendRequest(json);
+
+        if (Objects.isNull(result) || result.getCode() != 0) {
+            log.error("queryOrderInfo error :" + result.getMsg());
+            throw new BaseRuntimeException(CHAIN_CODE_QUERY_DEALING_RECORD_ERROR);
+        }
+    }
+
+    /**
+     * 根据个人钱包号获取链上钱包信息
+     * @param personalWalletNo 个人钱包号
+     */
+    public PersonalWallet queryPersonalWalletInfo(String personalWalletNo) {
+        if (!configuration.getChainCodeSwitch()) {
+            return null;
+        }
+
+        JSONObject json = initialRequestJson();
+        json.put("args", new String[]{personalWalletNo});
+        json.put("fcn", ChainCodeConstant.QUERY_PERSONAL_WALLET_FUNC);
+        json.put("func", ChainCodeConstant.FABRIC_QUERY);
+
+        log.info("根据个人钱包号:[{}],获取链上钱包信息", personalWalletNo);
+        Result result = sendRequest(json);
+
+        if (Objects.isNull(result) || result.getCode() != 0) {
+            log.error("queryPersonalWalletInfo error :" + result.getMsg());
+            throw new BaseRuntimeException(CHAIN_CODE_QUERY_PERSONAL_WALLET_ERROR);
+        }
+        return JSONObject.parseObject(result.data, PersonalWallet.class);
+    }
+
+    /**
+     * 根据商家钱包号获取链上钱包信息
+     * @param businessWalletNo 交易单号
+     */
+    public BusinessWallet queryBusinessWalletInfo(String businessWalletNo) {
+        if (!configuration.getChainCodeSwitch()) {
+            return null;
+        }
+
+        JSONObject json = initialRequestJson();
+        json.put("args", new String[]{businessWalletNo});
+        json.put("fcn", ChainCodeConstant.QUERY_BUSINESS_WALLET_FUNC);
+        json.put("func", ChainCodeConstant.FABRIC_QUERY);
+
+        log.info("根据商家钱包号:[{}],获取链上钱包信息", businessWalletNo);
+        Result result = sendRequest(json);
+
+        if (Objects.isNull(result) || result.getCode() != 0) {
+            log.error("queryBusinessWalletInfo error :" + result.getMsg());
+            throw new BaseRuntimeException(CHAIN_CODE_QUERY_BUSINESS_WALLET_ERROR);
+        }
+        return JSONObject.parseObject(result.data, BusinessWallet.class);
+    }
+
 
     private JSONObject initialRequestJson() {
         JSONObject json = new JSONObject();
@@ -122,7 +196,7 @@ public class ChainCodeService {
     }
 
     private Result sendRequest(JSONObject jsonObject) {
-        String chainIp = configuration.getChainCodeIp() + ChainCodeConstant.FABRIC_INVOKE;
+        String chainIp = configuration.getChainCodeIp() + jsonObject.get("func");
         if (StringUtils.isBlank(chainIp)) {
             throw new BaseRuntimeException(CHAIN_CODE_LACK_CHAIN_CODE_IP);
         }

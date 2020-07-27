@@ -43,10 +43,14 @@ public class ChainCodeConstant {
     public static final String APPLICATION_READADDRESS_LUNA = "luna";
 
     /**
-     * 入参
+     * invoke
      */
     public static final String FABRIC_INVOKE = "/fabric/invoke";
 
+    /**
+     * query
+     */
+    public static final String FABRIC_QUERY = "/fabric/query";
 
     /**
      * JAVA SDK平台
@@ -62,5 +66,20 @@ public class ChainCodeConstant {
      * 保存结算记录函数名
      */
     public static final String SAVE_CHECK_SLIP_FUNC = "saveCheckSlipInfo";
+
+    /**
+     * 查询交易单信息函数名
+     */
+    public static final String QUERY_DEALING_RECORD_FUNC = "queryDealingRecord";
+
+    /**
+     * 查询个人钱包信息函数名
+     */
+    public static final String QUERY_PERSONAL_WALLET_FUNC = "queryPersonalWallet";
+
+    /**
+     * 查询商家钱包信息函数名
+     */
+    public static final String QUERY_BUSINESS_WALLET_FUNC = "queryBusinessWallet";
 
 }

@@ -14,7 +14,7 @@
     <groupId>com.cetcxl</groupId>
     <artifactId>xlpay</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
 
     <modules>
         <module>xlpay-core</module>
@@ -84,6 +84,14 @@
             <id>cetcxl</id>
             <name>Nexus Snapshot Repository.</name>
             <url>http://172.16.101.214:8081/repository/maven-hosted</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
         </repository>
     </repositories>
 

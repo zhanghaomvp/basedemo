@@ -83,7 +83,11 @@ public class WalletCreditService extends ServiceImpl<WalletCreditMapper, WalletC
                         .payType(PayType.CREDIT)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(walletCredit.getId().toString())
+                        .personalWalletNo(
+                                param.getCompany().getSocialCreditCode() +
+                                        "." +
+                                        param.getCompanyMember().getIcNo()
+                        )
                         .personalCreditBalance(creditFlow.getBalance().toString())
                         .personalCreditLimit(creditFlow.getQuota().toString())
                         .amount(creditFlow.getAmount().toString())

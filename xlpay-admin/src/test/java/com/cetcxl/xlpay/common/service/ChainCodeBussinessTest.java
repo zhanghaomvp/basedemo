@@ -11,15 +11,13 @@ import com.cetcxl.xlpay.common.chaincode.enums.PayType;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
 
 import static com.cetcxl.xlpay.common.chaincode.enums.DealType.LIMIT_CHANGE;
+import static com.cetcxl.xlpay.common.constants.CommonResultCode.CHAIN_CODE_SAVE_CHECK_SLIP_ERROR;
 import static com.cetcxl.xlpay.common.constants.CommonResultCode.CHAIN_CODE_SAVE_DEALING_RECORD_ERROR;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -29,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @date: 2020/7/13 8:57
  */
 @Slf4j
+//@Disabled
 public class ChainCodeBussinessTest extends BaseTest {
     private final static String PREFIX = "ChainCodeTest.";
     @Autowired
@@ -39,16 +38,14 @@ public class ChainCodeBussinessTest extends BaseTest {
     private String companySocialCreditCode;
     private String businessSocialCreditCode;
     private String identityCard;
-    private String employeeWalletCashNo;
-    private String employeeWalletCreditNo;
+    private String employeeWalletNo;
 
     {
         String s = PREFIX + UUID.randomUUID().toString();
-        companySocialCreditCode = s;
-        businessSocialCreditCode = s;
+        companySocialCreditCode = s + ".c";
+        businessSocialCreditCode = s + ".b";
         identityCard = s;
-        employeeWalletCashNo = s;
-        employeeWalletCreditNo = s;
+        employeeWalletNo = s + ".w";
     }
 
     @Override
@@ -66,7 +63,14 @@ public class ChainCodeBussinessTest extends BaseTest {
     }
 
     @Test
-    public void cash_main_bussiness() throws Exception {
+    @Disabled
+    public void queryPersonalWallet() {
+        PersonalWallet personalWallet = chainCodeService.queryPersonalWalletInfo(employeeWalletNo);
+        log.info("result data:[{}]", personalWallet);
+    }
+
+    @Test
+    public void cash_main_bussiness() {
         //充值
         String rechargeTradeNo = UUID.randomUUID().toString();
         String rechargeAmount = "100.5";
@@ -77,11 +81,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .identityCard(identityCard)
                         .amount(rechargeAmount)
                         .dealType(DealType.RECHARGE)
-                        .employeeWalletNo(employeeWalletCashNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CASH)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCashNo)
+                        .personalWalletNo(employeeWalletNo)
                         .personalCashBalance("100.5")
                         .amount(rechargeAmount)
                         .dealType(DealType.RECHARGE)
@@ -101,11 +105,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .identityCard(identityCard)
                         .amount(reduceAmount)
                         .dealType(DealType.RECHARGE)
-                        .employeeWalletNo(employeeWalletCashNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CASH)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCashNo)
+                        .personalWalletNo(employeeWalletNo)
                         .personalCashBalance("100")
                         .amount(reduceAmount)
                         .dealType(DealType.RECHARGE)
@@ -125,11 +129,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .identityCard(identityCard)
                         .amount(payAmount)
                         .dealType(DealType.CONSUME)
-                        .employeeWalletNo(employeeWalletCashNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CASH)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCashNo)
+                        .personalWalletNo(employeeWalletNo)
                         .personalCashBalance("50")
                         .amount(payAmount)
                         .dealType(DealType.CONSUME)
@@ -155,11 +159,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                             .identityCard(identityCard)
                             .amount(payAmount_)
                             .dealType(DealType.CONSUME)
-                            .employeeWalletNo(employeeWalletCashNo)
+                            .employeeWalletNo(employeeWalletNo)
                             .payType(PayType.CASH)
                             .build(),
                     PersonalWallet.builder()
-                            .personalWalletNo(employeeWalletCashNo)
+                            .personalWalletNo(employeeWalletNo)
                             .personalCashBalance("-50")
                             .amount(payAmount_)
                             .dealType(DealType.CONSUME)
@@ -180,7 +184,6 @@ public class ChainCodeBussinessTest extends BaseTest {
             );
         }
 
-
         //结算
         String checkBatch = UUID.randomUUID().toString();
         chainCodeService.saveCheckSlip(
@@ -197,7 +200,7 @@ public class ChainCodeBussinessTest extends BaseTest {
     }
 
     @Test
-    public void credit_main_bussiness() throws Exception {
+    public void credit_main_bussiness() {
 
         //设置初始额度
         String limitTradeNo = UUID.randomUUID().toString();
@@ -209,11 +212,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .identityCard(identityCard)
                         .amount(limitAmount)
                         .dealType(LIMIT_CHANGE)
-                        .employeeWalletNo(employeeWalletCreditNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CREDIT)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCreditNo)
+                        .personalWalletNo(employeeWalletNo)
                         .personalCreditBalance("100.5")
                         .personalCreditLimit(limitAmount)
                         .amount(limitAmount)
@@ -224,33 +227,63 @@ public class ChainCodeBussinessTest extends BaseTest {
                 null
         );
 
-        //额度消费
-        String payTradeNo = UUID.randomUUID().toString();
-        String payAmount = "50.5";
+        //额度消费一
+        String payTradeNo1 = UUID.randomUUID().toString();
+        String payAmount1 = "10.5";
         chainCodeService.saveDealingRecord(
                 Order.builder()
-                        .tradeNo(payTradeNo)
+                        .tradeNo(payTradeNo1)
                         .companySocialCreditCode(companySocialCreditCode)
                         .identityCard(identityCard)
-                        .amount(payAmount)
+                        .amount(payAmount1)
                         .dealType(DealType.CONSUME)
-                        .employeeWalletNo(employeeWalletCreditNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CREDIT)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCreditNo)
-                        .personalCreditBalance("50")
+                        .personalWalletNo(employeeWalletNo)
+                        .personalCreditBalance("90")
                         .personalCreditLimit("100.5")
-                        .amount(payAmount)
+                        .amount(payAmount1)
                         .dealType(DealType.CONSUME)
                         .payType(PayType.CREDIT)
-                        .tradeNo(payTradeNo)
+                        .tradeNo(payTradeNo1)
                         .build(),
                 BusinessWallet.builder()
                         .businessSocialCreditCode(businessSocialCreditCode)
-                        .amount(payAmount)
+                        .amount(payAmount1)
                         .payType(PayType.CREDIT)
-                        .tradeNo(payTradeNo)
+                        .tradeNo(payTradeNo1)
+                        .build()
+        );
+
+        //额度消费二
+        String payTradeNo2 = UUID.randomUUID().toString();
+        String payAmount2 = "40";
+        chainCodeService.saveDealingRecord(
+                Order.builder()
+                        .tradeNo(payTradeNo2)
+                        .companySocialCreditCode(companySocialCreditCode)
+                        .identityCard(identityCard)
+                        .amount(payAmount2)
+                        .dealType(DealType.CONSUME)
+                        .employeeWalletNo(employeeWalletNo)
+                        .payType(PayType.CREDIT)
+                        .build(),
+                PersonalWallet.builder()
+                        .personalWalletNo(employeeWalletNo)
+                        .personalCreditBalance("50")
+                        .personalCreditLimit("100.5")
+                        .amount(payAmount2)
+                        .dealType(DealType.CONSUME)
+                        .payType(PayType.CREDIT)
+                        .tradeNo(payTradeNo2)
+                        .build(),
+                BusinessWallet.builder()
+                        .businessSocialCreditCode(businessSocialCreditCode)
+                        .amount(payAmount2)
+                        .payType(PayType.CREDIT)
+                        .tradeNo(payTradeNo2)
                         .build()
         );
 
@@ -264,11 +297,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .identityCard(identityCard)
                         .amount(limitAmount_)
                         .dealType(LIMIT_CHANGE)
-                        .employeeWalletNo(employeeWalletCreditNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CREDIT)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCreditNo)
+                        .personalWalletNo(employeeWalletNo)
                         .personalCreditBalance("30")
                         .personalCreditLimit(limitAmount_)
                         .amount(limitAmount_)
@@ -290,11 +323,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                             .identityCard(identityCard)
                             .amount(payAmount_)
                             .dealType(DealType.CONSUME)
-                            .employeeWalletNo(employeeWalletCreditNo)
+                            .employeeWalletNo(employeeWalletNo)
                             .payType(PayType.CREDIT)
                             .build(),
                     PersonalWallet.builder()
-                            .personalWalletNo(employeeWalletCreditNo)
+                            .personalWalletNo(employeeWalletNo)
                             .personalCreditBalance("0")
                             .personalCreditLimit("80.5")
                             .amount(payAmount_)
@@ -324,12 +357,32 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .checkNo(checkBatch)
                         .companySocialCreditCode(companySocialCreditCode)
                         .businessSocialCreditCode(businessSocialCreditCode)
-                        .totalDeal("1")
+                        .totalDeal("2")
                         .totalAmount("50")
                         .checkType(PayType.CREDIT)
-                        .tradeNos(Lists.newArrayList(payTradeNo))
+                        .tradeNos(Lists.newArrayList(payTradeNo1, payTradeNo2))
                         .build()
         );
+
+        // 重复结算验证
+        try {
+            chainCodeService.saveCheckSlip(
+                    CheckSlip.builder()
+                            .checkNo(checkBatch)
+                            .companySocialCreditCode(companySocialCreditCode)
+                            .businessSocialCreditCode(businessSocialCreditCode)
+                            .totalDeal("2")
+                            .totalAmount("50")
+                            .checkType(PayType.CREDIT)
+                            .tradeNos(Lists.newArrayList(payTradeNo1, payTradeNo2))
+                            .build()
+            );
+            fail();
+        } catch (Exception e) {
+            Assertions.assertTrue(
+                    ((BaseRuntimeException) e).getResultCode() == CHAIN_CODE_SAVE_CHECK_SLIP_ERROR
+            );
+        }
 
         //额度恢复支付验证
         String payTradeNo__ = UUID.randomUUID().toString();
@@ -341,11 +394,11 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .identityCard(identityCard)
                         .amount(payAmount__)
                         .dealType(DealType.CONSUME)
-                        .employeeWalletNo(employeeWalletCreditNo)
+                        .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CREDIT)
                         .build(),
                 PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletCreditNo)
+                        .personalWalletNo(employeeWalletNo)
                         .personalCreditBalance("0")
                         .personalCreditLimit("80.5")
                         .amount(payAmount__)

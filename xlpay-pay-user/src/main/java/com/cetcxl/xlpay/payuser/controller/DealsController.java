@@ -64,7 +64,7 @@ public class DealsController extends BaseController {
     }
 
     @GetMapping("/pay-user/deals")
-    @ApiOperation("企业账单查询")
+    @ApiOperation("账单查询")
     public ResBody<IPage<DealMapper.DealDTO>> listDeal(@Validated ListDealReq req) {
 
         req.setEnd(req.getBegin().plusMonths(1));
@@ -79,7 +79,7 @@ public class DealsController extends BaseController {
     }
 
     @GetMapping("/pay-user/deals/{dealId}")
-    @ApiOperation("企业账单详情查询")
+    @ApiOperation("详情查询")
     public ResBody<DealVO> deal(@PathVariable Integer dealId) {
         Deal deal = dealService.getById(dealId);
         DealVO dealVO = DealVO.of(deal, DealVO.class);
@@ -92,7 +92,7 @@ public class DealsController extends BaseController {
     }
 
     @GetMapping("/pay-user/deals/amounts")
-    @ApiOperation("企业账单统筹数据查询")
+    @ApiOperation("账单统筹数据查询")
     public ResBody<DealMapper.DealAmountsDTO> listDealAmount(@Validated ListDealReq req) {
 
         req.setEnd(req.getBegin().plusMonths(1));

@@ -13,15 +13,19 @@ import (
 	"math/big"
 	"strconv"
 	"sync"
+	"time"
 )
 
 const (
 	CREDIT = "CREDIT"
 	CASH   = "CASH"
 
-	RECHARGE     = "RECHARGE"
-	CONSUME      = "CONSUME"
-	LIMIT_CHANGE = "LIMIT_CHANGE"
+	RECHARGE       = "RECHARGE"
+	CONSUME        = "CONSUME"
+	RECOVER_CREDIT = "RECOVER_CREDIT"
+	LIMIT_CHANGE   = "LIMIT_CHANGE"
+
+	CHECKED = "CHECKED"
 )
 
 type SimpleChainCode struct {
@@ -47,6 +51,8 @@ type Order struct {
 	DealType string `json:"dealType,omitempty"`
 	// 支付类型
 	PayType string `json:"payType,omitempty"`
+	// 订单状态
+	Status string `json:"status,omitempty"`
 	// 创建时间
 	Created string `json:"created,omitempty"`
 	// 公钥
@@ -99,6 +105,8 @@ type PersonalWallet struct {
 	PayType string `json:"payType,omitempty"`
 	// 交易单号
 	TradeNo string `json:"tradeNo,omitempty"`
+	// 结算单号
+	CheckNo string `json:"checkNo,omitempty"`
 	// 创建时间
 	Created string `json:"created,omitempty"`
 	// 公钥
@@ -188,6 +196,7 @@ func (t *SimpleChainCode) Invoke(stub shim.ChaincodeStubInterface) peer.Response
 		if err != nil {
 			fmt.Println(err)
 		} else {
+			fmt.Println("queryPersonalWallet result:" + string(response.Payload))
 			return response
 		}
 	case "queryBusinessWallet":
@@ -198,6 +207,7 @@ func (t *SimpleChainCode) Invoke(stub shim.ChaincodeStubInterface) peer.Response
 		if err != nil {
 			fmt.Println(err)
 		} else {
+			fmt.Println("queryBusinessWallet result:" + string(response.Payload))
 			return response
 		}
 	case "queryCheckSlip":
@@ -288,6 +298,8 @@ func (t *SimpleChainCode) saveOrderInfo(stub shim.ChaincodeStubInterface, jsonSt
 		return shim.Error("Order jsonString unmarshal err.")
 	}
 
+	fmt.Println("订单上链请求数据：" + jsonString)
+
 	// 交易单号
 	tradeNo := order.TradeNo
 	if tradeNo == "" {
@@ -312,6 +324,9 @@ func (t *SimpleChainCode) savePersonalWalletInfo(stub shim.ChaincodeStubInterfac
 	if err != nil {
 		return shim.Error("PersonalWallet jsonString unmarshal err.")
 	}
+
+	fmt.Println("个人钱包上链请求数据：" + jsonString)
+
 	// 钱包号
 	personalWalletNo := personalWallet.PersonalWalletNo
 	if personalWalletNo == "" {
@@ -329,12 +344,22 @@ func (t *SimpleChainCode) savePersonalWalletInfo(stub shim.ChaincodeStubInterfac
 		return shim.Error("verify false of personalWallet.")
 	}
 
+	creditLimitFloat, _ := strconv.ParseFloat(personalWallet.PersonalCreditLimit, 64)
+	creditLimit := decimal.NewFromFloat(creditLimitFloat)
+
+	creditBalanceFloat, _ := strconv.ParseFloat(personalWallet.PersonalCreditBalance, 64)
+	creditBalance := decimal.NewFromFloat(creditBalanceFloat)
+
+	cashBalanceFloat, _ := strconv.ParseFloat(personalWallet.PersonalCashBalance, 64)
+	cashBalance := decimal.NewFromFloat(cashBalanceFloat)
+
 	response := t.queryPersonalWallet(stub, personalWalletNo)
 	if response.Payload != nil {
 		var oldPersonalWallet PersonalWallet
 		erro := json.Unmarshal(response.Payload, &oldPersonalWallet)
 
 		if erro == nil {
+			fmt.Println("查询出的个人钱包数据：" + string(response.Payload))
 
 			amountFloat, _ := strconv.ParseFloat(personalWallet.Amount, 64)
 			amount := decimal.NewFromFloat(amountFloat)
@@ -348,64 +373,70 @@ func (t *SimpleChainCode) savePersonalWalletInfo(stub shim.ChaincodeStubInterfac
 			oldCashBalanceFloat, _ := strconv.ParseFloat(oldPersonalWallet.PersonalCashBalance, 64)
 			oldCashBalance := decimal.NewFromFloat(oldCashBalanceFloat)
 
-			creditLimitFloat, _ := strconv.ParseFloat(personalWallet.PersonalCreditLimit, 64)
-			creditLimit := decimal.NewFromFloat(creditLimitFloat)
-
-			creditBalanceFloat, _ := strconv.ParseFloat(personalWallet.PersonalCreditBalance, 64)
-			creditBalance := decimal.NewFromFloat(creditBalanceFloat)
-
-			cashBalanceFloat, _ := strconv.ParseFloat(personalWallet.PersonalCashBalance, 64)
-			cashBalance := decimal.NewFromFloat(cashBalanceFloat)
-
 			if personalWallet.DealType == RECHARGE {
 				if personalWallet.PayType == CREDIT {
 					if !oldCreditBalance.Add(amount).Equal(creditBalance) || oldCreditBalance.Add(amount).GreaterThan(creditLimit) {
+						fmt.Println("failed to credit recharge")
 						return shim.Error("failed to credit recharge")
 					}
+					personalWallet.PersonalCashBalance = oldCashBalance.String()
 				}
 
 				if personalWallet.PayType == CASH {
-					if !oldCashBalance.Add(amount).Equal(cashBalance) {
+					if !oldCashBalance.Add(amount).Equal(cashBalance) || oldCashBalance.Add(amount).LessThan(decimal.NewFromFloat(0)) {
+						fmt.Println("failed to cash recharge")
 						return shim.Error("failed to cash recharge")
 					}
+					personalWallet.PersonalCreditLimit = oldCreditLimit.String()
+					personalWallet.PersonalCreditBalance = oldCreditBalance.String()
 				}
 			}
 
 			if personalWallet.DealType == CONSUME {
 				if personalWallet.PayType == CREDIT {
-					if oldCreditBalance.GreaterThan(creditLimit) {
-						oldCreditBalance = creditLimit
-					}
-
-					if !oldCreditBalance.Sub(amount).Equal(creditBalance) || oldCreditBalance.Sub(amount).LessThan(decimal.NewFromFloat(0)) || amount.GreaterThan(creditLimit) {
+					if !oldCreditBalance.Sub(amount).Equal(creditBalance) || oldCreditBalance.Sub(amount).LessThan(decimal.NewFromFloat(0)) || !oldCreditLimit.Equal(creditLimit) || amount.GreaterThan(creditLimit) {
+						fmt.Println("failed to credit consume")
 						return shim.Error("failed to credit consume")
 					}
+					personalWallet.PersonalCashBalance = oldCashBalance.String()
 				}
 
 				if personalWallet.PayType == CASH {
 					if !oldCashBalance.Sub(amount).Equal(cashBalance) || oldCashBalance.Sub(amount).LessThan(decimal.NewFromFloat(0)) {
+						fmt.Println("failed to cash consume")
 						return shim.Error("failed to cash consume")
 					}
+					personalWallet.PersonalCreditLimit = oldCreditLimit.String()
+					personalWallet.PersonalCreditBalance = oldCreditBalance.String()
 				}
 			}
 
 			// 如果是信用额度调整操作，amount表示新的信用额度
 			if personalWallet.DealType == LIMIT_CHANGE {
 				if amount.GreaterThan(oldCreditLimit) {
-					personalWallet.PersonalCreditBalance = oldCreditBalance.Add(amount.Div(oldCreditLimit)).String()
+					personalWallet.PersonalCreditBalance = oldCreditBalance.Add(amount.Sub(oldCreditLimit)).String()
 					personalWallet.PersonalCreditLimit = amount.String()
 				} else {
-					if oldCreditBalance.Div(oldCreditLimit.Div(amount)).GreaterThanOrEqual(decimal.NewFromFloat(0)) {
-						personalWallet.PersonalCreditBalance = oldCreditBalance.Div(oldCreditLimit.Div(amount)).String()
-					} else {
-						personalWallet.PersonalCreditBalance = "0.00"
-					}
+					personalWallet.PersonalCreditBalance = oldCreditBalance.Sub(oldCreditLimit.Sub(amount)).String()
 				}
+				personalWallet.PersonalCashBalance = oldCashBalance.String()
 			}
 		} else {
-			if personalWallet.DealType == CONSUME {
-				return shim.Error("failed to consume")
-			}
+			return shim.Error("SavePersonalWalletInfo fail.")
+		}
+	} else {
+		if personalWallet.DealType == CONSUME {
+			return shim.Error("failed to consume")
+		}
+
+		if personalWallet.DealType == RECHARGE && creditBalanceFloat > creditLimitFloat {
+			return shim.Error("failed to recharge")
+		}
+
+		// 如果是信用额度调整操作，amount表示新的信用额度
+		if personalWallet.DealType == LIMIT_CHANGE {
+			personalWallet.PersonalCreditBalance = personalWallet.Amount
+			personalWallet.PersonalCreditLimit = personalWallet.Amount
 		}
 	}
 
@@ -422,6 +453,9 @@ func (t *SimpleChainCode) saveBusinessWalletInfo(stub shim.ChaincodeStubInterfac
 	if err != nil {
 		return shim.Error("BusinessWallet jsonString unmarshal err.")
 	}
+
+	fmt.Println("商家钱包上链请求数据：" + jsonString)
+
 	// 商家社会信用码
 	businessSocialCreditCode := businessWallet.BusinessSocialCreditCode
 	if businessSocialCreditCode == "" {
@@ -433,7 +467,7 @@ func (t *SimpleChainCode) saveBusinessWalletInfo(stub shim.ChaincodeStubInterfac
 		return shim.Error("TradeNo not appearance")
 	}
 
-	r, _ := verify(businessWallet.Upk, businessWallet.Sign, businessWalletNo)
+	r, _ := verify(businessWallet.Upk, businessWallet.Sign, businessSocialCreditCode)
 	if !r {
 		return shim.Error("Verify false of businessWallet")
 	}
@@ -443,6 +477,8 @@ func (t *SimpleChainCode) saveBusinessWalletInfo(stub shim.ChaincodeStubInterfac
 	erro := json.Unmarshal(response.Payload, &oldBusinessWallet)
 
 	if erro == nil {
+		fmt.Println("查询出的商家钱包数据：" + string(response.Payload))
+
 		amountFloat, _ := strconv.ParseFloat(businessWallet.Amount, 64)
 		amount := decimal.NewFromFloat(amountFloat)
 
@@ -478,6 +514,9 @@ func (t *SimpleChainCode) saveCheckSlipInfo(stub shim.ChaincodeStubInterface, ar
 	if err != nil {
 		return shim.Error("")
 	}
+
+	fmt.Println("结算单上链请求数据：" + jsonString)
+
 	// 结算单号
 	checkNo := checkSlip.CheckNo
 	if checkNo == "" {
@@ -491,42 +530,78 @@ func (t *SimpleChainCode) saveCheckSlipInfo(stub shim.ChaincodeStubInterface, ar
 
 	// 如果是信用结算，则需要恢复个人钱包信用额度
 	if checkSlip.CheckType == CREDIT {
-		var order Order
+		// 用于存放个人钱包号和钱包信用余额，这样做是为了处理在同一个结算单内同一个钱包有多条消费的情况
+		maps := make(map[string]PersonalWallet)
+		// 用于计算单个钱包在本次结算中累计恢复的额度
+		amounts := make(map[string]float64)
+
 		tradeNos := checkSlip.TradeNos
 		for _, tradeNo := range tradeNos {
 			objectBytes, _ := stub.GetState(tradeNo)
+
+			var order Order
 			er := json.Unmarshal(objectBytes, &order)
 			if er != nil {
-				return shim.Error("SaveCheckSlipInfo fail.")
+				return shim.Error("SaveCheckSlipInfo fail.Order unmarshal error.")
 			}
+			fmt.Println("结算操作查询出的订单数据：" + string(objectBytes))
+
+			if order.PayType != CREDIT {
+				fmt.Println("SaveCheckSlipInfo fail.Pay type not match.")
+				return shim.Error("SaveCheckSlipInfo fail.Pay type not match.")
+			}
+			if order.Status == CHECKED {
+				fmt.Println("SaveCheckSlipInfo fail.Order status not match.")
+				return shim.Error("SaveCheckSlipInfo fail.Order status not match.")
+			}
+
+			// 修改订单状态为已结算并保存上链
+			order.Status = CHECKED
+			oString, _ := json.Marshal(order)
+			stub.PutState(order.TradeNo, oString)
 
 			// 交易金额
 			amount, _ := strconv.ParseFloat(order.Amount, 64)
 
 			personalWalletNo := order.EmployeeWalletNo
-			objBytes, _ := stub.GetState(personalWalletNo)
+			personalWallet, ok := maps[personalWalletNo]
+			if !ok {
+				objBytes, _ := stub.GetState(personalWalletNo)
+				err := json.Unmarshal(objBytes, &personalWallet)
+				if err != nil {
+					return shim.Error("SaveCheckSlipInfo fail.PersonalWallet unmarshal error.")
+				}
 
-			var personalWallet PersonalWallet
-			err := json.Unmarshal(objBytes, &personalWallet)
-			if err != nil {
-				return shim.Error("SaveCheckSlipInfo fail.")
+				fmt.Println("结算操作查询出的个人钱包数据：" + string(objBytes))
+				maps[personalWalletNo] = personalWallet
 			}
 
 			// 信用余额
 			creditBalance, _ := strconv.ParseFloat(personalWallet.PersonalCreditBalance, 64)
-			// 信用额度
-			creditLimit, _ := strconv.ParseFloat(personalWallet.PersonalCreditLimit, 64)
-
 			sum := decimal.NewFromFloat(amount).Add(decimal.NewFromFloat(creditBalance))
-			if sum.LessThanOrEqual(decimal.NewFromFloat(creditLimit)) {
-				personalWallet.PersonalCreditBalance = sum.String()
-				personalWallet.TradeNo = tradeNo
-				personalWallet.DealType = RECHARGE
 
-				objString, _ := json.Marshal(personalWallet)
-				stub.PutState(personalWalletNo, objString)
+			personalWallet.PersonalCreditBalance = sum.String()
+			total, flag := amounts[personalWalletNo]
+			if flag {
+				total += amount
+			} else {
+				total = amount
 			}
+			amounts[personalWalletNo] = total
 
+			maps[personalWalletNo] = personalWallet
+		}
+
+		for personalWalletNo, personalWallet := range maps {
+			personalWallet.TradeNo = ""
+			personalWallet.DealType = RECOVER_CREDIT
+			personalWallet.CheckNo = checkNo
+			personalWallet.Created = time.Now().Format("2006-01-02 15:04:05")
+
+			objString, _ := json.Marshal(personalWallet)
+			fmt.Println("结算操作个人钱包上链数据：" + string(objString))
+
+			stub.PutState(personalWalletNo, objString)
 		}
 	}
 

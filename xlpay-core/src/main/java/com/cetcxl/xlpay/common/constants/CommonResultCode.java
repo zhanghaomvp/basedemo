@@ -23,6 +23,9 @@ public enum CommonResultCode implements IResultCode {
     CHAIN_CODE_SAVE_DEALING_RECORD_ERROR(9303, "交易记录上链失败"),
     CHAIN_CODE_SAVE_CHECK_SLIP_ERROR(9304, "结算记录上链失败"),
     CHAIN_CODE_SIGN_ERROR(9305, "上链签名失败"),
+    CHAIN_CODE_QUERY_DEALING_RECORD_ERROR(9306, "查询链上交易记录失败"),
+    CHAIN_CODE_QUERY_PERSONAL_WALLET_ERROR(9307, "查询链上个人钱包信息失败"),
+    CHAIN_CODE_QUERY_BUSINESS_WALLET_ERROR(9308, "查询链上商家钱包信息失败"),
     ;
 
     private int code;

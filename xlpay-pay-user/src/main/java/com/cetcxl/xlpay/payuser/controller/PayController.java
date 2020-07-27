@@ -5,7 +5,6 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.rpc.ResBody;
-import com.cetcxl.xlpay.payuser.constants.ResultCode;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
 import com.cetcxl.xlpay.payuser.entity.vo.WalletCashVO;
@@ -24,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -122,6 +122,24 @@ public class PayController extends BaseController {
                                         ContextUtil.getUserInfo().getPayUser(),
                                         socialCreditCode,
                                         storeId)
+                );
+    }
+
+    @GetMapping("/pay-user/wallet/no-password-pay/status")
+    @ApiOperation("是否当前交易支持免密支付")
+    public ResBody<Boolean> canNoPasswordPay(@NotBlank String amount) {
+        PayUser payUser = payUserService
+                .getById(
+                        ContextUtil.getUserInfo().getPayUser().getId()
+                );
+
+        return ResBody
+                .success(
+                        payService
+                                .checkNoPasswordPayValid(
+                                        payUser,
+                                        new BigDecimal(amount)
+                                )
                 );
     }
 
