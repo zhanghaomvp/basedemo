@@ -11,6 +11,7 @@ import com.cetcxl.xlpay.common.chaincode.enums.PayType;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -70,7 +71,7 @@ public class ChainCodeBussinessTest extends BaseTest {
     }
 
     @Test
-    public void cash_main_bussiness() {
+    public void cash_main_business() {
         //充值
         String rechargeTradeNo = UUID.randomUUID().toString();
         String rechargeAmount = "100.5";
@@ -93,6 +94,20 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .tradeNo(rechargeTradeNo)
                         .build(),
                 null
+        );
+
+        Assert.assertEquals(
+                rechargeAmount,
+                chainCodeService
+                        .queryOrderInfo(rechargeTradeNo)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                rechargeAmount,
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCashBalance()
         );
 
         //扣减
@@ -118,6 +133,21 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .build(),
                 null
         );
+
+        Assert.assertEquals(
+                "-0.5",
+                chainCodeService
+                        .queryOrderInfo(reduceTradeNo)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "100",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCashBalance()
+        );
+
 
         //消费
         String payTradeNo = UUID.randomUUID().toString();
@@ -146,6 +176,20 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .payType(PayType.CASH)
                         .tradeNo(payTradeNo)
                         .build()
+        );
+
+        Assert.assertEquals(
+                "50",
+                chainCodeService
+                        .queryOrderInfo(payTradeNo)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "50",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCashBalance()
         );
 
         //验证超额支付
@@ -197,10 +241,19 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .tradeNos(Lists.newArrayList(payTradeNo))
                         .build()
         );
+
+        Assert.assertEquals(
+                "50",
+                chainCodeService
+                        .queryCheckInfo(checkBatch)
+                        .getTotalAmount()
+        );
+
+
     }
 
     @Test
-    public void credit_main_bussiness() {
+    public void credit_main_business() {
 
         //设置初始额度
         String limitTradeNo = UUID.randomUUID().toString();
@@ -225,6 +278,20 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .tradeNo(limitTradeNo)
                         .build(),
                 null
+        );
+
+        Assert.assertEquals(
+                "100.5",
+                chainCodeService
+                        .queryOrderInfo(limitTradeNo)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "100.5",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditLimit()
         );
 
         //额度消费一
@@ -257,6 +324,27 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .build()
         );
 
+        Assert.assertEquals(
+                "10.5",
+                chainCodeService
+                        .queryOrderInfo(payTradeNo1)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "100.5",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditLimit()
+        );
+
+        Assert.assertEquals(
+                payTradeNo1,
+                chainCodeService
+                        .queryBusinessWalletInfo(payTradeNo1)
+                        .getTradeNo()
+        );
+
         //额度消费二
         String payTradeNo2 = UUID.randomUUID().toString();
         String payAmount2 = "40";
@@ -287,6 +375,27 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .build()
         );
 
+        Assert.assertEquals(
+                payAmount2,
+                chainCodeService
+                        .queryOrderInfo(payTradeNo2)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "50",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
+
+        Assert.assertEquals(
+                payAmount2,
+                chainCodeService
+                        .queryBusinessWalletInfo(payTradeNo2)
+                        .getAmount()
+        );
+
         //额度调整
         String limitTradeNo_ = UUID.randomUUID().toString();
         String limitAmount_ = "80.5";
@@ -310,6 +419,21 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .tradeNo(limitTradeNo_)
                         .build(),
                 null
+        );
+
+
+        Assert.assertEquals(
+                limitAmount_,
+                chainCodeService
+                        .queryOrderInfo(limitTradeNo_)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "30",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
         );
 
         // 验证超额支付
@@ -364,6 +488,15 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .build()
         );
 
+
+        Assert.assertEquals(
+                "50",
+                chainCodeService
+                        .queryCheckInfo(checkBatch)
+                        .getTotalAmount()
+        );
+
+
         // 重复结算验证
         try {
             chainCodeService.saveCheckSlip(
@@ -413,6 +546,27 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .tradeNo(payTradeNo__)
                         .build()
         );
+
+        Assert.assertEquals(
+                payAmount__,
+                chainCodeService
+                        .queryOrderInfo(payTradeNo__)
+                        .getAmount()
+        );
+
+        Assert.assertEquals(
+                "0",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
+        Assert.assertEquals(
+                payAmount__,
+                chainCodeService
+                        .queryBusinessWalletInfo(payTradeNo__)
+                        .getAmount()
+        );
+
     }
 
 }

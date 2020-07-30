@@ -44,22 +44,6 @@ public class ResBody<T> implements Serializable {
                 .build();
     }
 
-    public static ResBody error(int errorCode, String errorMessage) {
-        return ResBody.builder()
-                .status(Status.ERROR)
-                .code(errorCode)
-                .message(errorMessage)
-                .build();
-    }
-
-    public static ResBody error(Object... o) {
-        return ResBody.builder()
-                .status(Status.ERROR)
-                .code(Status.ERROR.getCode())
-                .data(o.length == 0 ? null : o[0])
-                .build();
-    }
-
     public static ResBody error(IResultCode resultCode, Object... o) {
         return ResBody.builder()
                 .status(Status.ERROR)

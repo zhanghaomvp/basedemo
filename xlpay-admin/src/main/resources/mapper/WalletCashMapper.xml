@@ -23,6 +23,7 @@
                 company_member cm
             WHERE
                 c.id = #{companyId}
+                AND cm.status = 1
                 AND cm.company = c.id
                 <if test="department != null">
                     AND cm.department  like concat('%',#{department},'%')

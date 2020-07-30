@@ -2,7 +2,7 @@ package com.cetcxl.xlpay.payuser.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cetcxl.xlpay.common.component.RedisLockComponent;
-import com.cetcxl.xlpay.common.constants.Constants;
+import com.cetcxl.xlpay.common.constants.XlpayConstants;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.payuser.dao.DealMapper;
@@ -52,7 +52,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Transactional
     public Deal dealCash(DealParam param) {
         try (RedisLockComponent.RedisLock redisLock =
-                     new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + param.getWalletId())) {
+                     new RedisLockComponent.RedisLock(XlpayConstants.LOCK_CASH_DEAL + param.getWalletId())) {
             Deal deal = process(param, CASH);
             walletCashService.process(
                     deal,
@@ -70,7 +70,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Transactional
     public Deal dealCredit(DealParam param) {
         try (RedisLockComponent.RedisLock redisLock =
-                     new RedisLockComponent.RedisLock(Constants.KEY_CREDIT_DEAL + param.getWalletId())) {
+                     new RedisLockComponent.RedisLock(XlpayConstants.LOCK_CREDIT_DEAL + param.getWalletId())) {
             Deal deal = process(param, CREDIT);
             walletCreditService.process(
                     deal,

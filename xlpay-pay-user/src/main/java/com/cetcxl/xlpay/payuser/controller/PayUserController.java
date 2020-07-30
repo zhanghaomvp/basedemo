@@ -1,11 +1,12 @@
 package com.cetcxl.xlpay.payuser.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.cetcxl.xlpay.common.constants.CommonResultCode;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
-import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import com.cetcxl.xlpay.payuser.constants.ResultCode;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
@@ -24,7 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -59,27 +63,28 @@ public class PayUserController extends BaseController {
             @ApiResponse(code = 3002, message = "绑定企业成员不存在"),
             @ApiResponse(code = 2002, message = "信链钱包未开通")
     })
-    public ResBody<PayUserVO> getPayUser(String socialCreditCode, String icNo) {
+    public PayUserVO getPayUser(String socialCreditCode, String icNo) {
         Company company = companyService.lambdaQuery()
                 .eq(Company::getSocialCreditCode, socialCreditCode)
                 .one();
         if (Objects.isNull(company)) {
-            return ResBody.error(COMPANY_NOT_EXIST);
+            throw new BaseRuntimeException(COMPANY_NOT_EXIST);
         }
 
         CompanyMember companyMember = companyMemberService.lambdaQuery()
                 .eq(CompanyMember::getIcNo, icNo)
                 .eq(CompanyMember::getCompany, company.getId())
+                .eq(CompanyMember::getStatus, CompanyMember.CompanyMemberStatus.ACTIVE)
                 .one();
         if (Objects.isNull(companyMember)) {
-            return ResBody.error(COMPANY_MEMBER_NOT_EXIST);
+            throw new BaseRuntimeException(COMPANY_MEMBER_NOT_EXIST);
         }
 
         PayUser payUser = payUserService.lambdaQuery()
                 .eq(PayUser::getIcNo, icNo)
                 .one();
         if (Objects.isNull(payUser)) {
-            return ResBody.error(PAY_USER_NOT_EXIST);
+            throw new BaseRuntimeException(PAY_USER_NOT_EXIST);
         }
 
         PayUserVO payUserVO = PayUserVO.of(payUser, PayUserVO.class);
@@ -92,7 +97,7 @@ public class PayUserController extends BaseController {
             payUserVO.setCookieAlive(true);
         }
 
-        return ResBody.success(payUserVO);
+        return payUserVO;
     }
 
     @Data
@@ -118,14 +123,14 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user")
     @ApiOperation("信链钱包开通")
-    public ResBody register(@RequestBody @Validated RegisterReq req) {
+    public void register(@RequestBody @Validated RegisterReq req) {
         int count = payUserService.count(
                 Wrappers.lambdaQuery(PayUser.class)
                         .or(wrapper -> wrapper.eq(PayUser::getIcNo, req.getIcNo()))
                         .or(wrapper -> wrapper.eq(PayUser::getPhone, req.getPhone()))
         );
         if (count > 0) {
-            return ResBody.error(ResultCode.PAY_USER_EXIST);
+            throw new BaseRuntimeException(ResultCode.PAY_USER_EXIST);
         }
 
         payUserService.save(
@@ -136,8 +141,6 @@ public class PayUserController extends BaseController {
                         .status(PayUser.PayUserStatus.ACTIVE)
                         .build()
         );
-
-        return ResBody.success();
     }
 
     @GetMapping("/pay-user/heartbeat")
@@ -145,8 +148,7 @@ public class PayUserController extends BaseController {
     @ApiResponses({
             @ApiResponse(code = 9003, message = "验证失败 请重新登录"),
     })
-    public ResBody heartbeat() {
-        return ResBody.success();
+    public void heartbeat() {
     }
 
     @Data
@@ -167,13 +169,13 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user/password")
     @ApiOperation("钱包支付密码修改")
-    public ResBody updatePayPassword(@RequestBody @Validated UpdatePayPasswordReq req) {
+    public void updatePayPassword(@RequestBody @Validated UpdatePayPasswordReq req) {
 
         PayUser payUser = payUserService.getById(
                 ContextUtil.getUserInfo().getPayUser().getId()
         );
         if (!passwordEncoder.matches(req.oldPassword, payUser.getPassword())) {
-            return ResBody.error(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+            throw new BaseRuntimeException(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
         }
 
         payUserService.update(
@@ -181,8 +183,6 @@ public class PayUserController extends BaseController {
                         .eq(PayUser::getId, payUser.getId())
                         .set(PayUser::getPassword, passwordEncoder.encode(req.newPassword))
         );
-
-        return ResBody.success();
     }
 
     @Data
@@ -196,14 +196,21 @@ public class PayUserController extends BaseController {
         @NotNull
         private boolean isOpen;
 
+        @ApiModelProperty(value = "支付密码")
+        @NotBlank
+        private String password;
+
     }
 
     @PostMapping(value = "/pay-user/secret-free-payment")
     @ApiOperation("小额免密支付功能")
-    public ResBody updateNoPayFunction(@RequestBody @Validated UpdateNoPayFunctionReq req) {
+    public void updateNoPayFunction(@RequestBody @Validated UpdateNoPayFunctionReq req) {
         PayUser payUser = payUserService.getById(
                 ContextUtil.getUserInfo().getPayUser().getId()
         );
+        if (!passwordEncoder.matches(req.getPassword(), payUser.getPassword())) {
+            throw new BaseRuntimeException(ResultCode.PAY_USER_PASSWORD_NOT_CORRECT);
+        }
 
         Integer functions = payUser.getFunctions();
         if (Objects.isNull(functions)) {
@@ -220,7 +227,6 @@ public class PayUserController extends BaseController {
                 .eq(PayUser::getId, payUser.getId())
                 .set(PayUser::getFunctions, functions)
                 .update();
-        return ResBody.success();
     }
 
 
@@ -239,13 +245,15 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user/password/initial/verify-code")
     @ApiOperation("重置密码发送验证码")
-    public ResBody resetSendVerifyCode(@Validated @RequestBody ResetSendVerifyCodeReq req) {
+    public void resetSendVerifyCode(@Validated @RequestBody ResetSendVerifyCodeReq req) {
         PayUser payUser = payUserService.lambdaQuery()
                 .eq(PayUser::getIcNo, req.getIcNo())
                 .one();
 
         boolean flag = verifyCodeService.sendVerifyCode(payUser.getPhone());
-        return flag ? ResBody.success() : ResBody.error();
+        if (!flag) {
+            throw new BaseRuntimeException(CommonResultCode.RPC_ERROR);
+        }
     }
 
     @Data
@@ -266,10 +274,10 @@ public class PayUserController extends BaseController {
 
     @PostMapping("/pay-user/password/initial")
     @ApiOperation("重置密码设置新密码")
-    public ResBody resetPassword(@RequestBody @Validated ResetPasswordReq req) {
+    public void resetPassword(@RequestBody @Validated ResetPasswordReq req) {
         Optional<String> optional = verifyCodeService.getPhone(req.getVerifyCode());
         if (!optional.isPresent()) {
-            return ResBody.error(VERIFY_CODE_UNAVAILABLE);
+            throw new BaseRuntimeException(VERIFY_CODE_UNAVAILABLE);
         }
 
         PayUser payUser = payUserService.lambdaQuery()
@@ -278,6 +286,5 @@ public class PayUserController extends BaseController {
         payUser.setPassword(passwordEncoder.encode(req.newPassword));
 
         payUserService.updateById(payUser);
-        return ResBody.success();
     }
 }

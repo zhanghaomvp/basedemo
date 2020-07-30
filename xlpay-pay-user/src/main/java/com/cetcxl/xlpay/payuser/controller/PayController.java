@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.*;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
-import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.payuser.entity.model.PayUser;
 import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
 import com.cetcxl.xlpay.payuser.entity.vo.WalletCashVO;
@@ -60,7 +59,7 @@ public class PayController extends BaseController {
 
     @GetMapping("/pay-user/company/{socialCreditCode}/wallet/cash")
     @ApiOperation("个人余额查询")
-    public ResBody<WalletCashVO> getCashBalance(@PathVariable String socialCreditCode) {
+    public WalletCashVO getCashBalance(@PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
 
         Company company = companyService.getOne(
@@ -68,7 +67,7 @@ public class PayController extends BaseController {
                         .eq(Company::getSocialCreditCode, socialCreditCode)
         );
         if (Objects.isNull(company)) {
-            return ResBody.error(COMPANY_NOT_EXIST);
+            throw new BaseRuntimeException(COMPANY_NOT_EXIST);
         }
 
         CompanyMember companyMember = companyMemberService.getOne(
@@ -81,12 +80,12 @@ public class PayController extends BaseController {
                 Wrappers.lambdaQuery(WalletCash.class)
                         .eq(WalletCash::getCompanyMember, companyMember.getId())
         );
-        return ResBody.success(WalletCashVO.of(walletCash, WalletCashVO.class));
+        return WalletCashVO.of(walletCash, WalletCashVO.class);
     }
 
     @GetMapping("/pay-user/company/{socialCreditCode}/wallet/credit")
     @ApiOperation("个人信用额度查询")
-    public ResBody<WalletCreditVO> getCreditBalance(@PathVariable String socialCreditCode) {
+    public WalletCreditVO getCreditBalance(@PathVariable String socialCreditCode) {
         PayUser payUser = ContextUtil.getUserInfo().getPayUser();
 
         Company company = companyService.getOne(
@@ -94,7 +93,7 @@ public class PayController extends BaseController {
                         .eq(Company::getSocialCreditCode, socialCreditCode)
         );
         if (Objects.isNull(company)) {
-            return ResBody.error(COMPANY_NOT_EXIST);
+            throw new BaseRuntimeException(COMPANY_NOT_EXIST);
         }
 
         CompanyMember companyMember = companyMemberService.getOne(
@@ -108,38 +107,32 @@ public class PayController extends BaseController {
                         .eq(WalletCredit::getCompanyMember, companyMember.getId())
         );
 
-        return ResBody.success(WalletCreditVO.of(walletCredit, WalletCreditVO.class));
+        return WalletCreditVO.of(walletCredit, WalletCreditVO.class);
     }
 
     @GetMapping("/pay-user/company/{socialCreditCode}/store/{storeId}/wallets")
     @ApiOperation("可支付钱包列表查询")
-    public ResBody<PayService.StoreWalletDTO> storeWallet(@PathVariable Integer storeId, @PathVariable String socialCreditCode) {
+    public PayService.StoreWalletDTO storeWallet(@PathVariable Integer storeId, @PathVariable String socialCreditCode) {
 
-        return ResBody
-                .success(
-                        payService
-                                .storeWallet(
-                                        ContextUtil.getUserInfo().getPayUser(),
-                                        socialCreditCode,
-                                        storeId)
-                );
+        return payService
+                .storeWallet(
+                        ContextUtil.getUserInfo().getPayUser(),
+                        socialCreditCode,
+                        storeId);
     }
 
     @GetMapping("/pay-user/wallet/no-password-pay/status")
     @ApiOperation("是否当前交易支持免密支付")
-    public ResBody<Boolean> canNoPasswordPay(@NotBlank String amount) {
+    public Boolean canNoPasswordPay(@NotBlank String amount) {
         PayUser payUser = payUserService
                 .getById(
                         ContextUtil.getUserInfo().getPayUser().getId()
                 );
 
-        return ResBody
-                .success(
-                        payService
-                                .checkNoPasswordPayValid(
-                                        payUser,
-                                        new BigDecimal(amount)
-                                )
+        return payService
+                .checkNoPasswordPayValid(
+                        payUser,
+                        new BigDecimal(amount)
                 );
     }
 
@@ -157,7 +150,7 @@ public class PayController extends BaseController {
 
     @PostMapping("/pay-user/wallet/cash/{walletId}/deal")
     @ApiOperation("个人余额支付")
-    public ResBody<DealVO> payCash(
+    public DealVO payCash(
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
         PayUser payUser = payUserService
@@ -170,10 +163,10 @@ public class PayController extends BaseController {
 
         WalletCash walletCash = walletCashService.getById(walletId);
         if (Objects.isNull(walletCash)) {
-            return ResBody.error(SYSTEM_LOGIC_ERROR);
+            throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
         }
         if (WalletCash.WalletCashStaus.DISABLE == walletCash.getStatus()) {
-            return ResBody.error(WALLET_DISABLE);
+            throw new BaseRuntimeException(WALLET_DISABLE);
         }
 
         //此处先做一次初步校验 实际扣款分布式锁加好后 还需再次校验
@@ -188,7 +181,7 @@ public class PayController extends BaseController {
 
         if (!CompanyStoreRelation.Relation.CASH_PAY
                 .isOpen(companyStoreRelation.getRelation())) {
-            return ResBody.error(WALLET_RELATION_NOT_EXIST);
+            throw new BaseRuntimeException(WALLET_RELATION_NOT_EXIST);
         }
 
         DealService.DealParam dealParam = DealService.DealParam.builder()
@@ -200,12 +193,12 @@ public class PayController extends BaseController {
                 .info(req.getInfo())
                 .build();
 
-        return ResBody.success(DealVO.of(dealService.dealCash(dealParam), DealVO.class));
+        return DealVO.of(dealService.dealCash(dealParam), DealVO.class);
     }
 
     @PostMapping("/pay-user/wallet/credit/{walletId}/deal")
     @ApiOperation("个人信用额度支付")
-    public ResBody<DealVO> payCredit(
+    public DealVO payCredit(
             @PathVariable Integer walletId,
             @Validated @RequestBody PayReq req) {
         PayUser payUser = payUserService
@@ -221,7 +214,7 @@ public class PayController extends BaseController {
             throw new BaseRuntimeException(SYSTEM_LOGIC_ERROR);
         }
         if (WalletCredit.WalletCreditStaus.DISABLE == walletCredit.getStatus()) {
-            return ResBody.error(WALLET_DISABLE);
+            throw new BaseRuntimeException(WALLET_DISABLE);
         }
 
         //此处先做一次初步校验 实际扣款分布式锁加好后 还需再次校验
@@ -236,7 +229,7 @@ public class PayController extends BaseController {
 
         if (CompanyStoreRelation.Relation.CREDIT_PAY
                 .isClose(companyStoreRelation.getRelation())) {
-            return ResBody.error(WALLET_RELATION_NOT_EXIST);
+            throw new BaseRuntimeException(WALLET_RELATION_NOT_EXIST);
         }
 
         DealService.DealParam dealParam = DealService.DealParam.builder()
@@ -248,6 +241,6 @@ public class PayController extends BaseController {
                 .info(req.getInfo())
                 .build();
 
-        return ResBody.success(DealVO.of(dealService.dealCredit(dealParam), DealVO.class));
+        return DealVO.of(dealService.dealCredit(dealParam), DealVO.class);
     }
 }

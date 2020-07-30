@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS xinyufu;
 CREATE DATABASE xinyufu character set utf8;
 USE xinyufu;
 SET FOREIGN_KEY_CHECKS=0;
-
+SET sql_mode='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
 
 CREATE TABLE `company_user` (
 	id INT UNSIGNED AUTO_INCREMENT,
@@ -210,3 +210,21 @@ CREATE TABLE `checks_record` (
 
 ALTER TABLE `deal` ADD COLUMN `ic_no` VARCHAR ( 50 );
 ALTER TABLE `deal` ADD INDEX deal_ic_no_index ( `ic_no` ) ;
+
+CREATE TABLE
+IF
+	NOT EXISTS `pay_user` (
+		id INT UNSIGNED AUTO_INCREMENT,
+		ic_no VARCHAR ( 50 ),
+		`password` CHAR ( 60 ),
+		functions SMALLINT,
+		identity_flag TINYINT,
+		`status` TINYINT,
+		created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		PRIMARY KEY ( `id` ),
+	INDEX pay_user_ic_no_index ( ic_no )
+	);
+
+ALTER TABLE `pay_user` ADD COLUMN `phone` VARCHAR ( 20 );
+ALTER TABLE `pay_user` ADD COLUMN `locked_dead_line` TIMESTAMP;

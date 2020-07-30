@@ -88,7 +88,7 @@ public interface ChecksMapper extends BaseMapper<Checks> {
             LEFT_OUTER_JOIN(
                     "  checks_record cr1 ON c.batch = cr1.check_batch AND cr1.action = 0",
                     " company_user cu1 ON cr1.operator = cu1.id ",
-                    " checks_record cr2 ON c.batch = cr2.check_batch AND cr2.action = 2 ",
+                    " checks_record cr2 ON c.batch = cr2.check_batch AND cr2.action in (1,2) ",
                     " company_user cu2 ON cr2.operator = cu2.id ",
                     " checks_record cr3 ON c.batch = cr3.check_batch AND cr3.action = 4 ",
                     " company_user cu3 ON cr3.operator = cu3.id ",
@@ -109,7 +109,7 @@ public interface ChecksMapper extends BaseMapper<Checks> {
             if (Objects.nonNull(req.getStatues())) {
                 List<Integer> statues = Stream
                         .of(req.getStatues())
-                        .map(status -> status.getValue())
+                        .map(Checks.Status::getValue)
                         .collect(Collectors.toList());
 
                 WHERE("c.status" + " in ( " + Joiner.on(",").skipNulls().join(statues) + " ) ");
@@ -127,7 +127,7 @@ public interface ChecksMapper extends BaseMapper<Checks> {
             if (Objects.nonNull(req.getApprovalTimeEnd())) {
                 WHERE("cr2.created <=#{req.approvalTimeEnd}");
             }
-            ORDER_BY(" batch asc ");
+            ORDER_BY(" batch desc ");
         }}.toString();
     }
 

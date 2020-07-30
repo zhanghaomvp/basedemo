@@ -82,4 +82,9 @@ public class ChainCodeConstant {
      */
     public static final String QUERY_BUSINESS_WALLET_FUNC = "queryBusinessWallet";
 
+    /**
+     * 查询结算单信息函数名
+     */
+    public static final String QUERY_CHECK_SLIP_FUNC = "queryCheckSlip";
+
 }

@@ -10,7 +10,6 @@ import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.plugins.easyexcel.LocalDateTimeConverter;
-import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
@@ -73,33 +72,26 @@ public class DealsController extends BaseController {
 
     @GetMapping("/companys/{companyId}/deals")
     @ApiOperation("企业账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> listCompanyDeal(@Validated ListDealReq req) {
-        return ResBody
-                .success(
-                        dealMapper.listDeal(
-                                new Page(req.getPageNo(), req.getPageSize()),
-                                req
-                        )
-                );
+    public IPage<DealMapper.DealDTO> listCompanyDeal(@Validated ListDealReq req) {
+        return dealMapper.listDeal(
+                new Page(req.getPageNo(), req.getPageSize()),
+                req
+        );
     }
 
     @GetMapping("/stores/{storeId}/deals")
     @ApiOperation("商家账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> listStoreDeal(@Validated ListDealReq req) {
-        return ResBody
-                .success(
-                        dealMapper.listDeal(
-                                new Page(req.getPageNo(), req.getPageSize()),
-                                req
-                        )
-                );
+    public IPage<DealMapper.DealDTO> listStoreDeal(@Validated ListDealReq req) {
+        return dealMapper.listDeal(
+                new Page(req.getPageNo(), req.getPageSize()),
+                req
+        );
     }
 
     @GetMapping("/deals/{dealId}")
     @ApiOperation("账单详情查询")
-    public ResBody getDealDetail(@PathVariable Integer dealId) {
-        DealVO dealVO = DealVO.of(dealService.getById(dealId), DealVO.class);
-        return ResBody.success(dealVO);
+    public DealVO getDealDetail(@PathVariable Integer dealId) {
+        return DealVO.of(dealService.getById(dealId), DealVO.class);
     }
 
     @Data
@@ -131,23 +123,16 @@ public class DealsController extends BaseController {
 
     @GetMapping("/companys/{companyId}/deals/dashboard")
     @ApiOperation("企业数据看板")
-    public ResBody<DealMapper.DashboardDTO> companyDashboard(@Validated(DashboardCompanyGroup.class) DashboardReq req) {
+    public DealMapper.DashboardDTO companyDashboard(@Validated(DashboardCompanyGroup.class) DashboardReq req) {
 
         if (StringUtils.isNotBlank(req.getDepartment())) {
-
-            return ResBody
-                    .success(
-                            dealService.calculationAmount(
-                                    dealMapper.companyDashboardWithDepartment(req)
-                            )
-                    );
+            return dealService.calculationAmount(
+                    dealMapper.companyDashboardWithDepartment(req)
+            );
         } else {
-            return ResBody
-                    .success(
-                            dealService.calculationAmount(
-                                    dealMapper.companyDashboardWithOutDepartment(req)
-                            )
-                    );
+            return dealService.calculationAmount(
+                    dealMapper.companyDashboardWithOutDepartment(req)
+            );
         }
     }
 
@@ -156,21 +141,15 @@ public class DealsController extends BaseController {
 
     @GetMapping("/stores/{storeId}/deals/dashboard")
     @ApiOperation("商家数据看板")
-    public ResBody<DealMapper.DashboardDTO> storeDashboard(@Validated(DashboardStoreGroup.class) DashboardReq req) {
+    public DealMapper.DashboardDTO storeDashboard(@Validated(DashboardStoreGroup.class) DashboardReq req) {
         if (StringUtils.isNotBlank(req.getCompanyName())) {
-            return ResBody
-                    .success(
-                            dealService.calculationAmount(
-                                    dealMapper.storeDashboardWithCompany(req)
-                            )
-                    );
+            return dealService.calculationAmount(
+                    dealMapper.storeDashboardWithCompany(req)
+            );
         } else {
-            return ResBody
-                    .success(
-                            dealService.calculationAmount(
-                                    dealMapper.storeDashboardWithOutCompany(req)
-                            )
-                    );
+            return dealService.calculationAmount(
+                    dealMapper.storeDashboardWithOutCompany(req)
+            );
         }
     }
 

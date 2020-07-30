@@ -59,11 +59,11 @@ public class RedisLockComponent {
     }
 
     public static class RedisLock implements AutoCloseable {
-        private static ThreadLocal<List<String>> KEYS = new ThreadLocal<List<String>>();
         private static ThreadLocal<String> KEY = new ThreadLocal<String>();
+        private static ThreadLocal<List<String>> KEYS = new ThreadLocal<List<String>>();
 
-        private RedisLockComponent redisLockComponent;
         private boolean isMultiple;
+        private RedisLockComponent redisLockComponent;
 
         public RedisLock(String key) {
             isMultiple = false;

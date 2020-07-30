@@ -15,7 +15,7 @@ import com.cetcxl.xlpay.common.chaincode.entity.CheckSlip;
 import com.cetcxl.xlpay.common.chaincode.enums.PayType;
 import com.cetcxl.xlpay.common.component.RedisLockComponent;
 import com.cetcxl.xlpay.common.constants.CommonResultCode;
-import com.cetcxl.xlpay.common.constants.Constants;
+import com.cetcxl.xlpay.common.constants.XlpayConstants;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
@@ -120,7 +120,7 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
                     List<String> walletIdLists = deals.stream()
                             .map(
                                     deal ->
-                                            Constants.KEY_CREDIT_DEAL +
+                                            XlpayConstants.LOCK_CREDIT_DEAL +
                                                     walletCreditService.
                                                             lambdaQuery()
                                                             .eq(WalletCredit::getCompanyMember, deal.getCompanyMember())
@@ -301,7 +301,7 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
         @ColumnWidth(25)
         String storeName;
 
-        @ExcelProperty("申请结算总金额")
+        @ExcelProperty("申请结算总金额(元)")
         @ColumnWidth(25)
         String amount;
 
@@ -336,7 +336,7 @@ public class ChecksService extends ServiceImpl<ChecksMapper, Checks> {
 
         public enum SheetFormat {
             待审核结算(ImmutableList.of(APPLY), ImmutableList.of("approvalTime", "confirmTime", "denyTime")),
-            待确认结算(ImmutableList.of(APPROVAL), ImmutableList.of("confirmTime")),
+            待确认结算(ImmutableList.of(APPROVAL), ImmutableList.of("confirmTime","denyTime")),
             已结算(ImmutableList.of(CONFIRM), ImmutableList.of("denyTime")),
             撤销结算(ImmutableList.of(REJECT, DENY), ImmutableList.of("confirmTime")),
             ;

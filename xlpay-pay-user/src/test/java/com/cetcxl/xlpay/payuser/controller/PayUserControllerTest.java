@@ -164,6 +164,7 @@ class PayUserControllerTest extends BaseTest {
 
         PayUserController.UpdateNoPayFunctionReq req = PayUserController.UpdateNoPayFunctionReq.builder()
                 .isOpen(false)
+                .password("741852")
                 .build();
 
         mockMvc

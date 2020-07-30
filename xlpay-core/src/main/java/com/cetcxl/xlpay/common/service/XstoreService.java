@@ -34,7 +34,8 @@ public class XstoreService implements InitializingBean {
                     file.getOriginalFilename(),
                     StringUtils.substringAfterLast(file.getOriginalFilename(), "."),
                     xstorConfigrution.getSk(),
-                    xstorConfigrution.getPk());
+                    xstorConfigrution.getPk()
+            );
         } catch (Exception e) {
             throw new BaseRuntimeException(e, XSTORE_UPLOAD_FAIL);
         }
@@ -53,7 +54,8 @@ public class XstoreService implements InitializingBean {
         xstorSdk = new XstorSdk(
                 xstorConfigrution.getAppId(),
                 xstorConfigrution.getAppKey(),
-                StringUtils.EMPTY);
+                StringUtils.EMPTY
+        );
     }
 
     @Component

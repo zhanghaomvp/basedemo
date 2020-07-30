@@ -18,7 +18,7 @@ import java.util.List;
 public interface CompanyMemberMapper extends BaseMapper<CompanyMember> {
 
     @Select(
-            "SELECT distinct  department FROM company_member WHERE company = #{companyId}"
+            "SELECT distinct department FROM company_member WHERE company = #{companyId}"
     )
     List<String> getAllDepartment(Integer companyId);
 }

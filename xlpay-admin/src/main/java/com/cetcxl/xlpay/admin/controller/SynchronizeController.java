@@ -1,15 +1,14 @@
 package com.cetcxl.xlpay.admin.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.cetcxl.xlpay.common.constants.PatternConstants;
-import com.cetcxl.xlpay.common.controller.BaseController;
-import com.cetcxl.xlpay.common.interceptor.annotation.SignApi;
-import com.cetcxl.xlpay.common.rpc.ResBody;
-import com.cetcxl.xlpay.common.entity.model.Company;
-import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.admin.entity.vo.CompanyMemberVO;
 import com.cetcxl.xlpay.admin.service.CompanyMemberService;
 import com.cetcxl.xlpay.admin.service.CompanyService;
+import com.cetcxl.xlpay.common.constants.PatternConstants;
+import com.cetcxl.xlpay.common.controller.BaseController;
+import com.cetcxl.xlpay.common.entity.model.Company;
+import com.cetcxl.xlpay.common.entity.model.CompanyMember;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -74,7 +73,7 @@ public class SynchronizeController extends BaseController {
 
     @PostMapping("/synchronize/company-member")
     @ApiOperation("")
-    public ResBody<CompanyMemberVO> addCompanyMember(@RequestBody @Validated CompanyMemberAddReq req) {
+    public CompanyMemberVO addCompanyMember(@RequestBody @Validated CompanyMemberAddReq req) {
         Company company = companyService.getOne(
                 Wrappers.lambdaQuery(Company.class)
                         .eq(Company::getSocialCreditCode, req.getSocialCreditCode())
@@ -82,7 +81,7 @@ public class SynchronizeController extends BaseController {
         );
 
         if (Objects.isNull(company)) {
-            return ResBody.error(COMPANY_NOT_EXIST);
+            throw new BaseRuntimeException(COMPANY_NOT_EXIST);
         }
 
         CompanyMember member = companyMemberService
@@ -93,7 +92,7 @@ public class SynchronizeController extends BaseController {
                 );
 
         if (Objects.nonNull(member)) {
-            return ResBody.error(COMPANY_MEMBER_EXIST);
+            throw new BaseRuntimeException(COMPANY_MEMBER_EXIST);
         }
 
         CompanyMember companyMember = CompanyMember.builder()
@@ -106,12 +105,10 @@ public class SynchronizeController extends BaseController {
                 .status(CompanyMember.CompanyMemberStatus.ACTIVE)
                 .build();
 
-        CompanyMemberVO companyMemberVO = CompanyMemberVO
+        return CompanyMemberVO
                 .of(
                         companyMemberService.addCompanyMember(companyMember),
                         company
                 );
-
-        return ResBody.success(companyMemberVO);
     }
 }

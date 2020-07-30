@@ -105,13 +105,39 @@ public class ChainCodeService {
         }
     }
 
+
+
+    /**
+     * 根据结算单号获取链上结算单信息
+     * @param checkNo 结算单号
+     */
+    public CheckSlip queryCheckInfo(String checkNo) {
+        if (!configuration.getChainCodeSwitch()) {
+            return null;
+        }
+
+        JSONObject json = initialRequestJson();
+        json.put("args", new String[]{checkNo});
+        json.put("fcn", ChainCodeConstant.QUERY_CHECK_SLIP_FUNC);
+        json.put("func", ChainCodeConstant.FABRIC_QUERY);
+
+        log.info("根据交易单号:[{}],获取链上订单信息", checkNo);
+        Result result = sendRequest(json);
+
+        if (Objects.isNull(result) || result.getCode() != 0) {
+            log.error("queryCheckInfo error :" + result.getMsg());
+            throw new BaseRuntimeException(CHAIN_CODE_QUERY_DEALING_RECORD_ERROR);
+        }
+        return JSONObject.parseObject(result.data, CheckSlip.class);
+    }
+
     /**
      * 根据交易单号获取链上订单信息
      * @param tradeNo 交易单号
      */
-    public void queryOrderInfo(String tradeNo) {
+    public Order queryOrderInfo(String tradeNo) {
         if (!configuration.getChainCodeSwitch()) {
-            return;
+            return null;
         }
 
         JSONObject json = initialRequestJson();
@@ -126,6 +152,7 @@ public class ChainCodeService {
             log.error("queryOrderInfo error :" + result.getMsg());
             throw new BaseRuntimeException(CHAIN_CODE_QUERY_DEALING_RECORD_ERROR);
         }
+        return JSONObject.parseObject(result.data, Order.class);
     }
 
     /**

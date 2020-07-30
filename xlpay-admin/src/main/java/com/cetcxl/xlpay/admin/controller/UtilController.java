@@ -1,11 +1,11 @@
 package com.cetcxl.xlpay.admin.controller;
 
-import com.cetcxl.xlpay.admin.entity.vo.CompanyVO;
+import com.cetcxl.xlpay.common.constants.CommonResultCode;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Attachment;
 import com.cetcxl.xlpay.common.entity.vo.AttachmentVO;
-import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.service.AttachmentService;
 import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import com.cetcxl.xlpay.common.service.XstoreService;
@@ -36,26 +36,23 @@ public class UtilController extends BaseController {
     @PostMapping(value = "/util/verify-code", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiOperation("发送验证码")
     @ApiImplicitParam(name = "phone", paramType = "form")
-    public ResBody<CompanyVO> sendSmsVerifyCode(
+    public void sendSmsVerifyCode(
             @Pattern(regexp = PatternConstants.PHONE)
             @RequestParam("phone")
                     String phone
     ) {
         boolean flag = verifyCodeService.sendVerifyCode(phone);
         if (!flag) {
-            return ResBody.error();
+            throw new BaseRuntimeException(CommonResultCode.RPC_ERROR);
         }
-
-        return ResBody.success();
     }
 
     @PostMapping("/util/upload/xstore")
     @ApiOperation("文件上传")
-    public ResBody<AttachmentVO> upload(
+    public AttachmentVO upload(
             @RequestParam("file") MultipartFile file
     ) {
-        AttachmentVO attachmentVO = AttachmentVO.of(attachmentService.addXstoreFile(file), AttachmentVO.class);
-        return ResBody.success(attachmentVO);
+        return AttachmentVO.of(attachmentService.addXstoreFile(file), AttachmentVO.class);
     }
 
     @GetMapping("/util/download/xstore/{attachId}")

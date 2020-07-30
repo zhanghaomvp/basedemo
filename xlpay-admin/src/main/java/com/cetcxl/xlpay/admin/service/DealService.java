@@ -15,7 +15,7 @@ import com.cetcxl.xlpay.admin.dao.DealMapper;
 import com.cetcxl.xlpay.admin.exception.DealCashImportException;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
 import com.cetcxl.xlpay.common.component.RedisLockComponent;
-import com.cetcxl.xlpay.common.constants.Constants;
+import com.cetcxl.xlpay.common.constants.XlpayConstants;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.Deal;
@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CASH;
 import static com.cetcxl.xlpay.common.entity.model.Deal.PayType.CREDIT;
+import static com.cetcxl.xlpay.common.entity.model.WalletCash.WalletCashStaus.DISABLE;
 
 /**
  * <p>
@@ -81,13 +82,13 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
         @ColumnWidth(25)
         String amount;
 
+        @ExcelProperty("交易类型")
+        @ColumnWidth(25)
+        String payType;
+
         @ExcelProperty("交易时间")
         @ColumnWidth(40)
         LocalDateTime transTime;
-
-        @ExcelProperty("支付类型")
-        @ColumnWidth(25)
-        String payType;
 
         @ExcelProperty("结算状态")
         @ColumnWidth(25)
@@ -156,7 +157,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Transactional
     public void dealCashForAdmin(DealForAdminParam param) {
         try (RedisLockComponent.RedisLock redisLock =
-                     new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + param.getWalletId())) {
+                     new RedisLockComponent.RedisLock(XlpayConstants.LOCK_CASH_DEAL + param.getWalletId())) {
             Deal deal = Deal.builder()
                     .company(param.getCompany().getId())
                     .companyMember(param.getCompanyMember().getId())
@@ -288,12 +289,12 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
                 Wrappers.lambdaQuery(WalletCash.class)
                         .eq(WalletCash::getCompanyMember, companyMember.getId())
         );
-        if (Objects.isNull(walletCash)) {
+        if (Objects.isNull(walletCash) || walletCash.getStatus() == DISABLE) {
             throw new DealCashImportException();
         }
 
         try (RedisLockComponent.RedisLock redisLock =
-                     new RedisLockComponent.RedisLock(Constants.KEY_CASH_DEAL + walletCash.getId())) {
+                     new RedisLockComponent.RedisLock(XlpayConstants.LOCK_CASH_DEAL + walletCash.getId())) {
             Deal deal = Deal.builder()
                     .company(ContextUtil.getUserInfo().getCompany().getId())
                     .companyMember(companyMember.getId())
@@ -333,7 +334,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
     @Transactional
     public void dealCreditForAdmin(DealForAdminParam param) {
         try (RedisLockComponent.RedisLock redisLock =
-                     new RedisLockComponent.RedisLock(Constants.KEY_CREDIT_DEAL + param.getWalletId())) {
+                     new RedisLockComponent.RedisLock(XlpayConstants.LOCK_CREDIT_DEAL + param.getWalletId())) {
 
             Deal deal = Deal.builder()
                     .company(param.getCompany().getId())

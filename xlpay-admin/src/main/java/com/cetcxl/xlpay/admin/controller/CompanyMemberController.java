@@ -18,7 +18,6 @@ import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.model.WalletCash;
 import com.cetcxl.xlpay.common.entity.model.WalletCredit;
 import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
-import com.cetcxl.xlpay.common.rpc.ResBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -80,14 +79,12 @@ public class CompanyMemberController extends BaseController {
      */
     @GetMapping("/companys/{companyId}/members/wallet/cash")
     @ApiOperation("企业成员余额账户查询")
-    public ResBody<IPage<WalletCashMapper.WalletCashDTO>> listWalletCash(@Validated ListWalletReq req) {
-        IPage<WalletCashMapper.WalletCashDTO> iPage = walletCashMapper.listWalletCash(
+    public IPage<WalletCashMapper.WalletCashDTO> listWalletCash(@Validated ListWalletReq req) {
+        return walletCashMapper.listWalletCash(
                 new Page(req.getPageNo(), req.getPageSize()),
                 ContextUtil.getUserInfo().getCompany().getId(),
                 req.getDepartment(),
                 req.getName());
-
-        return ResBody.success(iPage);
     }
 
     @GetMapping("/companys/{companyId}/members/wallet/cash/export")
@@ -124,10 +121,10 @@ public class CompanyMemberController extends BaseController {
 
     @PatchMapping(value = "/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/status")
     @ApiOperation("企业成员余额账户状态修改")
-    public ResBody updateWalletCashStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCashStatusReq req) {
+    public void updateWalletCashStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCashStatusReq req) {
         WalletCash walletCash = walletCashService.getById(walletId);
         if (Objects.isNull(walletCash)) {
-            return ResBody.error(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
+            throw new BaseRuntimeException(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
         }
 
         walletCashService.update(
@@ -136,7 +133,6 @@ public class CompanyMemberController extends BaseController {
                         .set(WalletCash::getStatus, req.getStatus())
                         .eq(WalletCash::getId, walletCash.getId())
         );
-        return ResBody.success();
     }
 
 
@@ -155,7 +151,7 @@ public class CompanyMemberController extends BaseController {
 
     @PostMapping("/companys/{companyId}/members/{companyMemberId}/wallet/cash/{walletId}/balance")
     @ApiOperation("企业成员余额账户余额修改")
-    public ResBody updateWalletCashAmount(
+    public void updateWalletCashAmount(
             @PathVariable Integer walletId,
             @PathVariable Integer companyMemberId,
             @Validated @RequestBody UpdateWalletCashAmountReq req
@@ -170,7 +166,6 @@ public class CompanyMemberController extends BaseController {
                 .build();
 
         dealService.dealCashForAdmin(param);
-        return ResBody.success();
     }
 
     @Data
@@ -191,7 +186,7 @@ public class CompanyMemberController extends BaseController {
 
     @PostMapping("/companys/{companyId}/members/wallet/cashs/balance")
     @ApiOperation("批量企业成员余额账户余额修改")
-    public ResBody batchUpdateWalletCashAmount(@Validated @RequestBody BatchUpdateWalletCashAmountReq req) {
+    public void batchUpdateWalletCashAmount(@Validated @RequestBody BatchUpdateWalletCashAmountReq req) {
         List<Integer> walletIds = req.getWalletIds();
         List<Integer> companyMemberIds = req.getCompanyMemberIds();
         if (walletIds.size() != companyMemberIds.size()) {
@@ -213,7 +208,6 @@ public class CompanyMemberController extends BaseController {
                 .collect(Collectors.toList());
 
         dealService.batchDealCashForAdmin(list);
-        return ResBody.success();
     }
 
     @Data
@@ -226,7 +220,7 @@ public class CompanyMemberController extends BaseController {
 
     @PostMapping(value = "/companys/{companyId}/members/wallet/cashs/balance/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiOperation("批量企业成员余额账户余额修改导入")
-    public ResBody importUpdateWalletCashAmount(@RequestParam("file") MultipartFile file) throws IOException {
+    public ImportUpdateWalletCashAmountRes importUpdateWalletCashAmount(@RequestParam("file") MultipartFile file) throws IOException {
         DealService.DealCashImportListener listener = new DealService.DealCashImportListener(dealService);
 
         EasyExcel
@@ -238,14 +232,11 @@ public class CompanyMemberController extends BaseController {
                 .sheet()
                 .doRead();
 
-        return ResBody
-                .success(
-                        ImportUpdateWalletCashAmountRes
-                                .builder()
-                                .totalCount(listener.getTotal())
-                                .failRows(listener.getFailRows())
-                                .build()
-                );
+        return ImportUpdateWalletCashAmountRes
+                .builder()
+                .totalCount(listener.getTotal())
+                .failRows(listener.getFailRows())
+                .build();
     }
 
     @GetMapping("/companys/{companyId}/members/wallet/cashs/balance/excel/template/export")
@@ -271,15 +262,13 @@ public class CompanyMemberController extends BaseController {
      */
     @GetMapping("/companys/{companyId}/members/wallet/credit")
     @ApiOperation("企业成员信用账户查询")
-    public ResBody<IPage<WalletCreditMapper.WalletCreditDTO>> listWalletCredit(@Validated ListWalletReq req) {
-        IPage<WalletCreditMapper.WalletCreditDTO> iPage = walletCreditMapper.listWalletCredit(
+    public IPage<WalletCreditMapper.WalletCreditDTO> listWalletCredit(@Validated ListWalletReq req) {
+        return walletCreditMapper.listWalletCredit(
                 new Page(req.getPageNo(), req.getPageSize()),
                 ContextUtil.getUserInfo().getCompany().getId(),
                 req.getDepartment(),
                 req.getName()
         );
-
-        return ResBody.success(iPage);
     }
 
     @GetMapping("/companys/{companyId}/members/wallet/credit/export")
@@ -318,10 +307,10 @@ public class CompanyMemberController extends BaseController {
 
     @PatchMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/status")
     @ApiOperation("企业成员信用钱包状态修改")
-    public ResBody updateWalletCreditStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCreditStatusReq req) {
+    public void updateWalletCreditStatus(@PathVariable Integer walletId, @Validated @RequestBody UpdateWalletCreditStatusReq req) {
         WalletCredit walletCredit = walletCreditService.getById(walletId);
         if (Objects.isNull(walletCredit)) {
-            return ResBody.error(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
+            throw new BaseRuntimeException(ResultCode.COMPANY_MEMBER_WALLET_NOT_EXIST);
         }
 
         walletCreditService.update(
@@ -330,7 +319,6 @@ public class CompanyMemberController extends BaseController {
                         .set(WalletCredit::getStatus, req.getStatus())
                         .eq(WalletCredit::getId, walletCredit.getId())
         );
-        return ResBody.success();
     }
 
     @Data
@@ -346,7 +334,7 @@ public class CompanyMemberController extends BaseController {
 
     @PostMapping("/companys/{companyId}/members/{companyMemberId}/wallet/credit/{walletId}/quota")
     @ApiOperation("企业成员信用额度修改")
-    public ResBody updateWalletCreditQuota(
+    public void updateWalletCreditQuota(
             @PathVariable Integer walletId,
             @PathVariable Integer companyMemberId,
             @Validated @RequestBody UpdateWalletCreditQuotaReq req
@@ -361,7 +349,6 @@ public class CompanyMemberController extends BaseController {
                 .build();
 
         dealService.dealCreditForAdmin(param);
-        return ResBody.success();
     }
 
     @Data
@@ -377,7 +364,7 @@ public class CompanyMemberController extends BaseController {
 
     @PostMapping("/companys/{companyId}/members/wallet/credits/balance")
     @ApiOperation("批量企业成员信用账户额度修改")
-    public ResBody batchUpdateWalletCreditQuota(@Validated @RequestBody BatchUpdateWalletCreditQuotaReq req) {
+    public void batchUpdateWalletCreditQuota(@Validated @RequestBody BatchUpdateWalletCreditQuotaReq req) {
         List<Integer> walletIds = req.getWalletIds();
         List<Integer> companyMemberIds = req.getCompanyMemberIds();
 
@@ -400,7 +387,6 @@ public class CompanyMemberController extends BaseController {
                 .collect(Collectors.toList());
 
         dealService.batchDealCreditForAdmin(list);
-        return ResBody.success();
     }
 
     /*

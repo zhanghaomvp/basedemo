@@ -207,7 +207,7 @@ class ChecksControllerTest extends BaseTest {
                 );
 
         Assertions.assertTrue(checkDTOS.size() > 0);
-        Assertions.assertTrue(checkDTOS.get(2).getApprovalPhone().equals("17360126771"));
+        Assertions.assertEquals("17360126771", checkDTOS.get(1).getApprovalPhone());
 
     }
 

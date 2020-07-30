@@ -11,14 +11,13 @@ import com.cetcxl.xlpay.admin.service.ChecksService;
 import com.cetcxl.xlpay.admin.service.CompanyService;
 import com.cetcxl.xlpay.admin.service.DealService;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
-import com.cetcxl.xlpay.common.plugins.easyexcel.LocalDateTimeConverter;
 import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Attachment;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.Deal;
 import com.cetcxl.xlpay.common.entity.vo.AttachmentVO;
-import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.plugins.easyexcel.LocalDateTimeConverter;
 import com.cetcxl.xlpay.common.service.AttachmentService;
 import com.google.common.base.Splitter;
 import io.swagger.annotations.Api;
@@ -31,7 +30,6 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,7 +78,6 @@ public class ChecksController extends BaseController {
         Checks.Status[] statues;
 
 
-
         @DateTimeFormat(pattern = DATE_TIME)
         LocalDateTime approvalTimeBegin;
         @DateTimeFormat(pattern = DATE_TIME)
@@ -93,14 +90,11 @@ public class ChecksController extends BaseController {
 
     @GetMapping("/companys/{companyId}/checks")
     @ApiOperation("企业结算列表查询")
-    public ResBody<IPage<ChecksMapper.CheckDTO>> listCompanyCheck(@Validated(ListCompanyCheckGroup.class) ListCheckReq req) {
-        return ResBody
-                .success(
-                        checksMapper.listCheck(
-                                new Page(req.getPageNo(), req.getPageSize()),
-                                req
-                        )
-                );
+    public IPage<ChecksMapper.CheckDTO> listCompanyCheck(@Validated(ListCompanyCheckGroup.class) ListCheckReq req) {
+        return checksMapper.listCheck(
+                new Page(req.getPageNo(), req.getPageSize()),
+                req
+        );
     }
 
     interface ListStoreCheckGroup {
@@ -108,19 +102,16 @@ public class ChecksController extends BaseController {
 
     @GetMapping("/stores/{storeId}/checks")
     @ApiOperation("商家结算列表查询")
-    public ResBody<IPage<ChecksMapper.CheckDTO>> listStoreCheck(@Validated(ListStoreCheckGroup.class) ListCheckReq req) {
-        return ResBody
-                .success(
-                        checksMapper.listCheck(
-                                new Page(req.getPageNo(), req.getPageSize()),
-                                req
-                        )
-                );
+    public IPage<ChecksMapper.CheckDTO> listStoreCheck(@Validated(ListStoreCheckGroup.class) ListCheckReq req) {
+        return checksMapper.listCheck(
+                new Page(req.getPageNo(), req.getPageSize()),
+                req
+        );
     }
 
     @GetMapping("/checks/{checkId}")
     @ApiOperation("结算单详情查询")
-    public ResBody<ChecksVO> getCheckDetail(@PathVariable Integer checkId) {
+    public ChecksVO getCheckDetail(@PathVariable Integer checkId) {
         Checks checks = checksService.getById(checkId);
         ChecksVO checksVO = ChecksVO.of(checks, ChecksVO.class);
 
@@ -152,7 +143,7 @@ public class ChecksController extends BaseController {
                         .getName()
         );
 
-        return ResBody.success(checksVO.resolveInfos());
+        return checksVO.resolveInfos();
     }
 
     @Data
@@ -175,27 +166,23 @@ public class ChecksController extends BaseController {
 
     @PostMapping("/companys/{companyId}/deals/checks")
     @ApiOperation("企业新增结算单")
-    @Transactional
-    public ResBody<ChecksVO> addCheck(
+    public ChecksVO addCheck(
             @PathVariable Integer companyId,
             @Validated @RequestBody AddCheckReq req
     ) {
 
-        return ResBody
-                .success(
-                        ChecksVO.of(
-                                checksService.addCheck(
-                                        Integer.valueOf(ContextUtil.getUserInfo().getUsername()),
-                                        companyId,
-                                        req.getStoreId(),
-                                        req.getPayType(),
-                                        req.getDealIds(),
-                                        req.getAttachments(),
-                                        req.getInfo()
-                                ),
-                                ChecksVO.class
-                        )
-                );
+        return ChecksVO.of(
+                checksService.addCheck(
+                        Integer.valueOf(ContextUtil.getUserInfo().getUsername()),
+                        companyId,
+                        req.getStoreId(),
+                        req.getPayType(),
+                        req.getDealIds(),
+                        req.getAttachments(),
+                        req.getInfo()
+                ),
+                ChecksVO.class
+        );
     }
 
 
@@ -217,7 +204,7 @@ public class ChecksController extends BaseController {
 
     @PatchMapping("/companys/{companyId}/deals/checks/{checkBatch}")
     @ApiOperation("结算单企业审核")
-    public ResBody approvalCheck(
+    public void approvalCheck(
             @PathVariable
                     Integer checkBatch,
             @Validated(ApprovalCheckGroup.class)
@@ -231,8 +218,6 @@ public class ChecksController extends BaseController {
         } else {
             checksService.process(operator, checkBatch, Checks.Status.REJECT, req.getInfo());
         }
-
-        return ResBody.success();
     }
 
     interface ConfirmCheckGroup {
@@ -240,7 +225,7 @@ public class ChecksController extends BaseController {
 
     @PatchMapping("/stores/{storeId}/deals/checks/{checkBatch}")
     @ApiOperation("结算单商家确认")
-    public ResBody confirmCheck(
+    public void confirmCheck(
             @PathVariable
                     Integer checkBatch,
             @Validated(ConfirmCheckGroup.class)
@@ -254,14 +239,11 @@ public class ChecksController extends BaseController {
         } else {
             checksService.process(operator, checkBatch, Checks.Status.DENY, req.getInfo());
         }
-
-        return ResBody.success();
     }
 
     @GetMapping("/company/{companyId}/deal/checks/export")
     @ApiOperation("企业结算管理明细导出")
     public void companyCheckExport(@Validated ChecksController.ListCheckReq req, HttpServletResponse response) throws Exception {
-
 
 
         ChecksService.CheckExportRow.SheetFormat sheetFormat = ChecksService.CheckExportRow

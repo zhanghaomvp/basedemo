@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Deal;
-import com.cetcxl.xlpay.common.rpc.ResBody;
 import com.cetcxl.xlpay.payuser.dao.DealMapper;
 import com.cetcxl.xlpay.payuser.entity.vo.DealVO;
 import com.cetcxl.xlpay.payuser.service.CompanyService;
@@ -65,22 +64,18 @@ public class DealsController extends BaseController {
 
     @GetMapping("/pay-user/deals")
     @ApiOperation("账单查询")
-    public ResBody<IPage<DealMapper.DealDTO>> listDeal(@Validated ListDealReq req) {
-
+    public IPage<DealMapper.DealDTO> listDeal(@Validated ListDealReq req) {
         req.setEnd(req.getBegin().plusMonths(1));
-        return ResBody
-                .success(
-                        dealMapper.listDeal(
-                                new Page(req.getPageNo(), req.getPageSize()),
-                                req,
-                                ContextUtil.getUserInfo().getPayUser().getIcNo()
-                        )
-                );
+        return dealMapper.listDeal(
+                new Page(req.getPageNo(), req.getPageSize()),
+                req,
+                ContextUtil.getUserInfo().getPayUser().getIcNo()
+        );
     }
 
     @GetMapping("/pay-user/deals/{dealId}")
     @ApiOperation("详情查询")
-    public ResBody<DealVO> deal(@PathVariable Integer dealId) {
+    public DealVO deal(@PathVariable Integer dealId) {
         Deal deal = dealService.getById(dealId);
         DealVO dealVO = DealVO.of(deal, DealVO.class);
 
@@ -88,20 +83,17 @@ public class DealsController extends BaseController {
         if (Deal.Status.CHECK_FINISH == deal.getStatus()) {
             dealVO.setCheckFinishTime(deal.getUpdated());
         }
-        return ResBody.success(dealVO);
+        return dealVO;
     }
 
     @GetMapping("/pay-user/deals/amounts")
     @ApiOperation("账单统筹数据查询")
-    public ResBody<DealMapper.DealAmountsDTO> listDealAmount(@Validated ListDealReq req) {
+    public DealMapper.DealAmountsDTO listDealAmount(@Validated ListDealReq req) {
 
         req.setEnd(req.getBegin().plusMonths(1));
-        return ResBody
-                .success(
-                        dealMapper.listDealAmounts(
-                                req,
-                                ContextUtil.getUserInfo().getPayUser().getIcNo()
-                        )
-                );
+        return dealMapper.listDealAmounts(
+                req,
+                ContextUtil.getUserInfo().getPayUser().getIcNo()
+        );
     }
 }

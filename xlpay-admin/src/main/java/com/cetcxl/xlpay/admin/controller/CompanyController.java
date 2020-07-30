@@ -20,7 +20,7 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyMember;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
-import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -113,9 +114,9 @@ public class CompanyController extends BaseController {
     @PostMapping("/companys/register")
     @ApiOperation("企业注册")
     @Transactional
-    public ResBody<CompanyUserVO> register(@RequestBody @Validated final CompanyRegisterReq req) {
+    public CompanyUserVO register(@RequestBody @Validated final CompanyRegisterReq req) {
         if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
-            return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
+            throw new BaseRuntimeException(ResultCode.VERIFY_CODE_FAIL);
         }
 
         CompanyUser companyUser = companyUserService.getOne(Wrappers.lambdaQuery(CompanyUser.class)
@@ -123,7 +124,7 @@ public class CompanyController extends BaseController {
                 .eq(CompanyUser::getStatus, CompanyUser.CompanyUserStatus.ACTIVE));
 
         if (Objects.nonNull(companyUser)) {
-            return ResBody.error(ResultCode.COMPANY_USER_EXIST);
+            throw new BaseRuntimeException(ResultCode.COMPANY_USER_EXIST);
         }
 
         Company company = companyService.getOne(
@@ -137,12 +138,12 @@ public class CompanyController extends BaseController {
                     trustlinkDataRpcService.getCompanyInfo(req.getSocialCreditCode());
 
             if (!optionalCompanyInfo.isPresent()) {
-                return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
+                throw new BaseRuntimeException(ResultCode.COMPANY_NOT_EXIST);
             }
 
             TrustlinkDataRpcService.CompanyInfo companyInfo = optionalCompanyInfo.get();
             if (!req.getName().equals(companyInfo.getOrganizationName())) {
-                return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
+                throw new BaseRuntimeException(ResultCode.COMPANY_NOT_EXIST);
             }
 
             company = Company.builder()
@@ -173,13 +174,12 @@ public class CompanyController extends BaseController {
                 .build();
         companyUserService.save(companyUser);
 
-        CompanyUserVO companyUserVO = CompanyUserVO.of(companyUser, company);
-        return ResBody.success(companyUserVO);
+        return CompanyUserVO.of(companyUser, company);
     }
 
     @GetMapping("/companys/{companyId}")
     @ApiOperation("企业详情")
-    public ResBody<CompanyVO> detail(@PathVariable @Pattern(regexp = PatternConstants.MUST_NUMBER) String companyId) {
+    public CompanyVO detail(@PathVariable @Pattern(regexp = PatternConstants.MUST_NUMBER) String companyId) {
         Company company = companyService.getOne(
                 Wrappers.lambdaQuery(Company.class)
                         .eq(Company::getId, companyId)
@@ -187,7 +187,7 @@ public class CompanyController extends BaseController {
         );
 
         if (Objects.isNull(company)) {
-            return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
+            throw new BaseRuntimeException(ResultCode.COMPANY_NOT_EXIST);
         }
         CompanyVO companyVO = CompanyVO.of(company, CompanyVO.class);
 
@@ -201,10 +201,11 @@ public class CompanyController extends BaseController {
                 companyStoreRelationService.count(
                         Wrappers.lambdaQuery(CompanyStoreRelation.class)
                                 .eq(CompanyStoreRelation::getCompany, company.getId())
+                                .gt(CompanyStoreRelation::getRelation, 0)
                 )
         );
 
-        return ResBody.success(companyVO);
+        return companyVO;
     }
 
     @Data
@@ -220,29 +221,23 @@ public class CompanyController extends BaseController {
 
     @GetMapping("/companys/{companyId}/stores")
     @ApiOperation("商家查询")
-    public ResBody<IPage<StoreMapper.CompanyStoreDTO>> listStores(ListStoresReq req) {
+    public IPage<StoreMapper.CompanyStoreDTO> listStores(ListStoresReq req) {
         UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
 
         if (req.hasRelation) {
-            return ResBody
-                    .success(
-                            storeMapper
-                                    .listCompanyStoresWithRelation(
-                                            new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getCompany().getId(),
-                                            req.getName()
-                                    )
+            return storeMapper
+                    .listCompanyStoresWithRelation(
+                            new Page(req.getPageNo(), req.getPageSize()),
+                            user.getCompany().getId(),
+                            req.getName()
                     );
         } else {
-            return ResBody
-                    .success(
-                            storeMapper
-                                    .listCompanyStoresNotWithRelation(
-                                            new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getCompany().getId(),
-                                            req.getName()
+            return storeMapper
+                    .listCompanyStoresNotWithRelation(
+                            new Page(req.getPageNo(), req.getPageSize()),
+                            user.getCompany().getId(),
+                            req.getName()
 
-                                    )
                     );
         }
     }
@@ -264,8 +259,8 @@ public class CompanyController extends BaseController {
     @PostMapping("/companys/{companyId}/stores/{storeId}/company-store-relation")
     @ApiOperation("增加企业商家授信")
     @Transactional
-    public ResBody<CompanyStoreRelationVO> addCompanyStoreRelation(@PathVariable Integer storeId,
-                                                                   @Validated @RequestBody CompanyStoreRelationReq req) {
+    public CompanyStoreRelationVO addCompanyStoreRelation(@PathVariable Integer storeId,
+                                                          @Validated @RequestBody CompanyStoreRelationReq req) {
         UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
         Integer companyId = user.getCompany().getId();
 
@@ -276,7 +271,7 @@ public class CompanyController extends BaseController {
         );
 
         if (Objects.nonNull(one)) {
-            return ResBody.error(ResultCode.COMPANY_STORE_RELATION_EXIST);
+            throw new BaseRuntimeException(ResultCode.COMPANY_STORE_RELATION_EXIST);
         }
 
         int applyReleation = 0;
@@ -294,17 +289,17 @@ public class CompanyController extends BaseController {
                 .status(APPROVAL)
                 .build();
         companyStoreRelationService.save(relation);
-        return ResBody.success(CompanyStoreRelationVO.of(relation));
+        return CompanyStoreRelationVO.of(relation);
     }
 
     @PatchMapping("/companys/{companyId}/stores/{storeId}/company-store-relation/{id}")
     @ApiOperation("修改企业商家授信")
     @Transactional
-    public ResBody updateCompanyStoreRelation(@PathVariable Integer id, @Validated @RequestBody CompanyStoreRelationReq req) {
+    public void updateCompanyStoreRelation(@PathVariable Integer id, @Validated @RequestBody CompanyStoreRelationReq req) {
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getById(id);
 
         if (APPROVAL == companyStoreRelation.getStatus()) {
-            return ResBody.error(COMPANY_STORE_RELATION_APPROVING);
+            throw new BaseRuntimeException(COMPANY_STORE_RELATION_APPROVING);
         }
 
         Integer relation = companyStoreRelation.getRelation();
@@ -340,7 +335,6 @@ public class CompanyController extends BaseController {
                         .set(CompanyStoreRelation::getStatus, isAddRelation ? APPROVAL : WORKING)
                         .eq(CompanyStoreRelation::getId, companyStoreRelation.getId())
         );
-        return ResBody.success();
     }
 
     @Data
@@ -364,31 +358,26 @@ public class CompanyController extends BaseController {
 
     @PatchMapping("companys/company-user/password")
     @ApiOperation("重置企业登录密码")
-    public ResBody resetLoginPassword(@Validated @RequestBody ResetloginPasswordReq req) {
+    public void resetLoginPassword(@Validated @RequestBody ResetloginPasswordReq req) {
 
         if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
-            return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
+            throw new BaseRuntimeException(ResultCode.VERIFY_CODE_FAIL);
         }
         CompanyUser companyUser = companyUserService.lambdaQuery()
                 .eq(CompanyUser::getPhone, req.getPhone())
                 .eq(CompanyUser::getStatus, CompanyUser.CompanyUserStatus.ACTIVE).one();
 
         if (ObjectUtil.isNull(companyUser)) {
-            return ResBody.error(ResultCode.COMPANY_NOT_EXIST);
+            throw new BaseRuntimeException(ResultCode.COMPANY_NOT_EXIST);
         }
 
         companyUser.setPassword(passwordEncoder.encode(req.getNewPassword()));
         companyUserService.updateById(companyUser);
-        return ResBody.success();
     }
 
     @GetMapping("companys/{companyId}/departments")
     @ApiOperation("获取当前企业所有部门列表")
-    public ResBody getAllDepartment(@PathVariable Integer companyId) {
-
-        return ResBody.success(
-                companyMemberMapper.getAllDepartment(companyId)
-        );
-
+    public List<String> getAllDepartment(@PathVariable Integer companyId) {
+        return companyMemberMapper.getAllDepartment(companyId);
     }
 }

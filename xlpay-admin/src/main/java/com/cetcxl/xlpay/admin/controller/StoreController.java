@@ -11,7 +11,10 @@ import com.cetcxl.xlpay.admin.dao.StoreMapper;
 import com.cetcxl.xlpay.admin.entity.model.StoreUser;
 import com.cetcxl.xlpay.admin.entity.vo.StoreUserVO;
 import com.cetcxl.xlpay.admin.entity.vo.StoreVO;
-import com.cetcxl.xlpay.admin.service.*;
+import com.cetcxl.xlpay.admin.service.CompanyStoreRelationService;
+import com.cetcxl.xlpay.admin.service.StoreService;
+import com.cetcxl.xlpay.admin.service.StoreUserService;
+import com.cetcxl.xlpay.admin.service.UserDetailServiceImpl;
 import com.cetcxl.xlpay.admin.util.ContextUtil;
 import com.cetcxl.xlpay.common.config.MybatisPlusConfig;
 import com.cetcxl.xlpay.common.constants.PatternConstants;
@@ -19,7 +22,7 @@ import com.cetcxl.xlpay.common.controller.BaseController;
 import com.cetcxl.xlpay.common.entity.model.Company;
 import com.cetcxl.xlpay.common.entity.model.CompanyStoreRelation;
 import com.cetcxl.xlpay.common.entity.model.Store;
-import com.cetcxl.xlpay.common.rpc.ResBody;
+import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.cetcxl.xlpay.common.service.VerifyCodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -40,6 +43,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.util.List;
 import java.util.Objects;
 
 import static com.cetcxl.xlpay.admin.constants.ResultCode.COMPANY_STORE_RELATION_WORKING;
@@ -119,9 +123,9 @@ public class StoreController extends BaseController {
     @PostMapping("/stores/register")
     @ApiOperation("商家注册")
     @Transactional
-    public ResBody<StoreUserVO> register(@RequestBody @Validated StoreRegisterReq req) {
+    public StoreUserVO register(@RequestBody @Validated StoreRegisterReq req) {
         if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
-            return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
+            throw new BaseRuntimeException(ResultCode.VERIFY_CODE_FAIL);
         }
 
         StoreUser storeUser = storeUserService.getOne(
@@ -130,7 +134,7 @@ public class StoreController extends BaseController {
                         .eq(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE)
         );
         if (Objects.nonNull(storeUser)) {
-            return ResBody.error(ResultCode.STORE_USER_EXIST);
+            throw new BaseRuntimeException(ResultCode.STORE_USER_EXIST);
         }
 
         Store store = storeService.getOne(
@@ -139,7 +143,7 @@ public class StoreController extends BaseController {
                         .eq(Store::getStatus, Company.CompanyStatus.ACTIVE)
         );
         if (Objects.nonNull(store)) {
-            return ResBody.error(ResultCode.STORE_EXIST);
+            throw new BaseRuntimeException(ResultCode.STORE_EXIST);
         }
 
         store = Store.builder()
@@ -161,8 +165,7 @@ public class StoreController extends BaseController {
                 .build();
         storeUserService.save(storeUser);
 
-        StoreUserVO storeUserVO = StoreUserVO.of(storeUser, store);
-        return ResBody.success(storeUserVO);
+        return StoreUserVO.of(storeUser, store);
     }
 
 
@@ -178,27 +181,21 @@ public class StoreController extends BaseController {
 
     @GetMapping("/stores/{storeId}/companys")
     @ApiOperation("企业查询")
-    public ResBody<IPage<StoreMapper.StoreCompanyDTO>> listCompanys(ListCompanysReq req) {
+    public IPage<StoreMapper.StoreCompanyDTO> listCompanys(ListCompanysReq req) {
         UserDetailServiceImpl.UserInfo user = ContextUtil.getUserInfo();
         if (req.getIsApproval()) {
-            return ResBody
-                    .success(
-                            storeMapper
-                                    .listStoreCompanyIsApproval(
-                                            new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getStore().getId(),
-                                            req.getCompanyName()
-                                    )
+            return storeMapper
+                    .listStoreCompanyIsApproval(
+                            new Page(req.getPageNo(), req.getPageSize()),
+                            user.getStore().getId(),
+                            req.getCompanyName()
                     );
         } else {
-            return ResBody
-                    .success(
-                            storeMapper
-                                    .listStoreCompanyNotApproval(
-                                            new Page(req.getPageNo(), req.getPageSize()),
-                                            user.getStore().getId(),
-                                            req.getCompanyName()
-                                    )
+            return storeMapper
+                    .listStoreCompanyNotApproval(
+                            new Page(req.getPageNo(), req.getPageSize()),
+                            user.getStore().getId(),
+                            req.getCompanyName()
                     );
         }
     }
@@ -223,12 +220,12 @@ public class StoreController extends BaseController {
     @PatchMapping("/stores/{storeId}/company-store-relation/{id}")
     @ApiOperation("商家确认企业商家授信")
     @Transactional
-    public ResBody updateCompanyStoreRelation(@PathVariable Integer id,
-                                              @Validated(UpdateCompanyStoreRelationGroup.class)
-                                              @RequestBody StoreCompanyRelationReq req) {
+    public void updateCompanyStoreRelation(@PathVariable Integer id,
+                                           @Validated(UpdateCompanyStoreRelationGroup.class)
+                                           @RequestBody StoreCompanyRelationReq req) {
         CompanyStoreRelation companyStoreRelation = companyStoreRelationService.getById(id);
         if (WORKING == companyStoreRelation.getStatus()) {
-            return ResBody.error(COMPANY_STORE_RELATION_WORKING);
+            throw new BaseRuntimeException(COMPANY_STORE_RELATION_WORKING);
         }
 
         if (req.getIsApproval()) {
@@ -246,7 +243,6 @@ public class StoreController extends BaseController {
                     .update();
         }
 
-        return ResBody.success();
     }
 
     interface CancelCompanyStoreRelationGroup {
@@ -255,20 +251,19 @@ public class StoreController extends BaseController {
     @DeleteMapping("/stores/{storeId}/company-store-relation/{id}")
     @ApiOperation("商家取消企业商家授信")
     @Transactional
-    public ResBody cancelCompanyStoreRelation(@PathVariable Integer id) {
+    public void cancelCompanyStoreRelation(@PathVariable Integer id) {
         companyStoreRelationService.lambdaUpdate()
                 .set(CompanyStoreRelation::getApplyReleation, null)
                 .set(CompanyStoreRelation::getRelation, null)
                 .set(CompanyStoreRelation::getStatus, WORKING)
                 .eq(CompanyStoreRelation::getId, id)
                 .update();
-        return ResBody.success();
     }
 
 
     @GetMapping("/stores/{storeId}")
     @ApiOperation("查询商家账户信息")
-    public ResBody<StoreVO> queryStoreInfo(@PathVariable @Pattern(regexp =
+    public StoreVO queryStoreInfo(@PathVariable @Pattern(regexp =
             PatternConstants.MUST_NUMBER) String storeId) {
         Store store = storeService.getById(storeId);
 
@@ -280,7 +275,7 @@ public class StoreController extends BaseController {
                         .count()
         );
 
-        return ResBody.success(infoVO);
+        return infoVO;
     }
 
 
@@ -289,7 +284,7 @@ public class StoreController extends BaseController {
     public void generateQrCode(HttpServletResponse response, @PathVariable Integer storeId) throws Exception {
         resolvePicResponseHeader(response, "qr-code");
         QrCodeUtil.generate(
-                storeService.getQrCodeContent(storeId,storeService.getById(storeId).getName()),
+                storeService.getQrCodeContent(storeId, storeService.getById(storeId).getName()),
                 300,
                 300,
                 StringUtils.EMPTY,
@@ -318,32 +313,27 @@ public class StoreController extends BaseController {
 
     @PatchMapping("stores/store-user/password")
     @ApiOperation("重置商家登录密码")
-    public ResBody resetLoginPassword(@Validated @RequestBody StoreController.ResetloginPasswordReq req) {
+    public void resetLoginPassword(@Validated @RequestBody StoreController.ResetloginPasswordReq req) {
 
         if (!verifyCodeService.checkVerifyCode(req.getVerifyCode(), req.getPhone())) {
-            return ResBody.error(ResultCode.VERIFY_CODE_FAIL);
+            throw new BaseRuntimeException(ResultCode.VERIFY_CODE_FAIL);
         }
         StoreUser storeUser = storeUserService.lambdaQuery()
                 .eq(StoreUser::getPhone, req.getPhone())
                 .eq(StoreUser::getStatus, StoreUser.StoreUserStatus.ACTIVE).one();
 
         if (ObjectUtil.isNull(storeUser)) {
-            return ResBody.error(ResultCode.STORE_NOT_EXIST);
+            throw new BaseRuntimeException(ResultCode.STORE_NOT_EXIST);
         }
 
         storeUser.setPassword(passwordEncoder.encode(req.getNewPassword()));
         storeUserService.updateById(storeUser);
-        return ResBody.success();
     }
 
     @GetMapping("stores/{storeId}/company-names")
     @ApiOperation("获取当前商家关联所有企业列表")
-    public ResBody getAllCompanyNames(@PathVariable Integer storeId) {
-
-        return ResBody.success(
-                companyStoreRelationMapper.getAllCompanyNames(storeId)
-        );
-
+    public List<String> getAllCompanyNames(@PathVariable Integer storeId) {
+        return companyStoreRelationMapper.getAllCompanyNames(storeId);
     }
 
 }
