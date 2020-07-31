@@ -495,6 +495,15 @@ func (t *SimpleChainCode) saveBusinessWalletInfo(stub shim.ChaincodeStubInterfac
 		if businessWallet.PayType == CREDIT {
 			businessWallet.BusinessCreditBalance = oldCreditBalance.Add(amount).String()
 		}
+	} else {
+		// 初始化
+		if businessWallet.PayType == CASH {
+			businessWallet.BusinessCashBalance = businessWallet.Amount
+		}
+
+		if businessWallet.PayType == CREDIT {
+			businessWallet.BusinessCreditBalance = businessWallet.Amount
+		}
 	}
 
 	oString, _ := json.Marshal(businessWallet)
@@ -528,6 +537,19 @@ func (t *SimpleChainCode) saveCheckSlipInfo(stub shim.ChaincodeStubInterface, ar
 		return shim.Error("Verify false of check slip.")
 	}
 
+	// 校验交易单数量
+	if !validateTotalDeal(checkSlip) {
+		return shim.Error("校验交易单数量不通过")
+	}
+
+	// <tradeNo, Order> map
+	orderMap := make(map[string]Order)
+
+	// 校验结算总金额
+	if !validateTotalAmount(checkSlip, orderMap, stub) {
+		return shim.Error("校验结算总金额不通过")
+	}
+
 	// 如果是信用结算，则需要恢复个人钱包信用额度
 	if checkSlip.CheckType == CREDIT {
 		// 用于存放个人钱包号和钱包信用余额，这样做是为了处理在同一个结算单内同一个钱包有多条消费的情况
@@ -535,17 +557,7 @@ func (t *SimpleChainCode) saveCheckSlipInfo(stub shim.ChaincodeStubInterface, ar
 		// 用于计算单个钱包在本次结算中累计恢复的额度
 		amounts := make(map[string]float64)
 
-		tradeNos := checkSlip.TradeNos
-		for _, tradeNo := range tradeNos {
-			objectBytes, _ := stub.GetState(tradeNo)
-
-			var order Order
-			er := json.Unmarshal(objectBytes, &order)
-			if er != nil {
-				return shim.Error("SaveCheckSlipInfo fail.Order unmarshal error.")
-			}
-			fmt.Println("结算操作查询出的订单数据：" + string(objectBytes))
-
+		for _, order := range orderMap {
 			if order.PayType != CREDIT {
 				fmt.Println("SaveCheckSlipInfo fail.Pay type not match.")
 				return shim.Error("SaveCheckSlipInfo fail.Pay type not match.")
@@ -592,6 +604,7 @@ func (t *SimpleChainCode) saveCheckSlipInfo(stub shim.ChaincodeStubInterface, ar
 			maps[personalWalletNo] = personalWallet
 		}
 
+		// 恢复个人钱包信用余额
 		for personalWalletNo, personalWallet := range maps {
 			personalWallet.TradeNo = ""
 			personalWallet.DealType = RECOVER_CREDIT
@@ -609,6 +622,49 @@ func (t *SimpleChainCode) saveCheckSlipInfo(stub shim.ChaincodeStubInterface, ar
 	stub.PutState(checkNo, oString)
 
 	return shim.Success(nil)
+}
+
+// 校验totalDeal的值与tradeNos的长度是否一致
+func validateTotalDeal(checkSlip CheckSlip) bool {
+	// 结算的交易单总条数
+	totalDeal, err := strconv.Atoi(checkSlip.TotalDeal)
+	if err != nil {
+		return false
+	}
+
+	return len(checkSlip.TradeNos) == totalDeal
+}
+
+// 校验结算总金额
+func validateTotalAmount(checkSlip CheckSlip, orderMap map[string]Order, stub shim.ChaincodeStubInterface) bool {
+	// 结算的总金额
+	totalAmountFloat, _ := strconv.ParseFloat(checkSlip.TotalAmount, 64)
+	totalAmountDecimal := decimal.NewFromFloat(totalAmountFloat)
+
+	tradeNos := checkSlip.TradeNos
+	sum := decimal.NewFromFloat(0)
+
+	for _, tradeNo := range tradeNos {
+		objectBytes, _ := stub.GetState(tradeNo)
+
+		var order Order
+		er := json.Unmarshal(objectBytes, &order)
+		if er != nil {
+			fmt.Println("SaveCheckSlipInfo fail.Order unmarshal error.")
+			return false
+		}
+		fmt.Println("结算操作查询出的订单数据：" + string(objectBytes))
+		// 放入map，方便后续操作
+		orderMap[tradeNo] = order
+		// 交易单金额
+		amountFloat, _ := strconv.ParseFloat(order.Amount, 64)
+		amountDecimal := decimal.NewFromFloat(amountFloat)
+		sum = sum.Add(amountDecimal)
+	}
+	fmt.Println("===== totalAmount：" + checkSlip.TotalAmount)
+	fmt.Println("===== sum：" + sum.String())
+
+	return totalAmountDecimal.Equal(sum)
 }
 
 //定义签名算法

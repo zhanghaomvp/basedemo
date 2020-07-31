@@ -267,8 +267,14 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
 
     @Transactional
     public void dealCashImport(DealCashImportRow row) throws DealCashImportException {
-        CompanyMember companyMember = companyMemberService.getOne(Wrappers.lambdaQuery(CompanyMember.class)
-                .eq(CompanyMember::getIcNo, row.getIcNo()));
+        Integer companyId = ContextUtil.getUserInfo().getCompany().getId();
+
+        CompanyMember companyMember =
+                companyMemberService.lambdaQuery()
+                        .eq(CompanyMember::getIcNo, row.getIcNo())
+                        .eq(CompanyMember::getCompany, companyId)
+                        .one();
+
         if (Objects.isNull(companyMember)) {
             throw new DealCashImportException();
         }
@@ -296,7 +302,7 @@ public class DealService extends ServiceImpl<DealMapper, Deal> {
         try (RedisLockComponent.RedisLock redisLock =
                      new RedisLockComponent.RedisLock(XlpayConstants.LOCK_CASH_DEAL + walletCash.getId())) {
             Deal deal = Deal.builder()
-                    .company(ContextUtil.getUserInfo().getCompany().getId())
+                    .company(companyId)
                     .companyMember(companyMember.getId())
                     .amount(new BigDecimal(row.getAmount()))
                     .type(dealType)

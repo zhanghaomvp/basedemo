@@ -12,7 +12,10 @@ import com.cetcxl.xlpay.common.exception.BaseRuntimeException;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
@@ -29,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @Slf4j
 //@Disabled
-public class ChainCodeBussinessTest extends BaseTest {
+public class ChainCodeCreditBussinessTest extends BaseTest {
     private final static String PREFIX = "ChainCodeTest.";
     @Autowired
     private ChainCodeConfiguration configuration;
@@ -61,195 +64,6 @@ public class ChainCodeBussinessTest extends BaseTest {
     public void tearDown() {
         super.tearDown();
         configuration.setChainCodeIp("http://127.0.0.1:8089/cc_manager");
-    }
-
-    @Test
-    @Disabled
-    public void queryPersonalWallet() {
-        PersonalWallet personalWallet = chainCodeService.queryPersonalWalletInfo(employeeWalletNo);
-        log.info("result data:[{}]", personalWallet);
-    }
-
-    @Test
-    public void cash_main_business() {
-        //充值
-        String rechargeTradeNo = UUID.randomUUID().toString();
-        String rechargeAmount = "100.5";
-        chainCodeService.saveDealingRecord(
-                Order.builder()
-                        .tradeNo(rechargeTradeNo)
-                        .companySocialCreditCode(companySocialCreditCode)
-                        .identityCard(identityCard)
-                        .amount(rechargeAmount)
-                        .dealType(DealType.RECHARGE)
-                        .employeeWalletNo(employeeWalletNo)
-                        .payType(PayType.CASH)
-                        .build(),
-                PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletNo)
-                        .personalCashBalance("100.5")
-                        .amount(rechargeAmount)
-                        .dealType(DealType.RECHARGE)
-                        .payType(PayType.CASH)
-                        .tradeNo(rechargeTradeNo)
-                        .build(),
-                null
-        );
-
-        Assert.assertEquals(
-                rechargeAmount,
-                chainCodeService
-                        .queryOrderInfo(rechargeTradeNo)
-                        .getAmount()
-        );
-
-        Assert.assertEquals(
-                rechargeAmount,
-                chainCodeService
-                        .queryPersonalWalletInfo(employeeWalletNo)
-                        .getPersonalCashBalance()
-        );
-
-        //扣减
-        String reduceTradeNo = UUID.randomUUID().toString();
-        String reduceAmount = "-0.5";
-        chainCodeService.saveDealingRecord(
-                Order.builder()
-                        .tradeNo(reduceTradeNo)
-                        .companySocialCreditCode(companySocialCreditCode)
-                        .identityCard(identityCard)
-                        .amount(reduceAmount)
-                        .dealType(DealType.RECHARGE)
-                        .employeeWalletNo(employeeWalletNo)
-                        .payType(PayType.CASH)
-                        .build(),
-                PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletNo)
-                        .personalCashBalance("100")
-                        .amount(reduceAmount)
-                        .dealType(DealType.RECHARGE)
-                        .payType(PayType.CASH)
-                        .tradeNo(reduceTradeNo)
-                        .build(),
-                null
-        );
-
-        Assert.assertEquals(
-                "-0.5",
-                chainCodeService
-                        .queryOrderInfo(reduceTradeNo)
-                        .getAmount()
-        );
-
-        Assert.assertEquals(
-                "100",
-                chainCodeService
-                        .queryPersonalWalletInfo(employeeWalletNo)
-                        .getPersonalCashBalance()
-        );
-
-
-        //消费
-        String payTradeNo = UUID.randomUUID().toString();
-        String payAmount = "50";
-        chainCodeService.saveDealingRecord(
-                Order.builder()
-                        .tradeNo(payTradeNo)
-                        .companySocialCreditCode(companySocialCreditCode)
-                        .identityCard(identityCard)
-                        .amount(payAmount)
-                        .dealType(DealType.CONSUME)
-                        .employeeWalletNo(employeeWalletNo)
-                        .payType(PayType.CASH)
-                        .build(),
-                PersonalWallet.builder()
-                        .personalWalletNo(employeeWalletNo)
-                        .personalCashBalance("50")
-                        .amount(payAmount)
-                        .dealType(DealType.CONSUME)
-                        .payType(PayType.CASH)
-                        .tradeNo(payTradeNo)
-                        .build(),
-                BusinessWallet.builder()
-                        .businessSocialCreditCode(businessSocialCreditCode)
-                        .amount(payAmount)
-                        .payType(PayType.CASH)
-                        .tradeNo(payTradeNo)
-                        .build()
-        );
-
-        Assert.assertEquals(
-                "50",
-                chainCodeService
-                        .queryOrderInfo(payTradeNo)
-                        .getAmount()
-        );
-
-        Assert.assertEquals(
-                "50",
-                chainCodeService
-                        .queryPersonalWalletInfo(employeeWalletNo)
-                        .getPersonalCashBalance()
-        );
-
-        //验证超额支付
-        try {
-            String payTradeNo_ = UUID.randomUUID().toString();
-            String payAmount_ = "100";
-            chainCodeService.saveDealingRecord(
-                    Order.builder()
-                            .tradeNo(payTradeNo_)
-                            .companySocialCreditCode(companySocialCreditCode)
-                            .identityCard(identityCard)
-                            .amount(payAmount_)
-                            .dealType(DealType.CONSUME)
-                            .employeeWalletNo(employeeWalletNo)
-                            .payType(PayType.CASH)
-                            .build(),
-                    PersonalWallet.builder()
-                            .personalWalletNo(employeeWalletNo)
-                            .personalCashBalance("-50")
-                            .amount(payAmount_)
-                            .dealType(DealType.CONSUME)
-                            .payType(PayType.CASH)
-                            .tradeNo(payTradeNo_)
-                            .build(),
-                    BusinessWallet.builder()
-                            .businessSocialCreditCode(businessSocialCreditCode)
-                            .amount(payAmount_)
-                            .payType(PayType.CASH)
-                            .tradeNo(payTradeNo_)
-                            .build()
-            );
-            fail();
-        } catch (Exception e) {
-            Assertions.assertTrue(
-                    ((BaseRuntimeException) e).getResultCode() == CHAIN_CODE_SAVE_DEALING_RECORD_ERROR
-            );
-        }
-
-        //结算
-        String checkBatch = UUID.randomUUID().toString();
-        chainCodeService.saveCheckSlip(
-                CheckSlip.builder()
-                        .checkNo(checkBatch)
-                        .companySocialCreditCode(companySocialCreditCode)
-                        .businessSocialCreditCode(businessSocialCreditCode)
-                        .totalDeal("1")
-                        .totalAmount("50")
-                        .checkType(PayType.CASH)
-                        .tradeNos(Lists.newArrayList(payTradeNo))
-                        .build()
-        );
-
-        Assert.assertEquals(
-                "50",
-                chainCodeService
-                        .queryCheckInfo(checkBatch)
-                        .getTotalAmount()
-        );
-
-
     }
 
     @Test
@@ -344,6 +158,12 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .queryBusinessWalletInfo(payTradeNo1)
                         .getTradeNo()
         );
+        Assert.assertEquals(
+                "10.5",
+                chainCodeService
+                        .queryBusinessWalletInfo(businessSocialCreditCode)
+                        .getBusinessCreditBalance()
+        );
 
         //额度消费二
         String payTradeNo2 = UUID.randomUUID().toString();
@@ -390,15 +210,21 @@ public class ChainCodeBussinessTest extends BaseTest {
         );
 
         Assert.assertEquals(
-                payAmount2,
+                "100.5",
                 chainCodeService
-                        .queryBusinessWalletInfo(payTradeNo2)
-                        .getAmount()
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditLimit()
+        );
+        Assert.assertEquals(
+                "50.5",
+                chainCodeService
+                        .queryBusinessWalletInfo(businessSocialCreditCode)
+                        .getBusinessCreditBalance()
         );
 
         //额度调整
         String limitTradeNo_ = UUID.randomUUID().toString();
-        String limitAmount_ = "80.5";
+        String limitAmount_ = "80.3";
         chainCodeService.saveDealingRecord(
                 Order.builder()
                         .tradeNo(limitTradeNo_)
@@ -411,7 +237,7 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .build(),
                 PersonalWallet.builder()
                         .personalWalletNo(employeeWalletNo)
-                        .personalCreditBalance("30")
+                        .personalCreditBalance("29.8")
                         .personalCreditLimit(limitAmount_)
                         .amount(limitAmount_)
                         .dealType(LIMIT_CHANGE)
@@ -430,7 +256,7 @@ public class ChainCodeBussinessTest extends BaseTest {
         );
 
         Assert.assertEquals(
-                "30",
+                "29.8",
                 chainCodeService
                         .queryPersonalWalletInfo(employeeWalletNo)
                         .getPersonalCreditBalance()
@@ -453,7 +279,7 @@ public class ChainCodeBussinessTest extends BaseTest {
                     PersonalWallet.builder()
                             .personalWalletNo(employeeWalletNo)
                             .personalCreditBalance("0")
-                            .personalCreditLimit("80.5")
+                            .personalCreditLimit("80.3")
                             .amount(payAmount_)
                             .dealType(DealType.CONSUME)
                             .payType(PayType.CREDIT)
@@ -474,6 +300,48 @@ public class ChainCodeBussinessTest extends BaseTest {
             );
         }
 
+        //额度消费三
+        String payTradeNo3 = UUID.randomUUID().toString();
+        String payAmount3 = "29.8";
+        chainCodeService.saveDealingRecord(
+                Order.builder()
+                        .tradeNo(payTradeNo3)
+                        .companySocialCreditCode(companySocialCreditCode)
+                        .identityCard(identityCard)
+                        .amount(payAmount3)
+                        .dealType(DealType.CONSUME)
+                        .employeeWalletNo(employeeWalletNo)
+                        .payType(PayType.CREDIT)
+                        .build(),
+                PersonalWallet.builder()
+                        .personalWalletNo(employeeWalletNo)
+                        .personalCreditBalance("0")
+                        .personalCreditLimit("80.3")
+                        .amount(payAmount3)
+                        .dealType(DealType.CONSUME)
+                        .payType(PayType.CREDIT)
+                        .tradeNo(payTradeNo3)
+                        .build(),
+                BusinessWallet.builder()
+                        .businessSocialCreditCode(businessSocialCreditCode)
+                        .amount(payAmount3)
+                        .payType(PayType.CREDIT)
+                        .tradeNo(payTradeNo3)
+                        .build()
+        );
+        Assert.assertEquals(
+                "0",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
+        Assert.assertEquals(
+                "80.3",
+                chainCodeService
+                        .queryBusinessWalletInfo(businessSocialCreditCode)
+                        .getBusinessCreditBalance()
+        );
+
         // 信用结算
         String checkBatch = UUID.randomUUID().toString();
         chainCodeService.saveCheckSlip(
@@ -482,20 +350,24 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .companySocialCreditCode(companySocialCreditCode)
                         .businessSocialCreditCode(businessSocialCreditCode)
                         .totalDeal("2")
-                        .totalAmount("50")
+                        .totalAmount("50.5")
                         .checkType(PayType.CREDIT)
                         .tradeNos(Lists.newArrayList(payTradeNo1, payTradeNo2))
                         .build()
         );
 
-
         Assert.assertEquals(
-                "50",
+                "50.5",
                 chainCodeService
                         .queryCheckInfo(checkBatch)
                         .getTotalAmount()
         );
-
+        Assert.assertEquals(
+                "50.5",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
 
         // 重复结算验证
         try {
@@ -505,7 +377,7 @@ public class ChainCodeBussinessTest extends BaseTest {
                             .companySocialCreditCode(companySocialCreditCode)
                             .businessSocialCreditCode(businessSocialCreditCode)
                             .totalDeal("2")
-                            .totalAmount("50")
+                            .totalAmount("50.5")
                             .checkType(PayType.CREDIT)
                             .tradeNos(Lists.newArrayList(payTradeNo1, payTradeNo2))
                             .build()
@@ -517,15 +389,56 @@ public class ChainCodeBussinessTest extends BaseTest {
             );
         }
 
+        // 错误结算验证
+        try {
+            String checkBatch_ = UUID.randomUUID().toString();
+            chainCodeService.saveCheckSlip(
+                    CheckSlip.builder()
+                            .checkNo(checkBatch_)
+                            .companySocialCreditCode(companySocialCreditCode)
+                            .businessSocialCreditCode(businessSocialCreditCode)
+                            .totalDeal("2")
+                            .totalAmount("80")
+                            .checkType(PayType.CREDIT)
+                            .tradeNos(Lists.newArrayList(payTradeNo2, payTradeNo3))
+                            .build()
+            );
+            fail();
+        } catch (Exception e) {
+            Assertions.assertTrue(
+                    ((BaseRuntimeException) e).getResultCode() == CHAIN_CODE_SAVE_CHECK_SLIP_ERROR
+            );
+        }
+
+        // 再次信用结算
+        String checkBatch1 = UUID.randomUUID().toString();
+        chainCodeService.saveCheckSlip(
+                CheckSlip.builder()
+                        .checkNo(checkBatch1)
+                        .companySocialCreditCode(companySocialCreditCode)
+                        .businessSocialCreditCode(businessSocialCreditCode)
+                        .totalDeal("1")
+                        .totalAmount("29.8")
+                        .checkType(PayType.CREDIT)
+                        .tradeNos(Lists.newArrayList(payTradeNo3))
+                        .build()
+        );
+        Assert.assertEquals(
+                "80.3",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
+
         //额度恢复支付验证
-        String payTradeNo__ = UUID.randomUUID().toString();
-        String payAmount__ = "80.5";
+        String payTradeNo4 = UUID.randomUUID().toString();
+        String payAmount4 = "80.3";
         chainCodeService.saveDealingRecord(
                 Order.builder()
-                        .tradeNo(payTradeNo__)
+                        .tradeNo(payTradeNo4)
                         .companySocialCreditCode(companySocialCreditCode)
                         .identityCard(identityCard)
-                        .amount(payAmount__)
+                        .amount(payAmount4)
                         .dealType(DealType.CONSUME)
                         .employeeWalletNo(employeeWalletNo)
                         .payType(PayType.CREDIT)
@@ -533,24 +446,24 @@ public class ChainCodeBussinessTest extends BaseTest {
                 PersonalWallet.builder()
                         .personalWalletNo(employeeWalletNo)
                         .personalCreditBalance("0")
-                        .personalCreditLimit("80.5")
-                        .amount(payAmount__)
+                        .personalCreditLimit("80.3")
+                        .amount(payAmount4)
                         .dealType(DealType.CONSUME)
                         .payType(PayType.CREDIT)
-                        .tradeNo(payTradeNo__)
+                        .tradeNo(payTradeNo4)
                         .build(),
                 BusinessWallet.builder()
                         .businessSocialCreditCode(businessSocialCreditCode)
-                        .amount(payAmount__)
+                        .amount(payAmount4)
                         .payType(PayType.CREDIT)
-                        .tradeNo(payTradeNo__)
+                        .tradeNo(payTradeNo4)
                         .build()
         );
 
         Assert.assertEquals(
-                payAmount__,
+                payAmount4,
                 chainCodeService
-                        .queryOrderInfo(payTradeNo__)
+                        .queryOrderInfo(payTradeNo4)
                         .getAmount()
         );
 
@@ -561,12 +474,94 @@ public class ChainCodeBussinessTest extends BaseTest {
                         .getPersonalCreditBalance()
         );
         Assert.assertEquals(
-                payAmount__,
+                "80.3",
                 chainCodeService
-                        .queryBusinessWalletInfo(payTradeNo__)
-                        .getAmount()
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditLimit()
+        );
+        Assert.assertEquals(
+                "160.6",
+                chainCodeService
+                        .queryBusinessWalletInfo(businessSocialCreditCode)
+                        .getBusinessCreditBalance()
         );
 
-    }
+        //额度调整
+        String limitTradeNo__ = UUID.randomUUID().toString();
+        String limitAmount__ = "60.2";
+        chainCodeService.saveDealingRecord(
+                Order.builder()
+                        .tradeNo(limitTradeNo__)
+                        .companySocialCreditCode(companySocialCreditCode)
+                        .identityCard(identityCard)
+                        .amount(limitAmount__)
+                        .dealType(LIMIT_CHANGE)
+                        .employeeWalletNo(employeeWalletNo)
+                        .payType(PayType.CREDIT)
+                        .build(),
+                PersonalWallet.builder()
+                        .personalWalletNo(employeeWalletNo)
+                        .personalCreditBalance("-20.1")
+                        .personalCreditLimit(limitAmount__)
+                        .amount(limitAmount__)
+                        .dealType(LIMIT_CHANGE)
+                        .payType(PayType.CREDIT)
+                        .tradeNo(limitTradeNo__)
+                        .build(),
+                null
+        );
+        Assert.assertEquals(
+                "60.2",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditLimit()
+        );
 
+        // 错误结算验证
+        try {
+            String checkBatch_ = UUID.randomUUID().toString();
+            chainCodeService.saveCheckSlip(
+                    CheckSlip.builder()
+                            .checkNo(checkBatch_)
+                            .companySocialCreditCode(companySocialCreditCode)
+                            .businessSocialCreditCode(businessSocialCreditCode)
+                            .totalDeal("1")
+                            .totalAmount("80.4")
+                            .checkType(PayType.CREDIT)
+                            .tradeNos(Lists.newArrayList(payTradeNo4))
+                            .build()
+            );
+            fail();
+        } catch (Exception e) {
+            Assertions.assertTrue(
+                    ((BaseRuntimeException) e).getResultCode() == CHAIN_CODE_SAVE_CHECK_SLIP_ERROR
+            );
+        }
+        Assert.assertEquals(
+                "-20.1",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
+
+        // 再次信用结算
+        String checkBatch2 = UUID.randomUUID().toString();
+        chainCodeService.saveCheckSlip(
+                CheckSlip.builder()
+                        .checkNo(checkBatch2)
+                        .companySocialCreditCode(companySocialCreditCode)
+                        .businessSocialCreditCode(businessSocialCreditCode)
+                        .totalDeal("1")
+                        .totalAmount("80.3")
+                        .checkType(PayType.CREDIT)
+                        .tradeNos(Lists.newArrayList(payTradeNo4))
+                        .build()
+        );
+        Assert.assertEquals(
+                "60.2",
+                chainCodeService
+                        .queryPersonalWalletInfo(employeeWalletNo)
+                        .getPersonalCreditBalance()
+        );
+    }
 }

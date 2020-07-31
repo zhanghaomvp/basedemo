@@ -22,7 +22,7 @@ public class RedisLockComponent {
     private final static String LOCKED = "lock";
 
     private final long timeout = 3 * 1000L;
-    private final long expireMillis = 3 * 60 * 1000L;
+    private final long expireMillis = 5 * 60 * 1000L;
 
     public boolean lock(String key) {
         return lock(KEY_PREFIX + key, expireMillis);

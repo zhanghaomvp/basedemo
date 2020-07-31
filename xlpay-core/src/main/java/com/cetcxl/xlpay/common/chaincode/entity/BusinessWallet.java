@@ -25,6 +25,14 @@ public class BusinessWallet extends BaseChainCodeModel {
     @SignValue
     private String businessSocialCreditCode;
     /**
+     * 商家信用余额
+     */
+    private String businessCreditBalance;
+    /**
+     * 商家现金余额
+     */
+    private String businessCashBalance;
+    /**
      * 交易金额
      */
     private String amount;

@@ -29,7 +29,7 @@ sms:
     name: guoyubin
     password: guoyubin
     url: http://api.smsbao.com/sms
-    sign: 【信誉付】
+    sign: 【电科信链】
 
 xstor:
   appId: 190710000110001

@@ -74,7 +74,7 @@ public class ChainCodeService {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
-            log.error("saveDealingRecord error :" + result.getMsg());
+            log.error("saveDealingRecord error : {}", result);
             throw new BaseRuntimeException(CHAIN_CODE_SAVE_DEALING_RECORD_ERROR);
         }
     }
@@ -100,20 +100,20 @@ public class ChainCodeService {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
-            log.error("saveCheckSlip error :" + result.getMsg());
+            log.error("saveCheckSlip error : {}", result);
             throw new BaseRuntimeException(CHAIN_CODE_SAVE_CHECK_SLIP_ERROR);
         }
     }
 
 
-
     /**
      * 根据结算单号获取链上结算单信息
+     *
      * @param checkNo 结算单号
      */
     public CheckSlip queryCheckInfo(String checkNo) {
         if (!configuration.getChainCodeSwitch()) {
-            return null;
+            throw new BaseRuntimeException(FUNCTION_UNAVAILABLE);
         }
 
         JSONObject json = initialRequestJson();
@@ -125,7 +125,7 @@ public class ChainCodeService {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
-            log.error("queryCheckInfo error :" + result.getMsg());
+            log.error("queryCheckInfo error : {}", result);
             throw new BaseRuntimeException(CHAIN_CODE_QUERY_DEALING_RECORD_ERROR);
         }
         return JSONObject.parseObject(result.data, CheckSlip.class);
@@ -133,11 +133,12 @@ public class ChainCodeService {
 
     /**
      * 根据交易单号获取链上订单信息
+     *
      * @param tradeNo 交易单号
      */
     public Order queryOrderInfo(String tradeNo) {
         if (!configuration.getChainCodeSwitch()) {
-            return null;
+            throw new BaseRuntimeException(FUNCTION_UNAVAILABLE);
         }
 
         JSONObject json = initialRequestJson();
@@ -149,7 +150,7 @@ public class ChainCodeService {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
-            log.error("queryOrderInfo error :" + result.getMsg());
+            log.error("queryOrderInfo error : {}", result);
             throw new BaseRuntimeException(CHAIN_CODE_QUERY_DEALING_RECORD_ERROR);
         }
         return JSONObject.parseObject(result.data, Order.class);
@@ -157,11 +158,12 @@ public class ChainCodeService {
 
     /**
      * 根据个人钱包号获取链上钱包信息
+     *
      * @param personalWalletNo 个人钱包号
      */
     public PersonalWallet queryPersonalWalletInfo(String personalWalletNo) {
         if (!configuration.getChainCodeSwitch()) {
-            return null;
+            throw new BaseRuntimeException(FUNCTION_UNAVAILABLE);
         }
 
         JSONObject json = initialRequestJson();
@@ -173,7 +175,7 @@ public class ChainCodeService {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
-            log.error("queryPersonalWalletInfo error :" + result.getMsg());
+            log.error("queryPersonalWalletInfo error : {}", result);
             throw new BaseRuntimeException(CHAIN_CODE_QUERY_PERSONAL_WALLET_ERROR);
         }
         return JSONObject.parseObject(result.data, PersonalWallet.class);
@@ -181,11 +183,12 @@ public class ChainCodeService {
 
     /**
      * 根据商家钱包号获取链上钱包信息
+     *
      * @param businessWalletNo 交易单号
      */
     public BusinessWallet queryBusinessWalletInfo(String businessWalletNo) {
         if (!configuration.getChainCodeSwitch()) {
-            return null;
+            throw new BaseRuntimeException(FUNCTION_UNAVAILABLE);
         }
 
         JSONObject json = initialRequestJson();
@@ -197,7 +200,7 @@ public class ChainCodeService {
         Result result = sendRequest(json);
 
         if (Objects.isNull(result) || result.getCode() != 0) {
-            log.error("queryBusinessWalletInfo error :" + result.getMsg());
+            log.error("queryBusinessWalletInfo error : {}", result);
             throw new BaseRuntimeException(CHAIN_CODE_QUERY_BUSINESS_WALLET_ERROR);
         }
         return JSONObject.parseObject(result.data, BusinessWallet.class);
@@ -242,6 +245,7 @@ public class ChainCodeService {
             throw new BaseRuntimeException(CHAIN_CODE_REQUEST_ERROR);
         }
 
+        log.info("返回数据[" + responseEntity.getBody() + "]");
         return JSON.parseObject(responseEntity.getBody(), Result.class);
     }
 }

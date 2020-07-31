@@ -32,7 +32,7 @@ sms:
     name: guoyubin
     password: guoyubin
     url: http://api.smsbao.com/sms
-    sign: 【信誉付】
+    sign: 【电科信链】
     
 xstor:
   appId: 190710000110001
@@ -47,10 +47,10 @@ http:
     url: http://pay-trustlink-data:8080
 
 chain-code:
-  chainCodeSwitch: false
+  chainCodeSwitch: true
   readAddress: luna #智能合约chaincode
   chainCodeIp: http://172.16.5.27/cc_manager
-  chainCodeName: creditpaychaincode
+  chainCodeName: creditpaychaincodetest
   appKey: a4423c0f2242429eb672e79bd19b43b2
   appSecret: 3db845b089d741c3a7b9529b4ab2cfed
   chainCodeVersion:

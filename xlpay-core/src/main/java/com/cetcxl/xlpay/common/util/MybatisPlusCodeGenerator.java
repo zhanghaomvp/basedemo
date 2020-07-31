@@ -47,7 +47,7 @@ public class MybatisPlusCodeGenerator {
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(false);
         // *****此处更改表名即可******
-        strategy.setInclude("checks_record");
+        strategy.setInclude("checks");
         strategy.setControllerMappingHyphenStyle(true);
         //strategy.setTablePrefix(pc.getModuleName() + "_");
 

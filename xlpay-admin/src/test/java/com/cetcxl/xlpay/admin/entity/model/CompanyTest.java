@@ -31,5 +31,8 @@ public class CompanyTest {
         BigDecimal decimal = new BigDecimal("-1");
         BigDecimal subtract = decimal.subtract(new BigDecimal("200"));
         assertTrue(subtract.signum() == -1);
+
+        BigDecimal decimal_ = new BigDecimal("50");
+        System.out.println(decimal_.subtract(new BigDecimal("50.0")).toString());
     }
 }

@@ -33,7 +33,7 @@ sms:
     name: guoyubin
     password: guoyubin
     url: http://api.smsbao.com/sms
-    sign: 【年轮小程序】
+    sign: 【电科信链】
 
 xstor:
   appId: 190710000110001

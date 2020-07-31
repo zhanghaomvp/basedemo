@@ -2,6 +2,7 @@ package com.cetcxl.xlpay.common.chaincode.enums;
 
 /**
  * 交易类型枚举
+ *
  * @author henghuiwu
  */
 
@@ -17,5 +18,7 @@ public enum DealType {
     /**
      * 额度调整
      */
-    LIMIT_CHANGE;
+    LIMIT_CHANGE,
+    RECOVER_CREDIT,
+    ;
 }

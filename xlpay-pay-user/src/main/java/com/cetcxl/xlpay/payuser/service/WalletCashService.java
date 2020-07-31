@@ -77,7 +77,11 @@ public class WalletCashService extends ServiceImpl<WalletCashMapper, WalletCash>
                         .identityCard(param.getCompanyMember().getIcNo())
                         .amount(cashFlow.getAmount().toString())
                         .dealType(DealType.CONSUME)
-                        .employeeWalletNo(walletCash.getId().toString())
+                        .employeeWalletNo(
+                                param.getCompany().getSocialCreditCode() +
+                                "." +
+                                param.getCompanyMember().getIcNo()
+                        )
                         .payType(PayType.CASH)
                         .build(),
                 PersonalWallet.builder()
